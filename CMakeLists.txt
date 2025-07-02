@@ -502,6 +502,14 @@ install(
         bin
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/git_sparse_push_interactive ${EXECUTABLE_OUTPUT_PATH}/git_sparse_push_interactive COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/git_sparse_push_interactive
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)

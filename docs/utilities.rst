@@ -173,3 +173,20 @@ Arguments for this script are:
 3. **-v** enable verbose mode
 4. **-h** display help
 5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
+
+------------------
+Sparse Git Push
+------------------
+
+The script enables sparse git-push of dftracer traces to the specified remote repository
+and branch. It optionally provides interactive selection of directories to push.
+
+.. code-block:: bash
+
+    <install-dir>/bin/usage: git_sparse_push_interactive <remote repository> <branch> [directory]
+
+Arguments for this script are:
+
+3. **repository name** name of remote repository
+4. **branch name**     name of remote branch
+5. **directory**       optional comma-separated list of directories to sparse-push.
