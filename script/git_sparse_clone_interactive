@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# This script is intended to be run at the top-level directory where you want to sparse-clone
+# the repository.
+# Example usage: 
+#   For interactive usage:
+#   ./git_sparse_clone_interactive.sh ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git v1.0.10.dev7/corona dft-test1  
+#
+#   For non-interative usage: 
+#   ./git_sparse_clone_interactive.sh ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git v1.0.10.dev7/corona dft-test1 bert_v100,resnet50_v100
+#  !! For non-interactive usage, please make sure to not include spaces between names of dirs
+#     as shown above !!
+
+#report first error and bail
+set -euo pipefail
+#handle non-trivial names/strings
+IFS=$'\n\t'
+
+usage() {
+  cat <<EOF
+Usage: $0 <repo_url> <branch> <localdir> [dir1[,dir2,...]]
+
+  <repo_url>   Git repository URL (e.g., ssh://git@.../project.git)
+  <branch>     Branch to sparse-checkout (e.g., v1.0.10.dev7/corona)
+  <localdir>   Local folder name for the clone (will be created if missing)
+  [dirs]       Optional comma-separated list of paths
+               to sparse-checkout. If omitted, interactive menus are shown 
+               (specify item numbers to select directories to clone).
+EOF
+  exit 1
+}
+
+#require at least repo URL, branch, and local directory
+if [ $# -lt 3 ]; then
+  usage
+fi
+
+#parse mandatory args
+rurl=$1
+branch=$2
+localdir=$3
+shift 3
+
+#parse optional arg
+declare -a patterns
+skip_interactive=0
+if [ $# -ge 1 ]; then
+  skip_interactive=1
+  if [[ "$*" == *","* ]]; then
+    IFS=',' read -ra patterns <<< "$*"
+  else
+    patterns=("$@")
+  fi
+fi
+
+#clone metadata if needed
+if [ ! -d "$localdir/.git" ]; then
+  git clone -b "$branch" --no-checkout "$rurl" "$localdir" || {
+    echo "Error: clone failed" >&2
+    exit 1
+  }
+fi
+
+pushd "$localdir" >/dev/null
+
+#enable LFS and sparse-checkout
+#not required each time but doesn't hurt
+#also doesn't handle git servers with LFS disabled or not supported
+git lfs install --local >/dev/null 2>&1 || true
+git sparse-checkout init --cone >/dev/null 2>&1 || true
+
+#interactive selection if patterns not provided
+if [ "$skip_interactive" -eq 0 ]; then
+  #list top-level dirs
+  mapfile -t topDirs < <(git ls-tree --name-only -d "$branch")
+  if [ ${#topDirs[@]} -eq 0 ]; then
+    echo "Error: no top-level directories on '$branch'" >&2
+    popd >/dev/null
+    exit 1
+  fi
+  echo
+  echo "Select top-level directories (comma-separated indices) or 'all':"
+  for i in "${!topDirs[@]}"; do
+    printf "%3d) %s\n" "$((i+1))" "${topDirs[i]}"
+  done
+  printf "%3d) all\n" "$(( ${#topDirs[@]} + 1 ))"
+  read -rp "Choice(s): " choice1
+
+  if [[ "$choice1" == "all" ]]; then
+    patterns=("${topDirs[@]}")
+    drill_deeper=0
+  else
+    #parse indices of dirs
+    IFS=',' read -ra idxs <<< "$choice1"
+    for raw in "${idxs[@]}"; do
+      idx=$(echo "$raw" | xargs)
+      if ! [[ "$idx" =~ ^[0-9]+$ ]] || (( idx < 1 || idx > ${#topDirs[@]} )); then
+        echo "Error: invalid index '$raw'" >&2
+        popd >/dev/null
+        exit 1
+      fi
+      patterns+=("${topDirs[idx-1]}")
+    done
+    drill_deeper=0
+    if [ ${#patterns[@]} -eq 1 ]; then
+      drill_deeper=1
+    fi
+  fi
+
+  #optional second-level menu
+  if [ "$drill_deeper" -eq 1 ]; then
+    parent="${patterns[0]}"
+    mapfile -t subdirs < <(git ls-tree --name-only -d "$branch":"$parent")
+    if [ ${#subdirs[@]} -gt 0 ]; then
+      echo
+      echo "Select sub-dirs under '$parent' (indices) or 'all':"
+      for i in "${!subdirs[@]}"; do
+        printf "%3d) %s\n" "$((i+1))" "${subdirs[i]}"
+      done
+      printf "%3d) all\n" "$(( ${#subdirs[@]} + 1 ))"
+      read -rp "Choice(s): " choice2
+
+      unset patterns
+      if [[ "$choice2" == "all" ]]; then
+        for d in "${subdirs[@]}"; do
+          patterns+=("$parent/$d")
+        done
+      else
+        IFS=',' read -ra idxs2 <<< "$choice2"
+        for raw in "${idxs2[@]}"; do
+          idx=$(echo "$raw" | xargs)
+          if ! [[ "$idx" =~ ^[0-9]+$ ]] || (( idx < 1 || idx > ${#subdirs[@]} )); then
+            echo "Error: invalid index '$raw'" >&2
+            popd >/dev/null
+            exit 1
+          fi
+          patterns+=("$parent/${subdirs[idx-1]}")
+        done
+      fi
+    fi
+  fi
+fi
+
+#apply sparse-checkout patterns
+for p in "${patterns[@]}"; do
+  git sparse-checkout add "$p"
+done
+
+#checkout and pull LFS
+git checkout "$branch"
+git lfs pull --include="$(IFS=,; echo "${patterns[*]}")"
+
+popd >/dev/null
+echo "Sparse-checkout complete in '$localdir' for: ${patterns[*]}"

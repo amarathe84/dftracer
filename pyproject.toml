@@ -134,6 +134,7 @@ script-files = [
   "script/dftracer_event_count",
   "script/dftracer_validate",
   "script/dftracer_pgzip",
+  "script/git_sparse_clone_interactive",
   "script/git_sparse_push_interactive",
 ]
 

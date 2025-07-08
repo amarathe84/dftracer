@@ -502,6 +502,14 @@ install(
         bin
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/git_sparse_clone_interactive ${EXECUTABLE_OUTPUT_PATH}/git_sparse_clone_interactive COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/git_sparse_clone_interactive
+        DESTINATION
+        bin
+)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/git_sparse_push_interactive ${EXECUTABLE_OUTPUT_PATH}/git_sparse_push_interactive COPYONLY)
 install(
         FILES
