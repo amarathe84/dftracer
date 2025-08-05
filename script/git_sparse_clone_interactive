@@ -3,10 +3,10 @@
 # the repository.
 # Example usage: 
 #   For interactive usage:
-#   ./git_sparse_clone_interactive.sh ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git v1.0.10.dev7/corona dft-test1  
+#   ./git_sparse_clone_interactive.sh -r ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git -b v1.0.10.dev7/corona -l dft-test1
 #
-#   For non-interative usage: 
-#   ./git_sparse_clone_interactive.sh ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git v1.0.10.dev7/corona dft-test1 bert_v100,resnet50_v100
+#   For non-interactive usage: 
+#   ./git_sparse_clone_interactive.sh -r ssh://git@czgitlab.llnl.gov:7999/iopp/dftracer-traces.git -b v1.0.10.dev7/corona -l dft-test1 -d bert_v100,resnet50_v100
 #  !! For non-interactive usage, please make sure to not include spaces between names of dirs
 #     as shown above !!
 
@@ -17,39 +17,45 @@ IFS=$'\n\t'
 
 usage() {
   cat <<EOF
-Usage: $0 <repo_url> <branch> <localdir> [dir1[,dir2,...]]
+Usage: $0 -r <repo_url> -b <branch> -l <localdir> [-d <dir1[,dir2,...]>]
 
-  <repo_url>   Git repository URL (e.g., ssh://git@.../project.git)
-  <branch>     Branch to sparse-checkout (e.g., v1.0.10.dev7/corona)
-  <localdir>   Local folder name for the clone (will be created if missing)
-  [dirs]       Optional comma-separated list of paths
-               to sparse-checkout. If omitted, interactive menus are shown 
-               (specify item numbers to select directories to clone).
+  -r   Git repository URL (e.g., ssh://git@.../project.git)
+  -b   Branch to sparse-checkout (e.g., v1.0.10.dev7/corona)
+  -l   Local folder name for the clone (will be created if missing)
+  -d   Optional comma-separated list of paths
+       to sparse-checkout. If omitted, interactive menus are shown 
+       (specify item numbers to select directories to clone).
 EOF
   exit 1
 }
 
-#require at least repo URL, branch, and local directory
-if [ $# -lt 3 ]; then
-  usage
-fi
-
-#parse mandatory args
-rurl=$1
-branch=$2
-localdir=$3
-shift 3
-
-#parse optional arg
+#parse options
+rurl=""
+branch=""
+localdir=""
 declare -a patterns
 skip_interactive=0
-if [ $# -ge 1 ]; then
-  skip_interactive=1
-  if [[ "$*" == *","* ]]; then
-    IFS=',' read -ra patterns <<< "$*"
-  else
-    patterns=("$@")
-  fi
+
+while getopts ":r:b:l:d:" opt; do
+  case $opt in
+    r) rurl="$OPTARG" ;;
+    b) branch="$OPTARG" ;;
+    l) localdir="$OPTARG" ;;
+    d) skip_interactive=1
+       if [[ "$OPTARG" == *","* ]]; then
+         IFS=',' read -ra patterns <<< "$OPTARG"
+       else
+         patterns=("$OPTARG")
+       fi
+       ;;
+    :) echo "Error: Option -$OPTARG requires an argument." >&2; usage ;;
+    \?) echo "Error: Invalid option -$OPTARG" >&2; usage ;;
+  esac
+done
+
+#check mandatory args
+if [[ -z "$rurl" || -z "$branch" || -z "$localdir" ]]; then
+  usage
 fi
 
 #clone metadata if needed

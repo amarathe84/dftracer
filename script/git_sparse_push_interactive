@@ -2,10 +2,10 @@
 # This script is intended to be run at the root of your local clone
 # Example usage: 
 #   For interactive usage:
-#   ./git_sparse_push_interactive.sh upstream v1.0.10.dev6/corona   
+#   ./git_sparse_push_interactive.sh -r upstream -b v1.0.10.dev6/corona
 #
 #   For non-interative usage: 
-#   ./git_sparse_push_interactive.sh upstream v1.0.10.dev6/corona test_app3_v100,test_app4_v100
+#   ./git_sparse_push_interactive.sh -r upstream -b v1.0.10.dev6/corona -d test_app3_v100,test_app4_v100
 #  !! For non-interactive usage, please make sure to not include spaces between names of dirs
 #     as shown above
 
@@ -17,37 +17,44 @@ IFS=$'\n\t'
 
 usage() {
   cat <<EOF
-Usage: $0 <remote> <branch> [dir1[,dir2,...]]
+Usage: $0 -r <remote> -b <branch> [-d <dir1[,dir2,...]>]
 
-  <remote>   Name of the git remote (e.g., origin, upstream)
-  <branch>   Branch name to push to (e.g., v1.0.10.dev7/corona)
-  [dirs]     Optional comma-separated or space-separated list of directories
-             to push. If omitted, you will be prompted interactively.
+  -r   Name of the git remote (e.g., origin, upstream)
+  -b   Branch name to push to (e.g., v1.0.10.dev7/corona)
+  -d   Optional comma-separated or space-separated list of directories
+       to push. If omitted, you will be prompted interactively.
 EOF
   exit 1
 }
 
-# Check for minimum arguments needed: remote repo name and branch
-if [ $# -lt 2 ]; then
+#parse options
+remote=""
+branch=""
+declare -a dirs
+
+while getopts ":r:b:d:" opt; do
+  case $opt in
+    r) remote="$OPTARG" ;;
+    b) branch="$OPTARG" ;;
+    d) 
+      if [[ "$OPTARG" == *","* ]]; then
+        IFS=',' read -ra dirs <<< "$OPTARG"
+      else
+        dirs=("$OPTARG")
+      fi
+      ;;
+    :) echo "Error: Option -$OPTARG requires an argument." >&2; usage ;;
+    \?) echo "Error: Invalid option -$OPTARG" >&2; usage ;;
+  esac
+done
+
+#check mandatory args
+if [[ -z "$remote" || -z "$branch" ]]; then
   usage
 fi
 
-remote=$1
-branch=$2
-shift 2
-
-#Get the directories to push
-#gotta be an array if we need to support multiple dirs.
-declare -a dirs
-
-if [ $# -gt 0 ]; then
-  # User provided directories as comma- or space-separated
-  if [[ "$*" == *","* ]]; then
-    IFS=',' read -ra dirs <<< "$*"
-  else
-    dirs=("$@")
-  fi
-else
+# Interactive selection if dirs not provided
+if [ ${#dirs[@]} -eq 0 ]; then
   # Interactive selection: list top-level dirs excluding .git and whatever is hidden
   mapfile -t all_dirs < <(
     find . -type d \

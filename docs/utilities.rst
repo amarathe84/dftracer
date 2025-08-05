@@ -187,10 +187,10 @@ the specified local directory. It optionally provides interactive selection of d
 
 Arguments for this script are:
 
-1. **repository name** name of remote repository
-2. **branch name**     name of remote branch
-3. **local directory** name of local directory to clone into       
-4. **directory**       optional comma-separated list of directories to sparse-clone.
+1. **-r repository name** name of remote repository
+2. **-b branch name**     name of remote branch
+3. **-l local directory** name of local directory to clone into       
+4. **-d directory**       optional comma-separated list of directories to sparse-clone.
 
 ------------------
 Sparse Git Push
@@ -205,6 +205,6 @@ and branch. It optionally provides interactive selection of directories to push.
 
 Arguments for this script are:
 
-1. **repository name** name of remote repository
-2. **branch name**     name of remote branch
-3. **directory**       optional comma-separated list of directories to sparse-push.
+1. **-r repository name** name of remote repository
+2. **-b branch name**     name of remote branch
+3. **-d directory**       optional comma-separated list of directories to sparse-push.
