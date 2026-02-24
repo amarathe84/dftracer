@@ -17,6 +17,14 @@ if(DFTRACER_ENABLE_HDF5)
   string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_BUILD_WITH_HDF5=ON")
 endif()
 
+if(DFTRACER_GENERATE_INTERFACES)
+  if(NOT "${BRAHMA_CONFIGURE_ARGS}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";")
+  endif()
+
+  string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_GENERATE_INTERFACES=ON")
+endif()
+
 install_external_project(brahma 3.0.0 "BRAHMA" https://github.com/izzet/brahma.git fix/auto-discovery-generation ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)

@@ -189,6 +189,7 @@ if(DFTRACER_ENABLE_HDF5)
 endif()
 
 option(DFTRACER_ENABLE_DYNAMIC_DETECTION "Enable Dynamic Detection" OFF)
+option(DFTRACER_GENERATE_INTERFACES "Generate Brahma and DFTracer interfaces from discovered headers" OFF)
 
 # install dependency
 option(DFTRACER_INSTALL_DEPENDENCIES "Install DFTracer dependencies" OFF)
@@ -285,10 +286,13 @@ else()
                 message(FATAL_ERROR "-- [CPP_LOGGER] is needed for ${PROJECT_NAME} build")
         endif()
 
-        # Brahma can export an interface dependency on HDF5::HDF5.
-        # Ensure HDF5 imported targets exist before loading brahma package config.
+        # Brahma can export an interface dependency on HDF5::HDF5
+        # regardless of DFTRACER_ENABLE_HDF5 based on how Brahma was built.
+        # Preload HDF5 targets before loading brahma package config.
         if(DFTRACER_ENABLE_HDF5)
                 find_package(HDF5 REQUIRED COMPONENTS C)
+        else()
+                find_package(HDF5 QUIET COMPONENTS C)
         endif()
 
         find_package(brahma 3.0.0 REQUIRED)
@@ -308,6 +312,8 @@ else()
         else()
                 message(FATAL_ERROR "-- [BRAHMA] is needed for ${PROJECT_NAME} build")
         endif()
+
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tools)
 
         find_package(yaml-cpp REQUIRED)
 
@@ -511,6 +517,11 @@ else()
         add_library(${PROJECT_NAME}_preload_dbg SHARED)
         add_library(dftracer::dftracer_preload_dbg ALIAS ${PROJECT_NAME}_preload_dbg)
         target_link_libraries(${PROJECT_NAME}_preload_dbg ${DEPENDENCY_LIB} ${PROJECT_NAME}_core_dbg)
+
+        if(DFTRACER_GENERATE_INTERFACES AND TARGET ${PROJECT_NAME}_generate_interfaces)
+                add_dependencies(${PROJECT_NAME}_core ${PROJECT_NAME}_generate_interfaces)
+                add_dependencies(${PROJECT_NAME}_core_dbg ${PROJECT_NAME}_generate_interfaces)
+        endif()
 
         set(DFTRACER_DEBUG_TARGETS ${PROJECT_NAME}_core_dbg ${PROJECT_NAME}_preload_dbg)
 
@@ -995,6 +1006,7 @@ else()
                 DFTRACER_BUILD_PYTHON_BINDINGS
                 DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS
                 DFTRACER_ENABLE_FTRACING
+                DFTRACER_GENERATE_INTERFACES
                 DFTRACER_ENABLE_HDF5
                 DFTRACER_ENABLE_MPI
                 DFTRACER_ENABLE_PAPER_TESTS
