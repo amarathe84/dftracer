@@ -89,7 +89,8 @@ int main(int argc, char* argv[]) {
 
   const char* data_dir = (argc > 1) ? argv[1] : "/tmp";
   char filename[1024];
-  std::snprintf(filename, sizeof(filename), "%s/test_hdf5_smoke_cpp.h5", data_dir);
+  std::snprintf(filename, sizeof(filename), "%s/test_hdf5_smoke_cpp.h5",
+                data_dir);
 
   DFTRACER_CPP_METADATA(meta, "hdf5_test", "hdf5_smoke_test_cpp");
 

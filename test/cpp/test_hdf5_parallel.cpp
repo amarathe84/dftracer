@@ -168,7 +168,9 @@ int main(int argc, char* argv[]) {
 
 #if !defined(H5_HAVE_PARALLEL)
   if (rank == 0) {
-    std::printf("Parallel HDF5 unavailable (H5_HAVE_PARALLEL undefined), skipping parallel HDF5 calls\n");
+    std::printf(
+        "Parallel HDF5 unavailable (H5_HAVE_PARALLEL undefined), skipping "
+        "parallel HDF5 calls\n");
   }
 #endif
 
@@ -179,8 +181,9 @@ int main(int argc, char* argv[]) {
   MPI_Finalize();
 
   if (rank == 0 && rc == 0) {
-    std::printf("HDF5 parallel C++ smoke test completed successfully (sum=%d)\n",
-                total);
+    std::printf(
+        "HDF5 parallel C++ smoke test completed successfully (sum=%d)\n",
+        total);
   }
 
   return rc;

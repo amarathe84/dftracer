@@ -118,7 +118,8 @@ int main(int argc, char* argv[]) {
   MPI_Finalize();
 
   if (rank == 0 && rc == 0) {
-    std::printf("HDF5+MPI C++ smoke test completed successfully (sum=%d)\n", sum);
+    std::printf("HDF5+MPI C++ smoke test completed successfully (sum=%d)\n",
+                sum);
   }
   return rc;
 }

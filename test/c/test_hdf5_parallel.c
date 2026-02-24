@@ -10,7 +10,6 @@
 #include <dftracer/dftracer.h>
 #include <hdf5.h>
 #include <mpi.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -166,7 +165,9 @@ int main(int argc, char* argv[]) {
 
 #if !defined(H5_HAVE_PARALLEL)
   if (rank == 0) {
-    printf("Parallel HDF5 unavailable (H5_HAVE_PARALLEL undefined), skipping parallel HDF5 calls\n");
+    printf(
+        "Parallel HDF5 unavailable (H5_HAVE_PARALLEL undefined), skipping "
+        "parallel HDF5 calls\n");
   }
 #endif
 
@@ -177,7 +178,8 @@ int main(int argc, char* argv[]) {
   MPI_Finalize();
 
   if (rank == 0 && rc == 0) {
-    printf("HDF5 parallel C smoke test completed successfully (sum=%d)\n", total);
+    printf("HDF5 parallel C smoke test completed successfully (sum=%d)\n",
+           total);
   }
 
   return rc;
