@@ -71,23 +71,24 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y --no-install-recommends \
             build-essential \
-            cmake \
-            ninja-build \
-            git \
-            wget \
-            curl \
             ca-certificates \
-            pkg-config \
-            libyaml-cpp-dev \
+            cmake \
+            curl \
+            gcovr \
+            git \
             hwloc \
+            jq \
             libhwloc-dev \
-            mpich \
+            libhdf5-mpich-dev \
             libmpich-dev \
+            libyaml-cpp-dev \
+            mpich \
+            ninja-build \
+            pkg-config \
             python3-dev \
             python3-venv \
             software-properties-common \
-            jq \
-            gcovr
+            wget
 
           # Add Ubuntu toolchain PPA and install specific GCC version
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -118,7 +119,8 @@ jobs:
       - name: Build and test with pip install mode
         run: |
           source ${VENV_PATH:-venv}/bin/activate
-          ./autobuild.sh --enable-tests --enable-coverage
+          export DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON"
+          ./autobuild.sh --enable-tests --enable-coverage --enable-mpi --enable-hdf5 --generate-interfaces
           pip install -r test/py/requirements.txt
 
       - name: Run unit tests (non-coverage builds)

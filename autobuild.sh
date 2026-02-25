@@ -21,7 +21,9 @@ ENABLE_TESTS="${DFTRACER_ENABLE_TESTS:-OFF}"
 ENABLE_FTRACING="${DFTRACER_ENABLE_FTRACING:-OFF}"
 ENABLE_HIP_TRACING="${DFTRACER_ENABLE_HIP_TRACING:-OFF}"
 ENABLE_MPI="${DFTRACER_ENABLE_MPI:-OFF}"
+ENABLE_HDF5="${DFTRACER_ENABLE_HDF5:-OFF}"
 ENABLE_DYNAMIC_DETECTION="${DFTRACER_ENABLE_DYNAMIC_DETECTION:-OFF}"
+GENERATE_INTERFACES="${DFTRACER_GENERATE_INTERFACES:-OFF}"
 DISABLE_HWLOC="${DFTRACER_DISABLE_HWLOC:-ON}"
 ENABLE_DLIO_TESTS="${DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS:-OFF}"
 ENABLE_PAPER_TESTS="${DFTRACER_ENABLE_PAPER_TESTS:-OFF}"
@@ -54,7 +56,9 @@ OPTIONS:
     --enable-ftracing       Enable function tracing
     --enable-hip            Enable HIP tracing
     --enable-mpi            Enable MPI support
+    --enable-hdf5           Enable HDF5 support
     --enable-dynamic-detection Enable dynamic detection of MPI, HWLOC, and HIP at runtime
+    --generate-interfaces   Generate Brahma/DFTracer interfaces from discovered MPI/HDF5 headers
     --enable-hwloc          Enable HWLOC (default: disabled)
     --enable-dlio-tests     Enable DLIO benchmark tests
     --enable-paper-tests    Enable paper tests
@@ -73,7 +77,9 @@ ENVIRONMENT VARIABLES (same as setup.py):
     DFTRACER_ENABLE_FTRACING                Enable function tracing (ON/OFF)
     DFTRACER_ENABLE_HIP_TRACING             Enable HIP tracing (ON/OFF)
     DFTRACER_ENABLE_MPI                     Enable MPI (ON/OFF)
+    DFTRACER_ENABLE_HDF5                    Enable HDF5 (ON/OFF)
     DFTRACER_ENABLE_DYNAMIC_DETECTION       Enable dynamic detection (ON/OFF)
+    DFTRACER_GENERATE_INTERFACES            Generate interfaces from system headers (ON/OFF)
     DFTRACER_DISABLE_HWLOC                  Disable HWLOC (ON/OFF)
     DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS    Enable DLIO tests (ON/OFF)
     DFTRACER_ENABLE_PAPER_TESTS             Enable paper tests (ON/OFF)
@@ -99,6 +105,9 @@ EXAMPLES:
 
     # Build with MPI support
     $0 --enable-mpi
+
+    # Build with MPI + HDF5 and generated interfaces
+    $0 --enable-mpi --enable-hdf5 --generate-interfaces
 
     # Build with dfanalyzer for analysis tools
     $0 --with-dfanalyzer
@@ -190,9 +199,19 @@ while [[ $# -gt 0 ]]; do
             export DFTRACER_ENABLE_MPI="ON"
             shift
             ;;
+        --enable-hdf5)
+            ENABLE_HDF5="ON"
+            export DFTRACER_ENABLE_HDF5="ON"
+            shift
+            ;;
         --enable-dynamic-detection)
             ENABLE_DYNAMIC_DETECTION="ON"
             export DFTRACER_ENABLE_DYNAMIC_DETECTION="ON"
+            shift
+            ;;
+        --generate-interfaces)
+            GENERATE_INTERFACES="ON"
+            export DFTRACER_GENERATE_INTERFACES="ON"
             shift
             ;;
         --enable-hwloc)
@@ -496,6 +515,8 @@ echo "Enable Tests: ${ENABLE_TESTS}"
 echo "Enable Function Tracing: ${ENABLE_FTRACING}"
 echo "Enable HIP Tracing: ${ENABLE_HIP_TRACING}"
 echo "Enable MPI: ${ENABLE_MPI}"
+echo "Enable HDF5: ${ENABLE_HDF5}"
+echo "Generate Interfaces: ${GENERATE_INTERFACES}"
 echo "Disable HWLOC: ${DISABLE_HWLOC}"
 echo "Enable DLIO Tests: ${ENABLE_DLIO_TESTS}"
 echo "Enable Paper Tests: ${ENABLE_PAPER_TESTS}"
@@ -549,9 +570,11 @@ export DFTRACER_ENABLE_TESTS="${ENABLE_TESTS}"
 export DFTRACER_ENABLE_FTRACING="${ENABLE_FTRACING}"
 export DFTRACER_ENABLE_HIP_TRACING="${ENABLE_HIP_TRACING}"
 export DFTRACER_ENABLE_MPI="${ENABLE_MPI}"
+export DFTRACER_ENABLE_HDF5="${ENABLE_HDF5}"
 export DFTRACER_DISABLE_HWLOC="${DISABLE_HWLOC}"
 export DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS="${ENABLE_DLIO_TESTS}"
 export DFTRACER_ENABLE_PAPER_TESTS="${ENABLE_PAPER_TESTS}"
+export DFTRACER_GENERATE_INTERFACES="${GENERATE_INTERFACES}"
 
 if [ -n "${INSTALL_PREFIX}" ]; then
     export DFTRACER_INSTALL_DIR="${INSTALL_PREFIX}"
@@ -753,6 +776,8 @@ else
         "-DDFTRACER_ENABLE_FTRACING=${ENABLE_FTRACING}"
         "-DDFTRACER_ENABLE_HIP_TRACING=${ENABLE_HIP_TRACING}"
         "-DDFTRACER_ENABLE_MPI=${ENABLE_MPI}"
+        "-DDFTRACER_ENABLE_HDF5=${ENABLE_HDF5}"
+        "-DDFTRACER_GENERATE_INTERFACES=${GENERATE_INTERFACES}"
         "-DDFTRACER_DISABLE_HWLOC=${DISABLE_HWLOC}"
         "-DDFTRACER_ENABLE_TESTS=${ENABLE_TESTS}"
         "-DDFTRACER_ENABLE_DLIO_BENCHMARK_TESTS=${ENABLE_DLIO_TESTS}"

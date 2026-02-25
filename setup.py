@@ -94,6 +94,10 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-DDFTRACER_ENABLE_HIP_TRACING={enable_hip_tracing}"]
         enable_mpi = os.environ.get("DFTRACER_ENABLE_MPI", "OFF")
         cmake_args += [f"-DDFTRACER_ENABLE_MPI={enable_mpi}"]
+        enable_hdf5 = os.environ.get("DFTRACER_ENABLE_HDF5", "OFF")
+        cmake_args += [f"-DDFTRACER_ENABLE_HDF5={enable_hdf5}"]
+        generate_interfaces = os.environ.get("DFTRACER_GENERATE_INTERFACES", "OFF")
+        cmake_args += [f"-DDFTRACER_GENERATE_INTERFACES={generate_interfaces}"]
         disable_hwloc = os.environ.get("DFTRACER_DISABLE_HWLOC", "ON")
         cmake_args += [f"-DDFTRACER_DISABLE_HWLOC={disable_hwloc}"]
         cmake_args += [f"-DDFTRACER_PYTHON_EXE={sys.executable}"]
