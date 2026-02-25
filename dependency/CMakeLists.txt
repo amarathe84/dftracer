@@ -25,7 +25,7 @@ if(DFTRACER_GENERATE_INTERFACES)
   string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_GENERATE_INTERFACES=ON")
 endif()
 
-install_external_project(brahma 3.0.0 "BRAHMA" https://github.com/izzet/brahma.git fix/auto-discovery-generation ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
+install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/hariharan-devarajan/brahma.git v1.0.2 ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
 find_package(yaml-cpp QUIET)

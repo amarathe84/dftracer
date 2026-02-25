@@ -295,7 +295,7 @@ else()
                 find_package(HDF5 QUIET COMPONENTS C)
         endif()
 
-        find_package(brahma 3.0.0 REQUIRED)
+        find_package(brahma 4.0.0 REQUIRED)
 
         if(${brahma_FOUND})
                 message(STATUS "[BRAHMA] found brahma at ${BRAHMA_INCLUDE_DIRS}")
