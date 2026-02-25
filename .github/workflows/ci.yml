@@ -72,23 +72,23 @@ jobs:
           sudo apt-get update && sudo apt-get install -y --no-install-recommends \
             build-essential \
             ca-certificates \
-            clang-15 \
+            clang \
             cmake \
             curl \
             gcovr \
             git \
             hwloc \
             jq \
-            libclang-15-dev \
+            libclang-dev \
             libhdf5-mpich-dev \
             libhwloc-dev \
             libmpich-dev \
             libyaml-cpp-dev \
-            llvm-15-dev \
+            llvm-dev \
             mpich \
             ninja-build \
             pkg-config \
-            python3-clang-15 \
+            python3-clang \
             python3-dev \
             python3-venv \
             software-properties-common \
@@ -117,13 +117,61 @@ jobs:
           fi
           source $VENV_DIR/bin/activate
           python -m pip install --upgrade pip setuptools wheel
-          pip install pybind11 ninja cmake>=3.12 setuptools>=64 setuptools-scm>=8 clang==15.*
+          pip install pybind11 ninja cmake>=3.12 setuptools>=64 setuptools-scm>=8
           pip install pytest>=6.0 numpy>=1.24.3 pandas>=2.0.3
+
+      - name: Install matching Python clang bindings
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+          CLANG_MAJOR="$(clang --version | sed -n 's/.* version \([0-9][0-9]*\)\..*/\1/p' | head -n 1)"
+          if [ -z "$CLANG_MAJOR" ]; then
+            echo "Failed to detect system clang major version"
+            exit 1
+          fi
+          echo "Detected system clang major: $CLANG_MAJOR"
+
+          if ! pip install "clang==${CLANG_MAJOR}.*"; then
+            pip install clang
+          fi
+
+          CLANG_PY_VERSION="$(python -m pip show clang | awk '/^Version:/{print $2}' | head -n 1)"
+          if [ -z "$CLANG_PY_VERSION" ]; then
+            echo "Failed to determine installed Python clang version"
+            exit 1
+          fi
+          CLANG_PY_MAJOR="${CLANG_PY_VERSION%%.*}"
+          echo "Installed Python clang version: $CLANG_PY_VERSION"
+
+          CONSTRAINT_FILE="$PWD/pip-constraints.txt"
+          echo "clang==${CLANG_PY_MAJOR}.*" > "$CONSTRAINT_FILE"
+          echo "PIP_CONSTRAINT=$CONSTRAINT_FILE" >> $GITHUB_ENV
+
+          LLVM_CMAKE_DIR=""
+          if command -v "llvm-config-${CLANG_MAJOR}" >/dev/null 2>&1; then
+            LLVM_CMAKE_DIR="$(llvm-config-${CLANG_MAJOR} --cmakedir)"
+          elif command -v llvm-config >/dev/null 2>&1; then
+            LLVM_CMAKE_DIR="$(llvm-config --cmakedir)"
+          fi
+
+          if [ -n "$LLVM_CMAKE_DIR" ]; then
+            CLANG_CMAKE_DIR="$(dirname "$LLVM_CMAKE_DIR")/clang"
+            if [ -f "$CLANG_CMAKE_DIR/ClangConfig.cmake" ]; then
+              echo "DFTRACER_LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+              echo "DFTRACER_CLANG_DIR=$CLANG_CMAKE_DIR" >> $GITHUB_ENV
+            fi
+          fi
 
       - name: Build and test with pip install mode
         run: |
           source ${VENV_PATH:-venv}/bin/activate
-          export DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON"
+          DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON"
+          if [ -n "${DFTRACER_CLANG_DIR:-}" ]; then
+            DFTRACER_CMAKE_ARGS="${DFTRACER_CMAKE_ARGS};-DClang_DIR=${DFTRACER_CLANG_DIR}"
+          fi
+          if [ -n "${DFTRACER_LLVM_DIR:-}" ]; then
+            DFTRACER_CMAKE_ARGS="${DFTRACER_CMAKE_ARGS};-DLLVM_DIR=${DFTRACER_LLVM_DIR}"
+          fi
+          export DFTRACER_CMAKE_ARGS
           ./autobuild.sh --enable-tests --enable-coverage --enable-mpi --enable-hdf5 --generate-interfaces
           pip install -r test/py/requirements.txt
 
