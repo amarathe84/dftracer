@@ -599,7 +599,7 @@ if [ "$INSTALL_MODE" = "pip" ]; then
     "${PYTHON_EXE}" -m pip install --upgrade pip
     
     # Install build dependencies with normal isolation (not using --no-build-isolation here)
-    BUILD_DEPS_CMD=("${PYTHON_EXE}" -m pip install --upgrade setuptools wheel setuptools-scm pybind11 scikit-build-core cmake ninja)
+    BUILD_DEPS_CMD=("${PYTHON_EXE}" -m pip install --upgrade setuptools wheel setuptools-scm pybind11 scikit-build-core cmake ninja "clang==15.*")
     
     if [ "$VERBOSE" = "1" ]; then
         echo -e "${BLUE}[VERBOSE] Build dependencies command: ${BUILD_DEPS_CMD[*]}${NC}"
