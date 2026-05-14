@@ -300,6 +300,74 @@ else()
                 message(FATAL_ERROR "-- [DFTRACER] yaml-cpp is needed for ${PROJECT_NAME} build")
         endif()
 
+        set(DFTRACER_LIBUV_LINK_LIBS "")
+        set(DFTRACER_LIBUV_LIBRARY_DIRS "")
+        find_package(libuv 1.0.0 QUIET)
+        if(libuv_FOUND)
+                if(TARGET libuv::libuv)
+                        list(APPEND DFTRACER_LIBUV_LINK_LIBS libuv::libuv)
+                endif()
+                if(DEFINED LIBUV_INCLUDE_DIRS)
+                        include_directories(${LIBUV_INCLUDE_DIRS})
+                endif()
+                if(DEFINED libuv_INCLUDE_DIRS)
+                        include_directories(${libuv_INCLUDE_DIRS})
+                endif()
+                if(DEFINED LIBUV_LIBRARIES)
+                        list(APPEND DFTRACER_LIBUV_LINK_LIBS ${LIBUV_LIBRARIES})
+                endif()
+                if(DEFINED libuv_LIBRARIES)
+                        list(APPEND DFTRACER_LIBUV_LINK_LIBS ${libuv_LIBRARIES})
+                endif()
+                if(DEFINED LIBUV_LIBRARY_DIRS)
+                        list(APPEND DFTRACER_LIBUV_LIBRARY_DIRS ${LIBUV_LIBRARY_DIRS})
+                endif()
+                if(DEFINED libuv_LIBRARY_DIRS)
+                        list(APPEND DFTRACER_LIBUV_LIBRARY_DIRS ${libuv_LIBRARY_DIRS})
+                endif()
+                message(STATUS "[DFTRACER] found libuv")
+        else()
+                message(STATUS "[DFTRACER] libuv package config not found, will try manual discovery")
+        endif()
+
+        # Fallback: if find_package succeeded but exported no usable target/variable,
+        # locate the library and header manually (handles libuv installs that only
+        # ship a pkg-config or bare library without a CMake config target).
+        if(NOT DFTRACER_LIBUV_LINK_LIBS)
+                find_path(DFTRACER_LIBUV_INCLUDE_DIR uv.h
+                        HINTS ${CMAKE_INSTALL_PREFIX}/include)
+                find_library(DFTRACER_LIBUV_LIBRARY NAMES uv libuv
+                        HINTS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
+                if(DFTRACER_LIBUV_INCLUDE_DIR)
+                        include_directories(${DFTRACER_LIBUV_INCLUDE_DIR})
+                endif()
+                if(DFTRACER_LIBUV_LIBRARY)
+                        list(APPEND DFTRACER_LIBUV_LINK_LIBS ${DFTRACER_LIBUV_LIBRARY})
+                        get_filename_component(_uv_lib_dir "${DFTRACER_LIBUV_LIBRARY}" DIRECTORY)
+                        if(_uv_lib_dir)
+                                list(APPEND DFTRACER_LIBUV_LIBRARY_DIRS ${_uv_lib_dir})
+                        endif()
+                endif()
+        endif()
+
+        if(NOT DFTRACER_LIBUV_LINK_LIBS)
+                message(FATAL_ERROR "-- [DFTRACER] libuv is needed for ${PROJECT_NAME}_service build")
+        endif()
+
+        foreach(_lib ${DFTRACER_LIBUV_LINK_LIBS})
+                if(IS_ABSOLUTE "${_lib}")
+                        get_filename_component(_lib_dir "${_lib}" DIRECTORY)
+                        if(_lib_dir)
+                                list(APPEND DFTRACER_LIBUV_LIBRARY_DIRS ${_lib_dir})
+                        endif()
+                endif()
+        endforeach()
+
+        set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${DFTRACER_LIBUV_LINK_LIBS})
+        if(DFTRACER_LIBUV_LIBRARY_DIRS)
+                list(APPEND DEPENDENCY_LIBRARY_DIRS ${DFTRACER_LIBUV_LIBRARY_DIRS})
+        endif()
+
         # Optional Dependencies
         # =============================================================================
         if (DFTRACER_BUILD_PYTHON_BINDINGS)
@@ -445,12 +513,26 @@ else()
 
         set(DFTRACER_DEBUG_TARGETS ${PROJECT_NAME}_core_dbg ${PROJECT_NAME}_preload_dbg)
 
+        set(DFTRACER_SERVICE_TELEMETRY_SRC
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/cpu_collector.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/memory_collector.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/io_collector.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/network_collector.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/telemetry_factory.cpp)
+
+        add_library(${PROJECT_NAME}_service_telemetry STATIC ${DFTRACER_SERVICE_TELEMETRY_SRC})
+        target_include_directories(${PROJECT_NAME}_service_telemetry
+                PUBLIC
+                ${CMAKE_CURRENT_SOURCE_DIR}/src
+                ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        target_link_libraries(${PROJECT_NAME}_service_telemetry ${DEPENDENCY_LIB} ${PROJECT_NAME}_core)
+
         set(DFTRACER_SERVICE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/service.cpp)
 
         add_executable(${PROJECT_NAME}_service ${DFTRACER_SERVICE_SRC})
         add_executable(dftracer::dftracer_service ALIAS ${PROJECT_NAME}_service)
         target_compile_definitions(${PROJECT_NAME}_service PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
-        target_link_libraries(${PROJECT_NAME}_service ${DEPENDENCY_LIB} ${PROJECT_NAME}_core)
+        target_link_libraries(${PROJECT_NAME}_service ${DEPENDENCY_LIB} ${PROJECT_NAME}_core ${PROJECT_NAME}_service_telemetry)
 
         if(DFTRACER_BUILD_PYTHON_BINDINGS)
                 pybind11_add_module(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/python/dftracer.cpp)
@@ -478,10 +560,6 @@ else()
         target_sources(${PROJECT_NAME}_preload_dbg
                 PRIVATE
                 ${DFTRACER_PRELOAD_SRC}
-        )
-        target_sources(${PROJECT_NAME}_service
-                PRIVATE
-                ${DFTRACER_SERVICE_SRC}
         )
         target_include_directories(${PROJECT_NAME}_core
                 PRIVATE

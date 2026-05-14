@@ -14,12 +14,14 @@
 #define DFT_YAML_ENABLE "enable"
 // TRACER
 #define DFT_YAML_TRACER "tracer"
+#define DFT_YAML_PROFILER "profiler"
 #define DFT_YAML_TRACER_INIT "init"
 #define DFT_YAML_TRACER_LOG_FILE "log_file"
 #define DFT_YAML_TRACER_DATA_DIRS "data_dirs"
 #define DFT_YAML_TRACER_LOG_LEVEL "log_level"
 #define DFT_YAML_TRACER_COMPRESSION "compression"
 #define DFT_YAML_TRACER_INTERVAL "interval"
+#define DFT_YAML_TRACER_LIBUV_THREADS "libuv_threads"
 // GOTCHA
 #define DFT_YAML_GOTCHA "gotcha"
 #define DFT_YAML_GOTCHA_PRIORITY "priority"
@@ -44,6 +46,7 @@
 #define DFT_YAML_INTERNAL_SIGNALS "bind_signals"
 #define DFT_YAML_INTERNAL_THROW_ERROR "throw_error"
 #define DFT_YAML_INTERNAL_WRITE_BUFFER_SIZE "write_buffer_size"
+
 template <>
 std::shared_ptr<dftracer::ConfigurationManager>
     dftracer::Singleton<dftracer::ConfigurationManager>::instance = nullptr;
@@ -69,6 +72,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
       throw_error(false),
       write_buffer_size(16 * 1024 * 1024),
       trace_interval_ms(1000),
+      libuv_thread_count(1),
       aggregation_enable(false),
       aggregation_type(AggregationType::AGGREGATION_TYPE_FULL),
       aggregation_inclusion_rules(),
@@ -134,6 +138,20 @@ dftracer::ConfigurationManager::ConfigurationManager()
       }
       DFTRACER_LOG_DEBUG("YAML ConfigurationManager.compression %d",
                          this->compression);
+      if (config[DFT_YAML_TRACER][DFT_YAML_TRACER_LIBUV_THREADS]) {
+        this->libuv_thread_count =
+            config[DFT_YAML_TRACER][DFT_YAML_TRACER_LIBUV_THREADS].as<size_t>();
+      }
+      DFTRACER_LOG_DEBUG("YAML ConfigurationManager.libuv_thread_count %zu",
+                         this->libuv_thread_count);
+    }
+    if (config[DFT_YAML_PROFILER] &&
+        config[DFT_YAML_PROFILER][DFT_YAML_TRACER_LIBUV_THREADS]) {
+      this->libuv_thread_count =
+          config[DFT_YAML_PROFILER][DFT_YAML_TRACER_LIBUV_THREADS].as<size_t>();
+      DFTRACER_LOG_DEBUG(
+          "YAML ConfigurationManager.libuv_thread_count (profiler) %zu",
+          this->libuv_thread_count);
     }
     if (config[DFT_YAML_GOTCHA]) {
       if (config[DFT_YAML_GOTCHA][DFT_YAML_GOTCHA_PRIORITY]) {
@@ -261,6 +279,15 @@ dftracer::ConfigurationManager::ConfigurationManager()
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.trace_interval_ms %d",
                        this->trace_interval_ms);
+    const char *env_libuv_threads = getenv(DFTRACER_LIBUV_THREADS);
+    if (env_libuv_threads != nullptr) {
+      this->libuv_thread_count = atoi(env_libuv_threads);
+    }
+    if (this->libuv_thread_count == 0) {
+      this->libuv_thread_count = 1;
+    }
+    DFTRACER_LOG_DEBUG("ENV ConfigurationManager.libuv_thread_count %zu",
+                       this->libuv_thread_count);
     const char *env_init_type = getenv(DFTRACER_INIT);
     if (env_init_type != nullptr) {
       convert(env_init_type, this->init_type);

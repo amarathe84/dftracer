@@ -33,6 +33,7 @@ class ConfigurationManager {
   bool throw_error;
   size_t write_buffer_size;
   size_t trace_interval_ms;
+  size_t libuv_thread_count;
   bool aggregation_enable;
   AggregationType aggregation_type;
   std::vector<std::string> aggregation_inclusion_rules;

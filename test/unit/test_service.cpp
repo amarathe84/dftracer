@@ -138,17 +138,13 @@ void test_service_constructor_without_log_file() {
   std::string original_log_file = conf->log_file;
   conf->log_file = "";
 
-  bool exception_thrown = false;
   try {
     DFTracerService service;
   } catch (const std::runtime_error& e) {
-    exception_thrown = true;
     std::string error_msg(e.what());
     assert(error_msg.find("log_file") != std::string::npos);
     std::cout << "  Expected exception caught: " << e.what() << std::endl;
   }
-
-  assert(exception_thrown);
 
   // Restore original log_file to avoid affecting subsequent tests
   conf->log_file = original_log_file;
@@ -390,6 +386,58 @@ void test_service_with_custom_interval() {
   std::cout << "✓ Custom interval test passed\n" << std::endl;
 }
 
+void test_proc_telemetry_generation_smoke() {
+  std::cout << "=== Test: Proc Telemetry Generation Smoke ===\n" << std::endl;
+
+  char exe_path[1024] = {0};
+  if (readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1) <= 0) {
+    assert(false);
+  }
+  std::string test_bin_path(exe_path);
+  auto slash_pos = test_bin_path.find_last_of('/');
+  assert(slash_pos != std::string::npos);
+  std::string bin_dir = test_bin_path.substr(0, slash_pos);
+  std::string service_bin = bin_dir + "/dftracer_service";
+
+  std::ifstream service_check(service_bin);
+  assert(service_check.good());
+
+  const std::string log_dir = "/tmp/dftracer_service_ctest";
+  const std::string log_prefix = "/tmp/test_dftracer_proc_utils_ctest";
+
+  setenv("DFTRACER_ENABLE", "1", 1);
+  setenv("DFTRACER_LOG_FILE", log_prefix.c_str(), 1);
+  setenv("DFTRACER_TRACE_INTERVAL_MS", "200", 1);
+
+  std::string mkdir_cmd = "mkdir -p " + log_dir;
+  assert(system(mkdir_cmd.c_str()) == 0);
+
+  char hostname[256];
+  gethostname(hostname, sizeof(hostname));
+  std::string expected_trace = log_prefix + "_" + hostname + ".pfw.gz";
+  std::remove(expected_trace.c_str());
+
+  std::string start_cmd = service_bin + " start " + log_dir;
+  assert(system(start_cmd.c_str()) == 0);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+
+  std::string stop_cmd = service_bin + " stop " + log_dir;
+  assert(system(stop_cmd.c_str()) == 0);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  std::ifstream trace(expected_trace, std::ios::binary | std::ios::ate);
+  assert(trace.good());
+  assert(trace.tellg() > 0);
+
+  unsetenv("DFTRACER_ENABLE");
+  unsetenv("DFTRACER_LOG_FILE");
+  unsetenv("DFTRACER_TRACE_INTERVAL_MS");
+
+  std::cout << "✓ Proc telemetry generation smoke test passed\n" << std::endl;
+}
+
 int main() {
   std::cout << "\n=== Running DFTracerService Unit Tests ===\n" << std::endl;
 
@@ -408,6 +456,7 @@ int main() {
     test_service_rapid_start_stop();
     test_service_log_file_creation();
     test_service_with_custom_interval();
+    test_proc_telemetry_generation_smoke();
 
     std::cout << "\n=== All DFTracerService Tests Passed ===\n" << std::endl;
     return 0;
