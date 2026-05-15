@@ -20,6 +20,12 @@ Required environment variables:
 Useful optional variable:
 
 - ``DFTRACER_TRACE_INTERVAL_MS=<milliseconds>`` (default is 1000)
+- ``DFTRACER_LIBUV_THREADS=<count>`` (default is 1)
+
+Optional YAML key (when using ``DFTRACER_CONFIGURATION``):
+
+- ``tracer.libuv_threads``
+- ``profiler.libuv_threads``
 
 The service appends hostname information to ``DFTRACER_LOG_FILE`` and writes
 one PID file per service process at ``<log_dir>/dftracer_server.pid``.
@@ -32,6 +38,7 @@ Single-node quick start
    export DFTRACER_ENABLE=1
    export DFTRACER_LOG_FILE=/path/to/output/dftracer-service
    export DFTRACER_TRACE_INTERVAL_MS=1000
+   export DFTRACER_LIBUV_THREADS=1
 
    # Start in daemon mode
    dftracer_service start /tmp/dftracer_service
@@ -59,6 +66,7 @@ Examples below assume:
    export DFTRACER_ENABLE=1
    export DFTRACER_LOG_FILE=/path/to/output/dftracer-service
    export DFTRACER_TRACE_INTERVAL_MS=1000
+   export DFTRACER_LIBUV_THREADS=1
 
 Run on multiple nodes with mpirun
 =================================

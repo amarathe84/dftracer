@@ -66,5 +66,27 @@ struct MemMetrics {
   unsigned long long DirectMap2M = 0;
   unsigned long long DirectMap1G = 0;
 };
+
+struct IOMetrics {
+  unsigned long long read_count = 0;      // Number of reads
+  unsigned long long read_bytes = 0;      // Bytes read
+  unsigned long long read_time_ms = 0;    // Time spent reading (ms)
+  unsigned long long write_count = 0;     // Number of writes
+  unsigned long long write_bytes = 0;     // Bytes written
+  unsigned long long write_time_ms = 0;   // Time spent writing (ms)
+  unsigned long long io_in_progress = 0;  // I/O operations in progress
+};
+
+struct NetworkMetrics {
+  unsigned long long rx_bytes = 0;    // Bytes received
+  unsigned long long rx_packets = 0;  // Packets received
+  unsigned long long rx_errors = 0;   // Receive errors
+  unsigned long long rx_dropped = 0;  // Packets dropped on RX
+  unsigned long long tx_bytes = 0;    // Bytes transmitted
+  unsigned long long tx_packets = 0;  // Packets transmitted
+  unsigned long long tx_errors = 0;   // Transmit errors
+  unsigned long long tx_dropped = 0;  // Packets dropped on TX
+  unsigned long long collisions = 0;  // Collision count
+};
 }  // namespace dftracer
 #endif  // DFTRACER_SERVER_COMMON_DATASTRUCTURE

@@ -4,27 +4,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <atomic>
-#include <chrono>
-#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <thread>
-
-// Atomic flag to control server running state
-std::atomic<bool> running(true);
-
-// Signal handler for SIGINT to gracefully shut down the server
-static void server_signal_handler(int signal) {
-  if (signal == SIGINT) {
-    running = false;
-    std::cout << "\nSIGINT received. Shutting down server..." << std::endl;
-  }
-}
-
-// Path to the PID file for the server process
-const char* PID_FILE = "/tmp/dftracer_server.pid";
 
 // Daemonize the process: detach from terminal and run in background
 void daemonize() {
@@ -63,6 +45,11 @@ int main(int argc, char* argv[]) {
   std::string err_log_path = log_dir + "/dftracer_server.err";
 
   if (cmd == "start") {
+    auto conf =
+        dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
+    auto libuv_threads = std::to_string(conf->libuv_thread_count);
+    setenv("UV_THREADPOOL_SIZE", libuv_threads.c_str(), 1);
+
     // Start the server as a daemon
     daemonize();
 
@@ -75,20 +62,9 @@ int main(int argc, char* argv[]) {
     pid_file << getpid();
     pid_file.close();
 
-    // Register signal handler for graceful shutdown
-    std::signal(SIGINT, server_signal_handler);
-
-    // Create and start the DFTracerService server
+    // Create and start the DFTracerService server. start() blocks until SIGINT.
     auto server = dftracer::DFTracerService();
     server.start();
-
-    // Main loop: keep running until SIGINT is received
-    while (running) {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-
-    // Stop the server and clean up
-    server.stop();
 
     // Remove the PID file
     std::remove(pid_file_path.c_str());

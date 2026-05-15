@@ -34,6 +34,7 @@ INSTALL_DFANALYZER="${INSTALL_DFANALYZER:-0}"  # Install dfanalyzer extras
 DRY_RUN="${DRY_RUN:-0}"
 VERBOSE="${VERBOSE:-0}"
 ENABLE_COVERAGE="${ENABLE_COVERAGE:-0}"  # Build with coverage support
+RUN_SMOKE_TEST="${RUN_SMOKE_TEST:-1}"
 
 # Print usage
 usage() {
@@ -65,6 +66,7 @@ OPTIONS:
     --install-mode MODE     Installation mode: pip or cmake (default: pip)
     --dry-run               Show what would be done without executing
     --verbose, -v           Enable verbose output
+    --skip-smoke-test       Skip post-build dftracer_service start/stop smoke test
 
 ENVIRONMENT VARIABLES (same as setup.py):
     DFTRACER_BUILD_TYPE                     Build type (Release/Debug)
@@ -238,6 +240,10 @@ while [[ $# -gt 0 ]]; do
             VERBOSE="1"
             shift
             ;;
+        --skip-smoke-test)
+            RUN_SMOKE_TEST="0"
+            shift
+            ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
             usage
@@ -262,6 +268,75 @@ execute_cmd() {
     else
         "$@"
     fi
+}
+
+run_service_smoke_test() {
+    if [ "${RUN_SMOKE_TEST}" != "1" ]; then
+        echo -e "${YELLOW}Skipping smoke test (--skip-smoke-test)${NC}"
+        return 0
+    fi
+
+    local service_bin=""
+    if command -v dftracer_service &> /dev/null; then
+        service_bin="$(command -v dftracer_service)"
+    elif [ -x "${BUILD_DIR}/bin/dftracer_service" ]; then
+        service_bin="${BUILD_DIR}/bin/dftracer_service"
+    elif [ -x "${INSTALL_PREFIX}/bin/dftracer_service" ]; then
+        service_bin="${INSTALL_PREFIX}/bin/dftracer_service"
+    elif [ -n "${VIRTUAL_ENV}" ] && [ -x "${VIRTUAL_ENV}/bin/dftracer_service" ]; then
+        service_bin="${VIRTUAL_ENV}/bin/dftracer_service"
+    elif [ -n "${CONDA_PREFIX}" ] && [ -x "${CONDA_PREFIX}/bin/dftracer_service" ]; then
+        service_bin="${CONDA_PREFIX}/bin/dftracer_service"
+    fi
+
+    if [ -z "${service_bin}" ]; then
+        echo -e "${RED}Smoke test failed: could not find dftracer_service binary${NC}"
+        return 1
+    fi
+
+    local smoke_dir="${BUILD_DIR}/smoke_service"
+    local pid_file="${smoke_dir}/dftracer_server.pid"
+    mkdir -p "${smoke_dir}"
+
+    (
+        export DFTRACER_ENABLE=1
+        export DFTRACER_LOG_FILE="${smoke_dir}/trace"
+        export DFTRACER_TRACE_INTERVAL_MS=100
+        : "${DFTRACER_LIBUV_THREADS:=1}"
+        export DFTRACER_LIBUV_THREADS
+
+        echo -e "${BLUE}Running dftracer_service smoke test with ${service_bin}${NC}"
+        if ! "${service_bin}" start "${smoke_dir}"; then
+            echo -e "${RED}Smoke test failed: service start command failed${NC}"
+            exit 1
+        fi
+
+        for _ in $(seq 1 20); do
+            if [ -f "${pid_file}" ]; then
+                break
+            fi
+            sleep 0.1
+        done
+
+        if [ ! -f "${pid_file}" ]; then
+            echo -e "${RED}Smoke test failed: pid file was not created${NC}"
+            exit 1
+        fi
+
+        if ! "${service_bin}" stop "${smoke_dir}"; then
+            echo -e "${RED}Smoke test failed: service stop command failed${NC}"
+            exit 1
+        fi
+
+        if [ -f "${pid_file}" ]; then
+            echo -e "${RED}Smoke test failed: pid file still exists after stop${NC}"
+            exit 1
+        fi
+
+        echo -e "${GREEN}Smoke test passed: dftracer_service started and stopped successfully${NC}"
+        exit 0
+    )
+    return $?
 }
 
 # Auto-detect Python if not explicitly disabled
@@ -502,6 +577,7 @@ echo "Enable Paper Tests: ${ENABLE_PAPER_TESTS}"
 echo "Parallel Jobs: ${JOBS}"
 echo "Install Mode: ${INSTALL_MODE}"
 echo "Install DFAnalyzer: ${INSTALL_DFANALYZER}"
+echo "Run Smoke Test: ${RUN_SMOKE_TEST}"
 echo "Dry Run: ${DRY_RUN}"
 echo "Verbose: ${VERBOSE}"
 echo ""
@@ -689,6 +765,10 @@ if [ "$INSTALL_MODE" = "pip" ]; then
     
     # Print success message
     if [ "$DRY_RUN" = "0" ]; then
+        if ! run_service_smoke_test; then
+            exit 1
+        fi
+
         echo ""
         echo -e "${GREEN}=== Build and Installation Successful ===${NC}"
         echo ""
@@ -990,6 +1070,10 @@ else
         echo "No changes were made. Remove --dry-run to execute."
     else
         if cmake --install .; then
+            if ! run_service_smoke_test; then
+                exit 1
+            fi
+
             echo ""
             echo -e "${GREEN}=== Build and Installation Successful ===${NC}"
             echo ""
