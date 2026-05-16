@@ -167,8 +167,13 @@ function(dftracer_install_external_project name version var_name url tag install
 endfunction()
 
 # Backward-compatible name; prefer dftracer_install_external_project in new code.
-function(install_external_project)
-  dftracer_install_external_project(${ARGV})
+# Forward each positional arg explicitly (not `${ARGV}`) so empty trailing
+# args like an empty `configure_args` are preserved rather than dropped.
+function(install_external_project name version var_name url tag install_prefix configure_args)
+  dftracer_install_external_project(
+    "${name}" "${version}" "${var_name}" "${url}" "${tag}"
+    "${install_prefix}" "${configure_args}"
+  )
 endfunction()
 
 # ###############################################################

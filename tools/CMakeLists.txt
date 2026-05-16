@@ -95,13 +95,53 @@ set(_generator_cmd
 # resolves typedefs like `hid_t` to `int`, producing overrides whose
 # signatures don't match brahma's parent class.
 set(_extra_include_dirs "")
+
+# Helper: extract -I include dirs from `<wrapper> -show` output. Works for
+# h5cc/h5pcc and mpicc/mpicxx on every distro, Spack, EasyBuild, and modules.
+# The wrapper always reports the toolchain's exact include dirs.
+function(_dftracer_collect_includes_from_wrapper _wrapper _out_var)
+  find_program(_${_wrapper}_exe NAMES ${_wrapper})
+  if(NOT _${_wrapper}_exe)
+    return()
+  endif()
+  execute_process(
+    COMMAND ${_${_wrapper}_exe} -show
+    OUTPUT_VARIABLE _wrapper_out
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(NOT _wrapper_out)
+    return()
+  endif()
+  separate_arguments(_wrapper_tokens UNIX_COMMAND "${_wrapper_out}")
+  set(_collected "")
+  foreach(_tok IN LISTS _wrapper_tokens)
+    if(_tok MATCHES "^-I(.+)$")
+      list(APPEND _collected "${CMAKE_MATCH_1}")
+    endif()
+  endforeach()
+  set(${_out_var} ${${_out_var}} ${_collected} PARENT_SCOPE)
+endfunction()
+
 if(DFTRACER_ENABLE_HDF5)
-  # HDF5 is already located in the parent CMakeLists before this subdir is
-  # added, so HDF5_INCLUDE_DIRS is populated.
+  # 1. CMake's find_package(HDF5) result.
   if(HDF5_INCLUDE_DIRS)
     list(APPEND _extra_include_dirs ${HDF5_INCLUDE_DIRS})
   endif()
+  # 2. Imported target if available; modern CMake's source of truth.
+  foreach(_hdf5_target hdf5::hdf5 HDF5::HDF5 hdf5::hdf5_hl)
+    if(TARGET ${_hdf5_target})
+      get_target_property(_hdf5_iface_inc ${_hdf5_target} INTERFACE_INCLUDE_DIRECTORIES)
+      if(_hdf5_iface_inc)
+        list(APPEND _extra_include_dirs ${_hdf5_iface_inc})
+      endif()
+    endif()
+  endforeach()
+  # 3. Query the HDF5 compiler wrapper.
+  foreach(_hdf5_wrapper h5pcc h5pcc.mpich h5pcc.openmpi h5cc)
+    _dftracer_collect_includes_from_wrapper(${_hdf5_wrapper} _extra_include_dirs)
+  endforeach()
 endif()
+
 if(DFTRACER_ENABLE_MPI)
   # MPI's find_package call lives later in the parent CMakeLists, so its
   # cache vars aren't yet populated when this subdir runs. Look it up here.
@@ -111,6 +151,7 @@ if(DFTRACER_ENABLE_MPI)
       list(APPEND _extra_include_dirs ${${_mpi_var}})
     endif()
   endforeach()
+  _dftracer_collect_includes_from_wrapper(mpicc _extra_include_dirs)
 endif()
 if(_extra_include_dirs)
   list(REMOVE_DUPLICATES _extra_include_dirs)
@@ -141,3 +182,6 @@ message(STATUS "[DFTRACER] Interfaces: ${_requested_interfaces}")
 message(STATUS "[DFTRACER] Brahma include root: ${_brahma_include_root}")
 message(STATUS "[DFTRACER] Generator Python: ${_dftracer_generator_python}")
 message(STATUS "[DFTRACER] Generator script: ${_generator_script}")
+message(STATUS "[DFTRACER] HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
+message(STATUS "[DFTRACER] MPI_C_INCLUDE_DIRS: ${MPI_C_INCLUDE_DIRS}")
+message(STATUS "[DFTRACER] Extra include dirs forwarded to regen: ${_extra_include_dirs}")

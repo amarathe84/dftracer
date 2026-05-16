@@ -401,7 +401,7 @@ def find_virtual_methods(
 ) -> List[Tuple[cix.Cursor, List[str], List[str], List[str]]]:
     args = ["-x", "c++", "-std=c++17"] + [f"-I{inc}" for inc in include_dirs] + [f"-D{d}" for d in defines]
     if header_path.name == "hdf5.h":
-        args.append("-DH5_DOXYGEN=1")
+        pass
     tu = index.parse(str(header_path), args=args)
 
     out: List[Tuple[cix.Cursor, List[str], List[str], List[str]]] = []

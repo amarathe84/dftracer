@@ -1,6 +1,6 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/dftracer-utils.cmake)
-install_external_project(cpp-logger 1.0.0 "CPP_LOGGER" https://github.com/hariharan-devarajan/cpp-logger.git v0.0.6 ${CMAKE_INSTALL_PREFIX} "")
-install_external_project(gotcha 2.3.2 "gotcha" https://github.com/LLNL/GOTCHA.git 1.0.7 ${CMAKE_INSTALL_PREFIX} "-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
+dftracer_install_external_project(cpp-logger 1.0.0 "CPP_LOGGER" https://github.com/hariharan-devarajan/cpp-logger.git v0.0.6 ${CMAKE_INSTALL_PREFIX} "")
+dftracer_install_external_project(gotcha 2.3.2 "gotcha" https://github.com/LLNL/GOTCHA.git 1.0.7 ${CMAKE_INSTALL_PREFIX} "-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
 
 # Build Brahma with MPI and/or HDF5 support based on dftracer options
 set(BRAHMA_CONFIGURE_ARGS "")
@@ -42,7 +42,7 @@ endif()
 #     mpi.h aren't picked up (yields "is" on Ubuntu mpich).
 #   - CMakeLists.txt: build the library + install rules in the same
 #     configure pass as interface generation.
-install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/rayandrew/brahma.git fix/bugs-in-checking-mpi-version ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
+dftracer_install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/rayandrew/brahma.git fix/bugs-in-checking-mpi-version ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
 find_package(yaml-cpp QUIET)

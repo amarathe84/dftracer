@@ -161,6 +161,17 @@ jobs:
             fi
           fi
 
+          # Pin libclang for brahma's discover script
+          for CANDIDATE_LIBCLANG in \
+              "/usr/lib/llvm-${CLANG_MAJOR}/lib/libclang.so" \
+              "/usr/lib/x86_64-linux-gnu/libclang-${CLANG_MAJOR}.so.1"; do
+            if [ -e "$CANDIDATE_LIBCLANG" ]; then
+              echo "LIBCLANG_PATH=$CANDIDATE_LIBCLANG" >> $GITHUB_ENV
+              echo "Set LIBCLANG_PATH=$CANDIDATE_LIBCLANG"
+              break
+            fi
+          done
+
       - name: Build and test with pip install mode
         run: |
           source ${VENV_PATH:-venv}/bin/activate
