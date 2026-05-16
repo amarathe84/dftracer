@@ -339,13 +339,24 @@ def clang_resource_include_dir() -> List[str]:
     return [include_path] if os.path.isdir(include_path) else []
 
 
-def build_include_dirs(brahma_include_root: Path, workspace_root: Path) -> List[str]:
+def build_include_dirs(
+    brahma_include_root: Path,
+    workspace_root: Path,
+    extra_include_dirs: Sequence[str] = (),
+) -> List[str]:
     dirs = [
         str(brahma_include_root),
         str(workspace_root / "install/include"),
         str(workspace_root / "build/src/gotcha/include"),
         str(workspace_root / "build/src/gotcha-build/include"),
     ]
+    # Caller-supplied dirs go BEFORE auto-detected ones so build-system paths
+    # (e.g., the exact MPI/HDF5 include dirs CMake's find_package picked) win
+    # over h5cc/mpicc auto-discovery, which fails silently on some distros
+    # (e.g., Ubuntu mpich's h5cc -show returns no -I flags). When typedefs
+    # like hid_t can't be resolved, libclang falls back to the underlying
+    # type and the generated overrides won't match brahma's parent class.
+    dirs.extend(extra_include_dirs)
     mpi_inc_dirs = include_dirs_from_command(["mpicc", "--showme:incdirs"])
     dirs.extend(mpi_inc_dirs)
     if not mpi_inc_dirs:
@@ -659,6 +670,21 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to libclang shared library",
     )
+    parser.add_argument(
+        "--extra-include-dir",
+        action="append",
+        default=[],
+        dest="extra_include_dirs",
+        metavar="DIR",
+        help=(
+            "Additional include dir to pass to libclang (repeatable). "
+            "Use this to inject the exact MPI/HDF5 paths CMake found, e.g. "
+            "via $<TARGET_PROPERTY:hdf5,INTERFACE_INCLUDE_DIRECTORIES>; "
+            "needed because h5cc/mpicc auto-discovery is unreliable on some "
+            "distros (Ubuntu mpich) and unresolved typedefs silently degrade "
+            "to their underlying type."
+        ),
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     return parser.parse_args()
 
@@ -694,7 +720,11 @@ def main() -> int:
     if not clang_format_exe:
         print("[warn] clang-format not found in PATH; generated files will not be formatted.")
 
-    include_dirs = build_include_dirs(brahma_include_root, workspace_root)
+    include_dirs = build_include_dirs(
+        brahma_include_root,
+        workspace_root,
+        extra_include_dirs=args.extra_include_dirs,
+    )
     index = cix.Index.create()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

@@ -23,9 +23,26 @@ if(DFTRACER_GENERATE_INTERFACES)
   endif()
 
   string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_GENERATE_INTERFACES=ON")
+
+  # Forward Clang_DIR / LLVM_DIR to brahma so its find_package(Clang) does not
+  # accidentally pick up an unrelated LLVM install on the system (e.g., a
+  # version whose dev libraries are missing on CI runners).
+  if(DEFINED Clang_DIR AND NOT "${Clang_DIR}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";-DClang_DIR=${Clang_DIR}")
+  endif()
+
+  if(DEFINED LLVM_DIR AND NOT "${LLVM_DIR}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";-DLLVM_DIR=${LLVM_DIR}")
+  endif()
 endif()
 
-install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/hariharan-devarajan/brahma.git v1.0.2 ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
+# TODO: revert to hariharan-devarajan/brahma once the fixes on this branch
+# are merged and a release is tagged. The branch contains:
+#   - MPI version detection: filter `#define` lines so comment lines in
+#     mpi.h aren't picked up (yields "is" on Ubuntu mpich).
+#   - CMakeLists.txt: build the library + install rules in the same
+#     configure pass as interface generation.
+install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/rayandrew/brahma.git fix/bugs-in-checking-mpi-version ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
 find_package(yaml-cpp QUIET)

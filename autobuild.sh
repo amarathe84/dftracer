@@ -641,7 +641,11 @@ if [ "$INSTALL_MODE" = "pip" ]; then
         
         # Do a full build which includes dependencies
         FULL_BUILD_CMD=("${PYTHON_EXE}" -m pip install --no-cache-dir ".[${PIP_EXTRAS}]")
-        
+
+        if [ "${DFTRACER_PIP_NO_BUILD_ISOLATION:-0}" = "1" ]; then
+            FULL_BUILD_CMD+=(--no-build-isolation)
+        fi
+
         if [ "$VERBOSE" = "1" ]; then
             FULL_BUILD_CMD+=(-v)
             echo -e "${BLUE}[VERBOSE] Full build command: ${FULL_BUILD_CMD[*]}${NC}"
@@ -675,7 +679,11 @@ if [ "$INSTALL_MODE" = "pip" ]; then
         
         # Build and install with pip (will use the virtual environment)
         PIP_CMD=("${PYTHON_EXE}" -m pip install --no-cache-dir ".[${PIP_EXTRAS}]")
-        
+
+        if [ "${DFTRACER_PIP_NO_BUILD_ISOLATION:-0}" = "1" ]; then
+            PIP_CMD+=(--no-build-isolation)
+        fi
+
         if [ "$VERBOSE" = "1" ]; then
             PIP_CMD+=(-v)
         fi

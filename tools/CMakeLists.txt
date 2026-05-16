@@ -89,6 +89,36 @@ set(_generator_cmd
   --interfaces ${_requested_interfaces}
 )
 
+# Forward exact MPI/HDF5 include dirs that CMake's find_package located. The
+# regen script's auto-detection (h5cc/mpicc -show) misses paths on some
+# distros (Ubuntu mpich), and without the system headers libclang silently
+# resolves typedefs like `hid_t` to `int`, producing overrides whose
+# signatures don't match brahma's parent class.
+set(_extra_include_dirs "")
+if(DFTRACER_ENABLE_HDF5)
+  # HDF5 is already located in the parent CMakeLists before this subdir is
+  # added, so HDF5_INCLUDE_DIRS is populated.
+  if(HDF5_INCLUDE_DIRS)
+    list(APPEND _extra_include_dirs ${HDF5_INCLUDE_DIRS})
+  endif()
+endif()
+if(DFTRACER_ENABLE_MPI)
+  # MPI's find_package call lives later in the parent CMakeLists, so its
+  # cache vars aren't yet populated when this subdir runs. Look it up here.
+  find_package(MPI QUIET COMPONENTS C CXX)
+  foreach(_mpi_var MPI_C_INCLUDE_DIRS MPI_CXX_INCLUDE_DIRS MPI_C_INCLUDE_PATH MPI_CXX_INCLUDE_PATH)
+    if(${_mpi_var})
+      list(APPEND _extra_include_dirs ${${_mpi_var}})
+    endif()
+  endforeach()
+endif()
+if(_extra_include_dirs)
+  list(REMOVE_DUPLICATES _extra_include_dirs)
+endif()
+foreach(_inc IN LISTS _extra_include_dirs)
+  list(APPEND _generator_cmd --extra-include-dir ${_inc})
+endforeach()
+
 if(DFTRACER_GENERATE_INTERFACES_VERBOSE)
   list(APPEND _generator_cmd --verbose)
 endif()
