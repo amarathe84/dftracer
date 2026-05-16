@@ -2,7 +2,7 @@
     "cmake.configureArgs": [
         "-DDFTRACER_INSTALL_DEPENDENCIES=OFF",
         "-DDFTRACER_ENABLE_TESTS=ON",
-        "-DENABLE_PAPER_TESTS=OFF",
+        "-DENABLE_PAPER_TESTS=ON",
         "-DDFTRACER_ENABLE_DLIO_BENCHMARK_TESTS=OFF",
         "-DDFTRACER_DISABLE_HWLOC=OFF",
         "-DCMAKE_INSTALL_PREFIX=/usr/workspace/haridev/dftracer/install",

@@ -16,10 +16,14 @@
     auto num_value =                                                   \
         dynamic_cast<dftracer::NumberAggregationValue<TYPE> *>(VALUE); \
     if (num_value) {                                                   \
-      metadata->insert("count", num_value->count);                     \
-      metadata->insert(base_key + "_sum", num_value->sum);             \
-      metadata->insert(base_key + "_min", num_value->min);             \
-      metadata->insert(base_key + "_max", num_value->max);             \
+      metadata->insert(DFTRACER_AGGREGATOR_COUNT, num_value->count);   \
+      if (num_value->count > 1) {                                      \
+        metadata->insert(base_key + "_sum", num_value->sum);           \
+        metadata->insert(base_key + "_min", num_value->min);           \
+        metadata->insert(base_key + "_max", num_value->max);           \
+      } else {                                                         \
+        metadata->insert(base_key, num_value->sum);                    \
+      }                                                                \
     }                                                                  \
     BLOCK;                                                             \
   }
@@ -28,9 +32,32 @@
   if (id == typeid(TYPE)) {                                                  \
     auto num_value = dynamic_cast<dftracer::AggregatedValue<TYPE> *>(VALUE); \
     if (num_value) {                                                         \
-      metadata->insert("count", num_value->count);                           \
+      metadata->insert(DFTRACER_AGGREGATOR_COUNT, num_value->count);         \
     }                                                                        \
     BLOCK;                                                                   \
+  }
+
+#define DFTRACER_ANY_NUM_AGGREGATE_UPDATE_MACRO(TYPE, VALUE, BLOCK)    \
+  if (id == typeid(TYPE)) {                                            \
+    auto this_casted =                                                 \
+        dynamic_cast<dftracer::NumberAggregationValue<TYPE> *>(this);  \
+    auto value_casted =                                                \
+        dynamic_cast<dftracer::NumberAggregationValue<TYPE> *>(VALUE); \
+    if (this_casted && value_casted) {                                 \
+      this_casted->update(value_casted);                               \
+    }                                                                  \
+    return;                                                            \
+  }
+
+#define DFTRACER_ANY_GENERAL_AGGREGATE_UPDATE_MACRO(TYPE, VALUE, BLOCK)       \
+  if (id == typeid(TYPE)) {                                                   \
+    auto this_casted = dynamic_cast<dftracer::AggregatedValue<TYPE> *>(this); \
+    auto value_casted =                                                       \
+        dynamic_cast<dftracer::AggregatedValue<TYPE> *>(VALUE);               \
+    if (this_casted && value_casted) {                                        \
+      this_casted->update(value_casted);                                      \
+    }                                                                         \
+    return;                                                                   \
   }
 
 #define DFTRACER_COMPARE_TYPE(TYPE, VALUE, BLOCK)            \

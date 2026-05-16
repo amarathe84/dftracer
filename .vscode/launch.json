@@ -49,8 +49,8 @@
             "env": {
                 "LD_LIBRARY_PATH": "/usr/tce/packages/mvapich2/mvapich2-2.3.7-gcc-11.2.1/lib:/usr/tce/packages/texlive/texlive-20220321/lib:${workspaceFolder}/build/lib64",
                 "DFTRACER_LOG_LEVEL": "INFO",
-                "DFTRACER_ENABLE_AGGREGATION": "SELECTIVE",
-                "DFTRACER_AGGREGATION_FILE": "${workspaceFolder}/test/rules.yaml",
+                "DFTRACER_ENABLE_AGGREGATION": "1",
+                "DFTRACER_AGGREGATION_TYPE": "FULL",
                 "DFTRACER_TRACE_COMPRESSION": "1",
                 "DFTRACER_DATA_DIR": "${workspaceFolder}/build/test/data",
                 "DFTRACER_LOG_FILE": "${workspaceFolder}/build/test/test_cpp_basic_only",
@@ -172,6 +172,17 @@
                 "DFTRACER_ENABLE": "1",
                 "DFTRACER_INC_METADATA": "1",
                 "LD_PRELOAD": "${workspaceFolder}/build/lib64/libdftracer_preload_dbg.so",
+            }
+        },
+        {
+            "name": "test_aggregated_value",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test_aggregated_value",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/build/lib64"
             }
         },
     ]

@@ -18,11 +18,9 @@ bool Aggregator::aggregate(AggregatedKey& aggregated_key) {
   bool is_first_local = is_first;
   is_first = false;
   std::unique_lock<std::shared_mutex> lock(mtx);
-  // Calculate time_interval as the largest multiple of
-  // config->trace_interval_ms * 1000 less than or equal to start_time
-  TimeResolution interval_us = config->trace_interval_ms * 1000;
+  // Use cached interval_us to avoid division per event
   aggregated_key.time_interval =
-      (aggregated_key.time_interval / interval_us) * interval_us;
+      (aggregated_key.time_interval / cached_interval_us) * cached_interval_us;
   auto time_iter = aggregated_data_.find(aggregated_key.time_interval);
   if (time_iter == aggregated_data_.end()) {
     aggregated_data_.insert_or_assign(
@@ -36,18 +34,26 @@ bool Aggregator::aggregate(AggregatedKey& aggregated_key) {
 
   insert_number_value(aggregated_key.time_interval, aggregated_key, "dur",
                       aggregated_key.duration);
-  for (const auto& [key, value] : *aggregated_key.additional_keys) {
-    if (value.first == MetadataType::MT_VALUE) {
-      DFTRACER_FOR_EACH_NUMERIC_TYPE(DFTRACER_ANY_CAST_MACRO, value.second, {
-        insert_number_value(aggregated_key.time_interval, aggregated_key, key,
-                            res.value());
-        continue;
-      })
-      DFTRACER_FOR_EACH_STRING_TYPE(DFTRACER_ANY_CAST_MACRO, value.second, {
-        insert_general_value(aggregated_key.time_interval, aggregated_key, key,
-                             res.value());
-        continue;
-      })
+
+  // Fast path: skip metadata iteration if empty
+  if (aggregated_key.additional_keys &&
+      !aggregated_key.additional_keys->empty()) {
+    for (const auto& [key, value] : *aggregated_key.additional_keys) {
+      // Only process MT_VALUE metadata (skip MT_KEY)
+      if (std::get<0>(value) == MetadataType::MT_VALUE) {
+        DFTRACER_FOR_EACH_NUMERIC_TYPE(
+            DFTRACER_ANY_CAST_MACRO, std::get<1>(value), {
+              insert_number_value(aggregated_key.time_interval, aggregated_key,
+                                  key, res.value());
+              continue;
+            })
+        DFTRACER_FOR_EACH_STRING_TYPE(
+            DFTRACER_ANY_CAST_MACRO, std::get<1>(value), {
+              insert_general_value(aggregated_key.time_interval, aggregated_key,
+                                   key, res.value());
+              continue;
+            })
+      }
     }
   }
 

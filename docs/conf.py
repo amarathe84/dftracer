@@ -26,7 +26,7 @@ author = "Hariharan Devarajan"
 # Read library version from VERSION file
 import os
 
-version_file = os.path.join(os.path.dirname(__file__), "..", "VERSION")
+version_file = os.path.join(os.path.dirname(__file__), "..", "PACKAGE_VERSION")
 with open(version_file, "r") as f:
     full_version = f.read().strip()
 

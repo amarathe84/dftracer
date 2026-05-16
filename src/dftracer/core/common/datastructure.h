@@ -7,6 +7,7 @@
 #include <dftracer/core/common/logging.h>
 #include <dftracer/core/common/macros.h>
 #include <dftracer/core/common/typedef.h>
+#include <dftracer/core/utils/utils.h>
 
 // standard headers
 #include <stddef.h>
@@ -26,22 +27,38 @@ namespace dftracer {
 
 class Metadata {
  private:
-  typedef std::unordered_map<std::string, std::pair<MetadataType, std::any>>
+  typedef std::unordered_map<std::string,
+                             std::tuple<MetadataType, std::any, std::size_t>>
       DataMap;
   DataMap data;
+  std::size_t get_hash(const std::any &value, const MetadataType &type) const {
+    if (type != MetadataType::MT_KEY) {
+      return 0;
+    }
+    DFTRACER_FOR_EACH_NUMERIC_TYPE(DFTRACER_ANY_CAST_MACRO, value, {
+      auto val = std::to_string(res.value());
+      return std::hash<std::string>()(val);
+    });
+    DFTRACER_FOR_EACH_STRING_TYPE(DFTRACER_ANY_CAST_MACRO, value, {
+      return std::hash<std::string>()(res.value());
+    });
+    return 0;
+  }
 
  public:
   Metadata() {}
   ~Metadata() {}
   std::pair<DataMap::iterator, bool> insert_or_assign(const std::string &key,
                                                       const std::any &value) {
-    auto ret =
-        data.insert_or_assign(key, std::make_pair(MetadataType::MT_KEY, value));
+    auto ret = data.insert_or_assign(
+        key, std::make_tuple(MetadataType::MT_KEY, value,
+                             get_hash(value, MetadataType::MT_KEY)));
     return ret;
   }
   std::pair<DataMap::iterator, bool> insert_or_assign(
       const std::string &key, const std::any &value, const MetadataType &type) {
-    auto ret = data.insert_or_assign(key, std::make_pair(type, value));
+    auto ret = data.insert_or_assign(
+        key, std::make_tuple(type, value, get_hash(value, type)));
     return ret;
   }
   bool contains(const std::string &key) const {
@@ -58,12 +75,15 @@ class Metadata {
 
   std::pair<DataMap::iterator, bool> insert(const std::string &key,
                                             const std::any &value) {
-    return data.insert({key, std::make_pair(MetadataType::MT_KEY, value)});
+    return data.insert(
+        {key, std::make_tuple(MetadataType::MT_KEY, value,
+                              get_hash(value, MetadataType::MT_KEY))});
   }
   std::pair<DataMap::iterator, bool> insert(const std::string &key,
                                             const std::any &value,
                                             const MetadataType &type) {
-    return data.insert({key, std::make_pair(type, value)});
+    return data.insert(
+        {key, std::make_tuple(type, value, get_hash(value, type))});
   }
 
   DataMap::iterator find(const std::string &key) { return data.find(key); }
@@ -72,11 +92,13 @@ class Metadata {
     return data.find(key);
   }
 
-  std::pair<MetadataType, std::any> &operator[](const std::string &key) {
+  std::tuple<MetadataType, std::any, std::size_t> &operator[](
+      const std::string &key) {
     return data[key];
   }
 
-  const std::pair<MetadataType, std::any> &at(const std::string &key) const {
+  const std::tuple<MetadataType, std::any, std::size_t> &at(
+      const std::string &key) const {
     return data.at(key);
   }
 
@@ -109,6 +131,7 @@ struct AggregatedKey {
   TimeResolution duration;
   const char *app_name;
   const int *rank;
+  mutable size_t _cached_hash;  // Cached hash value
 
   AggregatedKey()
       : category(nullptr),
@@ -118,7 +141,8 @@ struct AggregatedKey {
         additional_keys(nullptr),
         duration(0),
         app_name(nullptr),
-        rank(nullptr) {}
+        rank(nullptr),
+        _cached_hash(0) {}
 
   AggregatedKey(ConstEventNameType category_, ConstEventNameType event_name_,
                 TimeResolution time_interval_, TimeResolution duration_,
@@ -131,7 +155,8 @@ struct AggregatedKey {
         additional_keys(metadata_),
         duration(duration_),
         app_name(app_name_),
-        rank(rank_) {}
+        rank(rank_),
+        _cached_hash(0) {}
   AggregatedKey(const AggregatedKey &other)
       : category(other.category),
         event_name(other.event_name),
@@ -140,33 +165,32 @@ struct AggregatedKey {
         additional_keys(other.additional_keys),
         duration(other.duration),
         app_name(other.app_name),
-        rank(other.rank) {}
+        rank(other.rank),
+        _cached_hash(other._cached_hash) {}
   bool operator==(const AggregatedKey &other) const {
-    return category == other.category && event_name == other.event_name &&
-           time_interval == other.time_interval &&
-           thread_id == other.thread_id &&
-           additional_keys == other.additional_keys;
+    if (category != other.category || event_name != other.event_name ||
+        time_interval != other.time_interval || thread_id != other.thread_id) {
+      return false;
+    }
 
     // Compare additional_keys for MetadataType::MT_KEY
     if (additional_keys && other.additional_keys) {
       for (const auto &pair : *additional_keys) {
-        if (pair.second.first == MetadataType::MT_KEY) {
+        if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           auto it = other.additional_keys->find(pair.first);
           if (it == other.additional_keys->end() ||
-              it->second.first != MetadataType::MT_KEY ||
-              it->second.second.type() != pair.second.second.type() ||
-              compare_any(it->second.second, pair.second.second)) {
+              std::get<0>(it->second) != MetadataType::MT_KEY ||
+              std::get<2>(it->second) != std::get<2>(pair.second)) {
             return false;
           }
         }
       }
       for (const auto &pair : *other.additional_keys) {
-        if (pair.second.first == MetadataType::MT_KEY) {
+        if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           auto it = additional_keys->find(pair.first);
           if (it == additional_keys->end() ||
-              it->second.first != MetadataType::MT_KEY ||
-              it->second.second.type() != pair.second.second.type() ||
-              compare_any(it->second.second, pair.second.second)) {
+              std::get<0>(it->second) != MetadataType::MT_KEY ||
+              std::get<2>(it->second) != std::get<2>(pair.second)) {
             return false;
           }
         }
@@ -175,6 +199,7 @@ struct AggregatedKey {
       // One is nullptr, the other is not
       return false;
     }
+    return true;
   }
 };
 
@@ -185,18 +210,24 @@ namespace std {
 template <>
 struct hash<dftracer::AggregatedKey> {
   std::size_t operator()(const dftracer::AggregatedKey &key) const {
+    // Use cached hash if available
+    if (key._cached_hash != 0) {
+      return key._cached_hash;
+    }
+
+    // Hash string members
     std::size_t h1 = std::hash<std::string>()(key.category);
     std::size_t h2 = std::hash<std::string>()(key.event_name);
     std::size_t h3 = std::hash<TimeResolution>()(key.time_interval);
     std::size_t h4 = std::hash<ThreadID>()(key.thread_id);
 
     std::size_t h5 = 0;
-    if (key.additional_keys) {
+    if (key.additional_keys && !key.additional_keys->empty()) {
       for (const auto &pair : *key.additional_keys) {
-        if (pair.second.first == MetadataType::MT_KEY) {
+        if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           h5 ^= std::hash<std::string>()(pair.first);
           // For std::any, we can only hash the type info
-          h5 ^= pair.second.second.type().hash_code();
+          h5 ^= std::get<2>(pair.second);
         }
       }
     }
@@ -208,6 +239,8 @@ struct hash<dftracer::AggregatedKey> {
     result ^= h4 + 0x9e3779b9 + (result << 6) + (result >> 2);
     result ^= h5 + 0x9e3779b9 + (result << 6) + (result >> 2);
 
+    // Cache for next time
+    const_cast<dftracer::AggregatedKey &>(key)._cached_hash = result;
     return result;
   }
 };
@@ -248,7 +281,7 @@ struct AggregatedValue : public BaseAggregatedValue {
   size_t count;
   void update(AggregatedValue<T> *value) { count += value->count; }
   AggregatedValue(T value)
-      : BaseAggregatedValue(this, ValueType::VALUE_TYPE_STRING, typeid(T)),
+      : BaseAggregatedValue(nullptr, ValueType::VALUE_TYPE_STRING, typeid(T)),
         count(1) {}
 };
 
@@ -257,13 +290,13 @@ struct NumberAggregationValue : public AggregatedValue<T> {
  public:
   T min, max, sum;
   NumberAggregationValue(NumberAggregationValue<T> &value)
-      : AggregatedValue<T>(value, this, ValueType::VALUE_TYPE_NUMBER,
+      : AggregatedValue<T>(value, nullptr, ValueType::VALUE_TYPE_NUMBER,
                            typeid(T)),
         min(value.min),
         max(value.max),
         sum(value.sum) {}
   NumberAggregationValue(T value)
-      : AggregatedValue<T>(this, ValueType::VALUE_TYPE_NUMBER, typeid(T)),
+      : AggregatedValue<T>(nullptr, ValueType::VALUE_TYPE_NUMBER, typeid(T)),
         min(value),
         max(value),
         sum(value) {}

@@ -37,6 +37,7 @@ YAML configuration supported. WE need to set DFTRACER_CONFIGURATION ENV variable
       data_dirs: ./data # Colon separated paths that will be traced for I/O accesses by profiler. For tracing all directories use the string "all" (not recommended).
       log_level: DEBUG  # Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
       compression: True # Enable trace compression (default True)
+      libuv_threads: 1  # Number of libuv worker threads for dftracer_service (default 1)
     gotcha:
       priority: 1       # PRIORITY of DFTracer in GOTCHA (default: True).
     features:
@@ -81,6 +82,7 @@ ENV Variables supported
                                             this won't work for AI workloads which uses ``fork`` and ``spawn`` without a clear ``exit``.
                                             Also, it does not work for workloads which uses ``exec`` and rewrite process buffer state.
    DFTRACER_TRACE_INTERVAL_MS       INT     Setup the interval for trace collection (default 1000).
+    DFTRACER_LIBUV_THREADS           INT     Number of libuv worker threads for ``dftracer_service`` (default 1).
    DFTRACER_ENABLE_AGGREGATION      INT     set aggregation type (default 0).
    DFTRACER_AGGREGATION_TYPE        STRING  set aggregation type FULL or SELECTIVE (default: FULL).
                                             If SELECTIVE need to set DFTRACER_AGGREGATION_FILE else all are aggregated.

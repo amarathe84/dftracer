@@ -26,7 +26,7 @@ int dftracer::Function::exit_event(std::string &name, TimeResolution &start) {
 
 void __cyg_profile_func_enter(void *func, void *caller) {
   auto function = dftracer::Function::get_instance();
-  if (!function->is_active()) return;
+  if (!function || !function->is_active() || !function->logger) return;
   Dl_info info;
   if (!dladdr(func, &info)) return;
   if (!info.dli_fname) return;
@@ -45,8 +45,8 @@ void __cyg_profile_func_enter(void *func, void *caller) {
 
 void __cyg_profile_func_exit(void *func, void *caller) {
   auto function = dftracer::Function::get_instance();
+  if (!function || !function->is_active() || !function->logger) return;
   auto end_time = function->logger->get_time();
-  if (!function->is_active()) return;
   Dl_info info;
   if (!dladdr(func, &info)) return;
   if (!info.dli_fname) return;
@@ -61,7 +61,7 @@ void __cyg_profile_func_exit(void *func, void *caller) {
   TimeResolution start_time;
   int status = function->exit_event(event_name, start_time);
   if (status == 0) {
-    dftracer::Metadata *metadata;
+    dftracer::Metadata *metadata = nullptr;
     if (function->logger->include_metadata) {
       metadata = new dftracer::Metadata();
       const char *so = info.dli_fname;

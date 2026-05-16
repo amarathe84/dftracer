@@ -106,3 +106,4 @@ examples/dfanalyzer/outputs/
 # data
 *.pfw*
 .secrets.example
+logs/

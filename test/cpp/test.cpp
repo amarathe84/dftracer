@@ -49,6 +49,9 @@ int main(int argc, char *argv[]) {
   FILE *fh = fopen(filename, "w+");
   if (fh != nullptr) {
     fwrite("hello", sizeof("hello"), 1, fh);
+    fwrite("hello", sizeof("hello"), 1, fh);
+    fwrite("hello", sizeof("hello"), 1, fh);
+    fwrite("hello", sizeof("hello"), 1, fh);
     fclose(fh);
   }
   link(filename, filename_link);
@@ -75,6 +78,8 @@ int main(int argc, char *argv[]) {
   linkat(dd, "demofile.txt", dd, "demofile_link2.txt", 0);
   chdir(dir);
   int fd = openat(dd, "demofile.txt", O_RDONLY);
+  if (fd != -1) close(fd);
+  fd = openat(dd, "demofile2.txt", O_WRONLY | O_CREAT, 777);
   if (fd != -1) close(fd);
   fd = openat(dd, "demofile2.txt", O_WRONLY | O_CREAT, 777);
   if (fd != -1) close(fd);

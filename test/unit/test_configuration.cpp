@@ -28,6 +28,7 @@ void test_default_configuration() {
   assert(config->aggregation_enable == false);
   assert(config->compression == true);  // Constructor default is true
   assert(config->metadata == false);
+  assert(config->libuv_thread_count == 1);
 
   std::cout << "✓ Default configuration tests passed" << std::endl;
 }
@@ -86,6 +87,14 @@ void test_environment_variables() {
   auto config6 = std::make_shared<ConfigurationManager>();
   assert(config6->trace_interval_ms == 2000);
   unsetenv("DFTRACER_TRACE_INTERVAL_MS");
+  unsetenv("DFTRACER_ENABLE");
+
+  // Test libuv thread count (requires DFTRACER_ENABLE=1)
+  setenv("DFTRACER_ENABLE", "1", 1);
+  setenv("DFTRACER_LIBUV_THREADS", "8", 1);
+  auto config7 = std::make_shared<ConfigurationManager>();
+  assert(config7->libuv_thread_count == 8);
+  unsetenv("DFTRACER_LIBUV_THREADS");
   unsetenv("DFTRACER_ENABLE");
 
   std::cout << "✓ Environment variable configuration tests passed" << std::endl;

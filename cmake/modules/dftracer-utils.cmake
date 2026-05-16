@@ -133,7 +133,7 @@ endfunction()
 # ###############################################################
 include(ExternalProject)
 
-function(install_external_project name version var_name url tag install_prefix configure_args)
+function(dftracer_install_external_project name version var_name url tag install_prefix configure_args)
   find_package(${name} ${version} QUIET)
   set(found_var ${name}_FOUND)
 
@@ -164,6 +164,11 @@ function(install_external_project name version var_name url tag install_prefix c
     link_directories(${install_prefix}/lib64)
     include_directories(${CMAKE_BINARY_DIR}/src/${name}/include)
   endif()
+endfunction()
+
+# Backward-compatible name; prefer dftracer_install_external_project in new code.
+function(install_external_project)
+  dftracer_install_external_project(${ARGV})
 endfunction()
 
 # ###############################################################

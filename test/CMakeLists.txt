@@ -662,7 +662,7 @@ if(DFTRACER_HDF5_ENABLE)
     endif()
 endif()
 
-if(ENABLE_PAPER_TESTS)
+if(DFTRACER_ENABLE_PAPER_TESTS)
     add_subdirectory(paper)
 endif()
 

@@ -37,9 +37,13 @@ class Function {
 
  public:
   std::shared_ptr<DFTLogger> logger;
-  Function() {
+  bool enable;
+  Function() : enable(false) {
     DFTRACER_LOG_DEBUG("Function class intercepted", "");
     logger = DFT_LOGGER_INIT();
+    auto conf =
+        dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
+    enable = conf && conf->enable;
   }
 
   void finalize() {
@@ -54,7 +58,7 @@ class Function {
     }
     return instance;
   }
-  bool is_active() { return !stop_trace; }
+  bool is_active() { return !stop_trace && enable; }
   int enter_event(std::string &name);
   int exit_event(std::string &name, TimeResolution &start);
 };

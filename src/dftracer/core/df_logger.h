@@ -45,13 +45,10 @@ typedef std::chrono::high_resolution_clock chrono;
 class DFTLogger {
  private:
   std::shared_ptr<dftracer::ConfigurationManager> config;
-  std::shared_mutex level_mtx;
   std::shared_mutex map_mtx;
   bool throw_error;
   bool is_init, dftracer_tid;
   ProcessID process_id;
-  uint32_t level;
-  std::vector<int> index_stack;
   std::unordered_map<std::string, HashType> computed_hash;
   std::atomic_int index;
   bool is_aggregated;
@@ -87,8 +84,6 @@ class DFTLogger {
   DFTLogger(bool init_log = false)
       : is_init(false),
         dftracer_tid(false),
-        level(0),
-        index_stack(),
         computed_hash(),
         index(0),
         is_aggregated(false),
@@ -112,13 +107,18 @@ class DFTLogger {
 #endif
     }
     this->buffer_manager =
-        dftracer::Singleton<dftracer::BufferManager>::get_new_instance();
+        dftracer::Singleton<dftracer::BufferManager>::get_instance();
     this->is_init = true;
   }
   ~DFTLogger() {
     for (auto &hash : computed_hash) {
       if (hash.second) free(hash.second);
     }
+  }
+
+  void reinitialize() {
+    DFTRACER_LOG_DEBUG("DFTLogger.reinitialize", "");
+    index.store(0);
   }
 
   inline HashType get_hash(char *name) {
@@ -214,41 +214,25 @@ class DFTLogger {
     DFTRACER_LOG_INFO("Writing trace to %s", log_file.c_str());
   }
 
-  inline void clean_stack() {
-    std::unique_lock<std::shared_mutex> lock(level_mtx);
-    index_stack.clear();
-  }
   inline int enter_event() {
-    std::unique_lock<std::shared_mutex> lock(level_mtx);
-    index++;
-    level++;
-    int current_index = index.load();
-    index_stack.push_back(current_index);
-    return current_index;
+    // @Note @ray:
+    // intentionally a no-op: kept for API compatibility;
+    // level/stack tracking previously handled here has been removed.
+    return 0;
   }
 
   inline void exit_event() {
-    std::unique_lock<std::shared_mutex> lock(level_mtx);
-    level--;
-    index_stack.pop_back();
+    // @Note @ray:
+    // intentionally a no-op: kept for API compatibility;
+    // level/stack tracking previously handled here has been removed.
   }
 
-  inline int get_parent() {
-    std::shared_lock<std::shared_mutex> lock(level_mtx);
-    size_t stack_size = index_stack.size();
-    if (level > 1 && stack_size > 1 && level <= stack_size) {
-      return index_stack[level - 2];
-    }
-    return -1;
-  }
-
-  inline int get_current() {
-    std::shared_lock<std::shared_mutex> lock(level_mtx);
-    size_t stack_size = index_stack.size();
-    if (level > 0 && stack_size > 0 && level <= stack_size) {
-      return index_stack[level - 1];
-    }
-    return -1;
+  inline int increment_index() {
+    // @Note @ray:
+    // This method is atomic and thread-safe
+    // ensuring that each event gets a unique index even in multi-threaded
+    // scenarios.
+    return ++index;
   }
 
   inline HashType has_hash(ConstEventNameType key) {
@@ -322,32 +306,18 @@ class DFTLogger {
       if (metadata != nullptr) {
         auto iter = metadata->find("tid");
         if (iter != metadata->end()) {
-          tid = std::any_cast<ThreadID>(iter->second.second);
+          tid = std::any_cast<ThreadID>(std::get<1>(iter->second));
           metadata->erase("tid");
         }
       }
 #endif
     }
-    int local_index = 0;
-    if (!include_metadata) {
-      local_index = index.load();
-    }
-    if (metadata != nullptr && !is_aggregated) {
-      metadata->insert_or_assign("level", level);
-      int parent_index_value = get_parent();
-      metadata->insert_or_assign("p_idx", parent_index_value);
-    }
+
+    int current_index = this->increment_index();
     handle_mpi(tid);
-    if (include_metadata) {
-      int current_index = get_current();
-      this->buffer_manager->log_data_event(current_index, event_name, category,
-                                           start_time, duration, metadata,
-                                           this->process_id, tid);
-    } else {
-      this->buffer_manager->log_data_event(local_index, event_name, category,
-                                           start_time, duration, metadata,
-                                           this->process_id, tid);
-    }
+    this->buffer_manager->log_data_event(current_index, event_name, category,
+                                         start_time, duration, metadata,
+                                         this->process_id, tid);
     has_entry = true;
   }
 
@@ -421,7 +391,7 @@ class DFTLogger {
     if (this->buffer_manager != nullptr) {
       auto meta = new dftracer::Metadata();
       meta->insert_or_assign("num_events", index.load());
-      int current_index = this->enter_event();
+      int current_index = this->increment_index();
       auto tid = df_gettid();
       this->buffer_manager->log_data_event(current_index, "end", "dftracer",
                                            this->get_time(), 0, meta,
@@ -430,7 +400,6 @@ class DFTLogger {
       this->buffer_manager->finalize(index.load(), this->process_id, true);
       DFTRACER_LOG_INFO("Released Logger", "");
       this->buffer_manager.reset();
-      clean_stack();
     } else {
       DFTRACER_LOG_WARN("DFTLogger.finalize buffer manager not initialized",
                         "");

@@ -1,3 +1,4 @@
+#include <dftracer/core/common/constants.h>
 #include <dftracer/core/common/datastructure.h>
 #include <dftracer/core/common/logging.h>
 #include <dftracer/core/common/singleton.h>
@@ -32,18 +33,19 @@ bool JsonLines::convert_metadata(Metadata *metadata,
   for (const auto &item : *metadata) {
     has_meta = true;
     DFTRACER_FOR_EACH_NUMERIC_TYPE(
-        DFTRACER_ANY_CAST_MACRO, item.second.second, {
+        DFTRACER_ANY_CAST_MACRO, std::get<1>(item.second), {
           meta_stream << "\"" << item.first << "\":" << res.value();
           if (i < meta_size - 1) meta_stream << ",";
           i++;
           continue;
         });
-    DFTRACER_FOR_EACH_STRING_TYPE(DFTRACER_ANY_CAST_MACRO, item.second.second, {
-      meta_stream << "\"" << item.first << "\":\"" << res.value() << "\"";
-      if (i < meta_size - 1) meta_stream << ",";
-      i++;
-      continue;
-    });
+    DFTRACER_FOR_EACH_STRING_TYPE(
+        DFTRACER_ANY_CAST_MACRO, std::get<1>(item.second), {
+          meta_stream << "\"" << item.first << "\":\"" << res.value() << "\"";
+          if (i < meta_size - 1) meta_stream << ",";
+          i++;
+          continue;
+        });
     i++;
   }
   if (meta_stream.str().size() > 0 && meta_stream.str().back() == ',') {
