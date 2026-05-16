@@ -89,16 +89,29 @@ set(_generator_cmd
   --interfaces ${_requested_interfaces}
 )
 
-# Forward exact MPI/HDF5 include dirs that CMake's find_package located. The
-# regen script's auto-detection (h5cc/mpicc -show) misses paths on some
-# distros (Ubuntu mpich), and without the system headers libclang silently
-# resolves typedefs like `hid_t` to `int`, producing overrides whose
-# signatures don't match brahma's parent class.
+# Pin the same libclang the rest of the build uses.
+set(_dftracer_libclang_path "")
+if(DEFINED ENV{LIBCLANG_PATH} AND EXISTS "$ENV{LIBCLANG_PATH}")
+  set(_dftracer_libclang_path "$ENV{LIBCLANG_PATH}")
+elseif(DEFINED LLVM_DIR)
+  foreach(_libclang_candidate
+      "${LLVM_DIR}/../../libclang.so"
+      "${LLVM_DIR}/../../../lib/libclang.so")
+    get_filename_component(_libclang_candidate "${_libclang_candidate}" REALPATH)
+    if(EXISTS "${_libclang_candidate}")
+      set(_dftracer_libclang_path "${_libclang_candidate}")
+      break()
+    endif()
+  endforeach()
+endif()
+if(_dftracer_libclang_path)
+  list(APPEND _generator_cmd --libclang-path ${_dftracer_libclang_path})
+endif()
+
+# Forward exact MPI/HDF5 include dirs that CMake's find_package located.
 set(_extra_include_dirs "")
 
-# Helper: extract -I include dirs from `<wrapper> -show` output. Works for
-# h5cc/h5pcc and mpicc/mpicxx on every distro, Spack, EasyBuild, and modules.
-# The wrapper always reports the toolchain's exact include dirs.
+# Helper: extract -I include dirs from `<wrapper> -show` output.
 function(_dftracer_collect_includes_from_wrapper _wrapper _out_var)
   find_program(_${_wrapper}_exe NAMES ${_wrapper})
   if(NOT _${_wrapper}_exe)
@@ -185,3 +198,4 @@ message(STATUS "[DFTRACER] Generator script: ${_generator_script}")
 message(STATUS "[DFTRACER] HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
 message(STATUS "[DFTRACER] MPI_C_INCLUDE_DIRS: ${MPI_C_INCLUDE_DIRS}")
 message(STATUS "[DFTRACER] Extra include dirs forwarded to regen: ${_extra_include_dirs}")
+message(STATUS "[DFTRACER] libclang forwarded to regen: ${_dftracer_libclang_path}")
