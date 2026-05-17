@@ -150,7 +150,11 @@ function(dftracer_install_external_project name version var_name url tag install
       GIT_REPOSITORY ${url}
       GIT_TAG ${tag}
       TIMEOUT 10
-      CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${install_prefix}" ${configure_args}
+      CMAKE_ARGS
+      "-DCMAKE_INSTALL_PREFIX=${install_prefix}"
+      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+      ${configure_args}
       BUILD_COMMAND make -j
       INSTALL_COMMAND make install -j
       LOG_DOWNLOAD ON
@@ -163,8 +167,13 @@ function(dftracer_install_external_project name version var_name url tag install
 endfunction()
 
 # Backward-compatible name; prefer dftracer_install_external_project in new code.
-function(install_external_project)
-  dftracer_install_external_project(${ARGV})
+# Forward each positional arg explicitly (not `${ARGV}`) so empty trailing
+# args like an empty `configure_args` are preserved rather than dropped.
+function(install_external_project name version var_name url tag install_prefix configure_args)
+  dftracer_install_external_project(
+    "${name}" "${version}" "${var_name}" "${url}" "${tag}"
+    "${install_prefix}" "${configure_args}"
+  )
 endfunction()
 
 # ###############################################################
@@ -178,11 +187,11 @@ function(dftracer_debug_config target_list)
 endfunction()
 
 function(print_all_variables)
-    message(STATUS "CMake Variables:")
-    get_cmake_property(_variableNames VARIABLES)
-    list(SORT _variableNames)
+  message(STATUS "CMake Variables:")
+  get_cmake_property(_variableNames VARIABLES)
+  list(SORT _variableNames)
 
-    foreach(_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
+  foreach(_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+  endforeach()
 endfunction()

@@ -36,16 +36,48 @@ target_compile_options(test_c_api_coverage PRIVATE ${DFTRACER_FUNCTION_FLAGS})
 target_link_libraries(test_c_api_coverage ${PROJECT_NAME}_core_dbg)
 add_dependencies(test_c_api_coverage ${PROJECT_NAME}_core_dbg)
 
-function(set_common_properties test_name)
+function(set_common_linker_properties test_name)
+    set(_ld_paths ${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR})
+
+    if(ARGN)
+        list(APPEND _ld_paths ${ARGN})
+    endif()
+
+    if(NOT "${DFTRACER_TEST_LD_LIBRARY_PATH}" STREQUAL "")
+        string(REPLACE ":" ";" _dftracer_test_ld_paths "${DFTRACER_TEST_LD_LIBRARY_PATH}")
+        list(APPEND _ld_paths ${_dftracer_test_ld_paths})
+    endif()
+
+    if(NOT "$ENV{LD_LIBRARY_PATH}" STREQUAL "")
+        string(REPLACE ":" ";" _env_ld_paths "$ENV{LD_LIBRARY_PATH}")
+        list(APPEND _ld_paths ${_env_ld_paths})
+    endif()
+
+    if(NOT "$ENV{CRAY_LD_LIBRARY_PATH}" STREQUAL "")
+        string(REPLACE ":" ";" _env_cray_ld_paths "$ENV{CRAY_LD_LIBRARY_PATH}")
+        list(APPEND _ld_paths ${_env_cray_ld_paths})
+    endif()
+
+    list(FILTER _ld_paths EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES _ld_paths)
+    string(REPLACE ";" ":" _ld_library_path "${_ld_paths}")
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${_ld_library_path})
+endfunction()
+
+function(set_common_dftracer_properties test_name)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_LEVEL=DEBUG)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_COMPRESSION=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_ENABLE_AGGREGATION=OFF)
-    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_ENABLE=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_BIND_SIGNALS=0)
+endfunction()
+
+function(set_common_properties test_name)
+    set_common_linker_properties(${test_name} ${ARGN})
+    set_common_dftracer_properties(${test_name})
 endfunction()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
@@ -177,9 +209,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 
 set(test_name test_py_both)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/test.py --format=npz --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -187,9 +218,8 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA
 
 set(test_name test_py_aggregation_both)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/test.py --format=npz --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -199,9 +229,8 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_AGGREGATION_
 
 set(test_name test_py_aggregation_selective_both)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/test.py --format=npz --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -217,9 +246,8 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_AGGREGATION_
 # # Normal Run
 set(test_name test_py_ai_logging_normal)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -232,9 +260,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # # Normal Run + Epoch as Metadata
 set(test_name test_py_ai_logging_epoch_as_metadata)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --epoch-as-metadata)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -259,9 +286,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # ## ALL Category
 set(test_name test_py_ai_logging_disable_cat_all)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --disable-ai-cat all)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -274,9 +300,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # ## DataLoader category
 set(test_name test_py_ai_logging_disable_cat_dataloader)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --disable-ai-cat dataloader)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -289,9 +314,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # ## Device category
 set(test_name test_py_ai_logging_disable_cat_device)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --disable-ai-cat device)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -304,9 +328,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # ## Compute category
 set(test_name test_py_ai_logging_disable_cat_compute)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --disable-ai-cat compute)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -319,9 +342,8 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 # ## Checkpoint category
 set(test_name test_py_ai_logging_disable_cat_ckpt)
 df_add_test(${test_name} ${DFTRACER_PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/ai_logging.py --data_dir=${CMAKE_CURRENT_BINARY_DIR}/data --niter 3 --num_files 2 --disable-ai-cat ckpt)
-set_common_properties(${test_name})
+set_common_properties(${test_name} ${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/${DFTRACER_LIBDIR})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64:${DFTRACER_TEST_LD_LIBRARY_PATH})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_BINARY_DIR})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
@@ -374,6 +396,270 @@ if(ENABLE_DLIO_BENCHMARK_TESTS)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=all)
     add_subdirectory(dlio_benchmark)
+endif()
+
+# =============================================================================
+# MPI Tests
+# =============================================================================
+if(DFTRACER_MPI_ENABLE)
+    set(_dftracer_mpi_test_launcher ${MPIEXEC})
+    set(_dftracer_mpi_test_flags ${MPIEXEC_PREFLAGS})
+
+    if(NOT "${DFTRACER_MPI_TEST_LAUNCHER_FLAGS}" STREQUAL "")
+        separate_arguments(_dftracer_mpi_test_user_flags NATIVE_COMMAND "${DFTRACER_MPI_TEST_LAUNCHER_FLAGS}")
+        list(APPEND _dftracer_mpi_test_flags ${_dftracer_mpi_test_user_flags})
+    endif()
+
+    function(df_set_mpi_test_properties test_name)
+        set_tests_properties(${test_name} PROPERTIES TIMEOUT 300)
+    endfunction()
+
+    # Build MPI test executables
+    add_executable(test_c_mpi c/test_mpi.c)
+    target_compile_options(test_c_mpi PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+    target_link_libraries(test_c_mpi ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+    target_include_directories(test_c_mpi PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+    add_dependencies(test_c_mpi ${PROJECT_NAME}_core_dbg)
+
+    add_executable(test_cpp_mpi cpp/test_mpi.cpp)
+    target_compile_options(test_cpp_mpi PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+    target_link_libraries(test_cpp_mpi ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+    target_include_directories(test_cpp_mpi PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+    add_dependencies(test_cpp_mpi ${PROJECT_NAME}_core_dbg)
+
+    # C MPI test with preload
+    set(test_name test_c_mpi_preload)
+    df_add_test(${test_name} ${_dftracer_mpi_test_launcher} ${_dftracer_mpi_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_mpi ${CMAKE_CURRENT_BINARY_DIR}/data)
+    set_common_properties(${test_name})
+    df_set_mpi_test_properties(${test_name})
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 10)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C MPI test with app init
+    set(test_name test_c_mpi_app)
+    df_add_test(${test_name} ${_dftracer_mpi_test_launcher} ${_dftracer_mpi_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_mpi ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+    set_common_properties(${test_name})
+    df_set_mpi_test_properties(${test_name})
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 10)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C++ MPI test with preload
+    set(test_name test_cpp_mpi_preload)
+    df_add_test(${test_name} ${_dftracer_mpi_test_launcher} ${_dftracer_mpi_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_mpi ${CMAKE_CURRENT_BINARY_DIR}/data)
+    set_common_properties(${test_name})
+    df_set_mpi_test_properties(${test_name})
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 10)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C++ MPI test with app init
+    set(test_name test_cpp_mpi_app)
+    df_add_test(${test_name} ${_dftracer_mpi_test_launcher} ${_dftracer_mpi_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_mpi ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+    set_common_properties(${test_name})
+    df_set_mpi_test_properties(${test_name})
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 10)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+endif()
+
+# =============================================================================
+# HDF5 Tests
+# =============================================================================
+if(DFTRACER_HDF5_ENABLE)
+    function(df_link_hdf5 target_name)
+        if(TARGET HDF5::HDF5)
+            target_link_libraries(${target_name} HDF5::HDF5)
+        else()
+            if(DEFINED HDF5_C_LIBRARIES)
+                target_link_libraries(${target_name} ${HDF5_C_LIBRARIES})
+            endif()
+            if(DEFINED HDF5_LIBRARIES)
+                target_link_libraries(${target_name} ${HDF5_LIBRARIES})
+            endif()
+            if(DEFINED HDF5_INCLUDE_DIRS)
+                target_include_directories(${target_name} PRIVATE ${HDF5_INCLUDE_DIRS})
+            endif()
+        endif()
+    endfunction()
+
+    # Build standalone HDF5 test executables
+    add_executable(test_c_hdf5 c/test_hdf5.c)
+    target_compile_options(test_c_hdf5 PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+    target_link_libraries(test_c_hdf5 ${PROJECT_NAME}_core_dbg)
+    df_link_hdf5(test_c_hdf5)
+    add_dependencies(test_c_hdf5 ${PROJECT_NAME}_core_dbg)
+
+    add_executable(test_cpp_hdf5 cpp/test_hdf5.cpp)
+    target_compile_options(test_cpp_hdf5 PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+    target_link_libraries(test_cpp_hdf5 ${PROJECT_NAME}_core_dbg)
+    df_link_hdf5(test_cpp_hdf5)
+    add_dependencies(test_cpp_hdf5 ${PROJECT_NAME}_core_dbg)
+
+    # C HDF5 test with preload
+    set(test_name test_c_hdf5_preload)
+    df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c_hdf5 ${CMAKE_CURRENT_BINARY_DIR}/data)
+    set_common_properties(${test_name})
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C HDF5 test with app init
+    set(test_name test_c_hdf5_app)
+    df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c_hdf5 ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+    set_common_properties(${test_name})
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C++ HDF5 test with preload
+    set(test_name test_cpp_hdf5_preload)
+    df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5 ${CMAKE_CURRENT_BINARY_DIR}/data)
+    set_common_properties(${test_name})
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # C++ HDF5 test with app init
+    set(test_name test_cpp_hdf5_app)
+    df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5 ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+    set_common_properties(${test_name})
+
+    df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
+    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+    # Build MPI + HDF5 test executables and tests when MPI is enabled
+    if(DFTRACER_MPI_ENABLE)
+        set(_dftracer_mpi_hdf5_test_launcher ${MPIEXEC})
+        set(_dftracer_mpi_hdf5_test_flags ${MPIEXEC_PREFLAGS})
+
+        if(NOT "${DFTRACER_MPI_TEST_LAUNCHER_FLAGS}" STREQUAL "")
+            separate_arguments(_dftracer_mpi_hdf5_test_user_flags NATIVE_COMMAND "${DFTRACER_MPI_TEST_LAUNCHER_FLAGS}")
+            list(APPEND _dftracer_mpi_hdf5_test_flags ${_dftracer_mpi_hdf5_test_user_flags})
+        endif()
+
+        add_executable(test_c_hdf5_mpi c/test_hdf5_mpi.c)
+        target_compile_options(test_c_hdf5_mpi PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+        target_link_libraries(test_c_hdf5_mpi ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+        target_include_directories(test_c_hdf5_mpi PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+        df_link_hdf5(test_c_hdf5_mpi)
+        add_dependencies(test_c_hdf5_mpi ${PROJECT_NAME}_core_dbg)
+
+        add_executable(test_cpp_hdf5_mpi cpp/test_hdf5_mpi.cpp)
+        target_compile_options(test_cpp_hdf5_mpi PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+        target_link_libraries(test_cpp_hdf5_mpi ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+        target_include_directories(test_cpp_hdf5_mpi PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+        df_link_hdf5(test_cpp_hdf5_mpi)
+        add_dependencies(test_cpp_hdf5_mpi ${PROJECT_NAME}_core_dbg)
+
+        # C MPI+HDF5 test with preload
+        set(test_name test_c_hdf5_mpi_preload)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_mpi ${CMAKE_CURRENT_BINARY_DIR}/data)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 12)
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C MPI+HDF5 test with app init
+        set(test_name test_c_hdf5_mpi_app)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_mpi ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 12)
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C++ MPI+HDF5 test with preload
+        set(test_name test_cpp_hdf5_mpi_preload)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_mpi ${CMAKE_CURRENT_BINARY_DIR}/data)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 12)
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C++ MPI+HDF5 test with app init
+        set(test_name test_cpp_hdf5_mpi_app)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_mpi ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 12)
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # Build Parallel HDF5-specific test executables
+        add_executable(test_c_hdf5_parallel c/test_hdf5_parallel.c)
+        target_compile_options(test_c_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+        target_link_libraries(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+        target_include_directories(test_c_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+        df_link_hdf5(test_c_hdf5_parallel)
+        add_dependencies(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg)
+
+        add_executable(test_cpp_hdf5_parallel cpp/test_hdf5_parallel.cpp)
+        target_compile_options(test_cpp_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+        target_link_libraries(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+        target_include_directories(test_cpp_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+        df_link_hdf5(test_cpp_hdf5_parallel)
+        add_dependencies(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg)
+
+        # Keep line threshold permissive so test also passes when HDF5 is built
+        # without parallel support (H5_HAVE_PARALLEL undefined in headers).
+        set(_hdf5_parallel_expected_lines 6)
+
+        # C Parallel-HDF5 test with preload
+        set(test_name test_c_hdf5_parallel_preload)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C Parallel-HDF5 test with app init
+        set(test_name test_c_hdf5_parallel_app)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C++ Parallel-HDF5 test with preload
+        set(test_name test_cpp_hdf5_parallel_preload)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+        # C++ Parallel-HDF5 test with app init
+        set(test_name test_cpp_hdf5_parallel_app)
+        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+        set_common_properties(${test_name})
+        df_set_mpi_test_properties(${test_name})
+
+        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+    endif()
 endif()
 
 if(DFTRACER_ENABLE_PAPER_TESTS)
@@ -430,7 +716,7 @@ add_test(NAME ${test_name}
     -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
+set_common_linker_properties(${test_name})
 
 # Build the external test app
 set(test_name test_package_build_external_app)
@@ -447,7 +733,7 @@ add_test(NAME ${test_name}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(${test_name} PROPERTIES DEPENDS test_package_build_external_app)
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
+set_common_linker_properties(${test_name})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_ENABLE=1)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
@@ -526,7 +812,7 @@ add_test(NAME ${test_name}
     -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
+set_common_linker_properties(${test_name})
 
 # Test 2: Compatible version (same major, exact minor) (should succeed)
 set(test_name test_package_version_compatible)
@@ -538,7 +824,7 @@ add_test(NAME ${test_name}
     -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
+set_common_linker_properties(${test_name})
 
 # Test 3: Minimum version requirement (should succeed)
 set(test_name test_package_version_minimum)
@@ -550,7 +836,7 @@ add_test(NAME ${test_name}
     -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}:${DFTRACER_TEST_LD_LIBRARY_PATH})
+set_common_linker_properties(${test_name})
 
 # Test 4: Wrong exact version (should fail)
 set(test_name test_package_version_wrong_exact_fail)

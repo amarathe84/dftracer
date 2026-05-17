@@ -126,10 +126,11 @@ include(dftracer-utils)
 option(DFTRACER_WARNINGS_AS_ERRORS "Build with warnings promoted to errors." OFF)
 mark_as_advanced(DFTRACER_WARNINGS_AS_ERRORS)
 
-option (DFTRACER_USE_CLANG_LIBCXX OFF)
-if (DFTRACER_USE_CLANG_LIBCXX)
-    set (GCC_TOOLCHAIN "")
-endif (DFTRACER_USE_CLANG_LIBCXX)
+option(DFTRACER_USE_CLANG_LIBCXX OFF)
+
+if(DFTRACER_USE_CLANG_LIBCXX)
+        set(GCC_TOOLCHAIN "")
+endif(DFTRACER_USE_CLANG_LIBCXX)
 
 # Options
 option(DFTRACER_ENABLE_FTRACING "Enable Function Tracing" OFF)
@@ -141,7 +142,7 @@ else()
         set(DFTRACER_FUNCTION_FLAGS)
 endif()
 
-option (DFTRACER_BUILD_PYTHON_BINDINGS "Build python bindings." ON)
+option(DFTRACER_BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 set(DFTRACER_PYTHON_EXE "python3" CACHE STRING "Python executable to use for building.")
 set(DFTRACER_PYTHON_SITE $ENV{DFTRACER_PYTHON_SITE} CACHE STRING "Python site packages to use for building.")
 
@@ -163,19 +164,32 @@ if(DFTRACER_BUILD_PYTHON_BINDINGS)
 endif()
 
 # Check optional dependencies
-option (DFTRACER_DISABLE_HWLOC "Disable HWLOC" ON)
-if (NOT DFTRACER_DISABLE_HWLOC)
-    set(DFTRACER_HWLOC_ENABLE 1)
+option(DFTRACER_DISABLE_HWLOC "Disable HWLOC" ON)
+
+if(NOT DFTRACER_DISABLE_HWLOC)
+        set(DFTRACER_HWLOC_ENABLE 1)
 endif()
-option (DFTRACER_ENABLE_HIP_TRACING "Enable HIP Tracing" OFF)
-if (DFTRACER_ENABLE_HIP_TRACING)
-    set(DFTRACER_HIP_TRACING_ENABLE 1)
+
+option(DFTRACER_ENABLE_HIP_TRACING "Enable HIP Tracing" OFF)
+
+if(DFTRACER_ENABLE_HIP_TRACING)
+        set(DFTRACER_HIP_TRACING_ENABLE 1)
 endif()
-option (DFTRACER_ENABLE_MPI "Enable MPI" OFF)
-if (DFTRACER_ENABLE_MPI)
-    set(DFTRACER_MPI_ENABLE 1)
+
+option(DFTRACER_ENABLE_MPI "Enable MPI" OFF)
+
+if(DFTRACER_ENABLE_MPI)
+        set(DFTRACER_MPI_ENABLE 1)
 endif()
-option (DFTRACER_ENABLE_DYNAMIC_DETECTION "Enable Dynamic Detection" OFF)
+
+option(DFTRACER_ENABLE_HDF5 "Enable HDF5" OFF)
+
+if(DFTRACER_ENABLE_HDF5)
+        set(DFTRACER_HDF5_ENABLE 1)
+endif()
+
+option(DFTRACER_ENABLE_DYNAMIC_DETECTION "Enable Dynamic Detection" OFF)
+option(DFTRACER_GENERATE_INTERFACES "Generate Brahma and DFTracer interfaces from discovered headers" OFF)
 
 # install dependency
 option(DFTRACER_INSTALL_DEPENDENCIES "Install DFTracer dependencies" OFF)
@@ -185,6 +199,16 @@ option(DFTRACER_ENABLE_TESTS "Enable tests for DFTRACER." OFF)
 option(DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" OFF)
 option(DFTRACER_ENABLE_PAPER_TESTS "Enable paper tests" OFF)
 set(DFTRACER_TEST_LD_LIBRARY_PATH "" CACHE STRING "Additional LD_LIBRARY_PATH to be included on testing")
+
+# Extra MPI launcher flags used by CTest MPI tests (e.g. "-p pdebug" on Flux).
+set(_dftracer_default_mpi_test_launcher_flags "")
+
+if(DEFINED ENV{DFTRACER_TEST_MACHINE} AND "$ENV{DFTRACER_TEST_MACHINE}" STREQUAL "corona")
+        set(_dftracer_default_mpi_test_launcher_flags "-p pdebug")
+endif()
+
+set(DFTRACER_MPI_TEST_LAUNCHER_FLAGS "${_dftracer_default_mpi_test_launcher_flags}" CACHE STRING
+        "Additional launcher flags passed to MPIEXEC for DFTracer MPI tests (example: -p pdebug)")
 
 option(DFTRACER_ENABLE_NATIVE_SCRIPT "Build with native scripting support." OFF)
 
@@ -262,7 +286,16 @@ else()
                 message(FATAL_ERROR "-- [CPP_LOGGER] is needed for ${PROJECT_NAME} build")
         endif()
 
-        find_package(brahma 3.0.0 REQUIRED)
+        # Brahma can export an interface dependency on HDF5::HDF5
+        # regardless of DFTRACER_ENABLE_HDF5 based on how Brahma was built.
+        # Preload HDF5 targets before loading brahma package config.
+        if(DFTRACER_ENABLE_HDF5)
+                find_package(HDF5 REQUIRED COMPONENTS C)
+        else()
+                find_package(HDF5 QUIET COMPONENTS C)
+        endif()
+
+        find_package(brahma 4.0.0 REQUIRED)
 
         if(${brahma_FOUND})
                 message(STATUS "[BRAHMA] found brahma at ${BRAHMA_INCLUDE_DIRS}")
@@ -279,6 +312,8 @@ else()
         else()
                 message(FATAL_ERROR "-- [BRAHMA] is needed for ${PROJECT_NAME} build")
         endif()
+
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tools)
 
         find_package(yaml-cpp REQUIRED)
 
@@ -370,52 +405,61 @@ else()
 
         # Optional Dependencies
         # =============================================================================
-        if (DFTRACER_BUILD_PYTHON_BINDINGS)
+        if(DFTRACER_BUILD_PYTHON_BINDINGS)
                 find_package(pybind11 REQUIRED)
-                #add_subdirectory(dependency/py11bind)
+
+                # add_subdirectory(dependency/py11bind)
         endif()
+
         find_package(MPI COMPONENTS CXX QUIET)
-        if (MPI_CXX_FOUND AND (DFTRACER_ENABLE_MPI OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
+
+        if(MPI_CXX_FOUND AND(DFTRACER_ENABLE_MPI OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
                 message(STATUS "[${PROJECT_NAME}] MPI found at ${MPI_CXX_INCLUDE_DIRS}.")
                 set(DFTRACER_MPI_ENABLE 1)
                 include_directories(${MPI_CXX_INCLUDE_DIRS})
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${MPI_CXX_LIBRARIES})
+
                 # Get the directory of each MPI_CXX_LIBRARY and append to MPI_CXX_LIBRARY_DIRS
                 set(MPI_CXX_LIBRARY_DIRS "")
+
                 foreach(_lib ${MPI_CXX_LIBRARIES})
                         get_filename_component(_lib_dir "${_lib}" DIRECTORY)
-                        if (_lib_dir)
+
+                        if(_lib_dir)
                                 list(APPEND MPI_CXX_LIBRARY_DIRS "${_lib_dir}")
                         endif()
                 endforeach()
+
                 list(REMOVE_DUPLICATES MPI_CXX_LIBRARY_DIRS)
-                if (DEFINED MPI_CXX_LIBRARY_DIRS)
+
+                if(DEFINED MPI_CXX_LIBRARY_DIRS)
                         list(APPEND DEPENDENCY_LIBRARY_DIRS ${MPI_CXX_LIBRARY_DIRS})
                 endif()
-        else ()
+        else()
                 message(STATUS "[${PROJECT_NAME}] MPI not found.")
                 set(DFTRACER_MPI_ENABLE 0)
-        endif ()
-
+        endif()
 
         find_package(HWLOC QUIET)
 
-        if (HWLOC_FOUND AND (NOT DFTRACER_DISABLE_HWLOC OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
+        if(HWLOC_FOUND AND(NOT DFTRACER_DISABLE_HWLOC OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
                 set(DFTRACER_HWLOC_ENABLE 1)
                 include_directories(${HWLOC_INCLUDE_DIRS})
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${HWLOC_LIBRARIES})
-                if (DEFINED HWLOC_LIBDIR)
+
+                if(DEFINED HWLOC_LIBDIR)
                         list(APPEND DEPENDENCY_LIBRARY_DIRS ${HWLOC_LIBDIR})
                 endif()
+
                 message(STATUS "[DFTRACER] found hwloc at ${HWLOC_INCLUDE_DIRS}")
-        else ()
+        else()
                 message(STATUS "[DFTRACER] hwloc not found")
                 set(DFTRACER_HWLOC_ENABLE 0)
-        endif ()
-
+        endif()
 
         find_package(rocprofiler-sdk QUIET)
-        if (rocprofiler-sdk_FOUND AND (DFTRACER_ENABLE_HIP_TRACING OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
+
+        if(rocprofiler-sdk_FOUND AND(DFTRACER_ENABLE_HIP_TRACING OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
                 set(DFTRACER_HIP_TRACING_ENABLE 1)
                 message(STATUS "[DFTRACER] found rocprofiler-sdk at ${rocprofiler-sdk_INCLUDE_DIR}")
                 set(HIP_TRACING_LIBRARIES rocprofiler-sdk::rocprofiler-sdk)
@@ -425,23 +469,27 @@ else()
         endif()
 
         find_package(ZLIB REQUIRED)
-        if (ZLIB_FOUND)
+
+        if(ZLIB_FOUND)
                 message(STATUS "[DFTRACER] found zlib at ${ZLIB_INCLUDE_DIRS}")
                 include_directories(${ZLIB_INCLUDE_DIRS})
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${ZLIB_LIBRARIES})
                 get_filename_component(ZLIB_LIBRARY "${ZLIB_LIBRARIES}" DIRECTORY)
                 set(ZLIB_LIBRARY_DIR "${ZLIB_LIBRARY}")
+
                 # Get absolute path for ZLIB_LIBRARY_DIR
                 get_filename_component(ZLIB_LIBRARY_DIR "${ZLIB_LIBRARY_DIR}" ABSOLUTE)
-                if (DEFINED ZLIB_LIBRARY_DIR)
+
+                if(DEFINED ZLIB_LIBRARY_DIR)
                         list(APPEND DEPENDENCY_LIBRARY_DIRS ${ZLIB_LIBRARY_DIR})
                 endif()
-                if (DEFINED ZLIB_LIBRARY_DIRS)
+
+                if(DEFINED ZLIB_LIBRARY_DIRS)
                         list(APPEND DEPENDENCY_LIBRARY_DIRS ${ZLIB_LIBRARY_DIRS})
                 endif()
-        else ()
+        else()
                 message(FATAL_ERROR "-- [DFTRACER] zlib is needed for ${PROJECT_NAME} build")
-        endif ()
+        endif()
 
         # print_all_variables()
 
@@ -476,6 +524,20 @@ else()
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/aggregator/aggregator.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/common/datastructure.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/aggregator/rules.cpp)
+
+        # Add MPI/MPIIO sources if MPI is enabled
+        if(DFTRACER_MPI_ENABLE)
+                list(APPEND DFTRACER_CORE_SRC
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/mpi.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/mpiio.cpp)
+        endif()
+
+        # Add HDF5 sources if HDF5 is enabled
+        if(DFTRACER_HDF5_ENABLE)
+                list(APPEND DFTRACER_CORE_SRC
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/hdf5.cpp)
+        endif()
+
         set(DFTRACER_CORE_PUBLIC_INCLUDE
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/dftracer/dftracer.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/dftracer/core/common/constants.h
@@ -497,6 +559,19 @@ else()
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/utils/configuration_manager.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/aggregator/aggregator.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/common/datastructure.h)
+
+        # Add MPI/MPIIO/HDF5 private headers if enabled
+        if(DFTRACER_MPI_ENABLE)
+                list(APPEND DFTRACER_CORE_PRIVATE_INCLUDE
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/mpi.h
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/mpiio.h)
+        endif()
+
+        if(DFTRACER_HDF5_ENABLE)
+                list(APPEND DFTRACER_CORE_PRIVATE_INCLUDE
+                        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/brahma/hdf5.h)
+        endif()
+
         add_library(${PROJECT_NAME}_core SHARED)
         add_library(dftracer::dftracer_core ALIAS ${PROJECT_NAME}_core)
         target_compile_definitions(${PROJECT_NAME}_core PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
@@ -510,6 +585,18 @@ else()
         add_library(${PROJECT_NAME}_preload_dbg SHARED)
         add_library(dftracer::dftracer_preload_dbg ALIAS ${PROJECT_NAME}_preload_dbg)
         target_link_libraries(${PROJECT_NAME}_preload_dbg ${DEPENDENCY_LIB} ${PROJECT_NAME}_core_dbg)
+
+        if(DFTRACER_GENERATE_INTERFACES AND TARGET ${PROJECT_NAME}_generate_interfaces)
+                # Ensure brahma's interface headers are regenerated by its
+                # ExternalProject before our generator reads them; otherwise
+                # the regen runs against the pre-shipped headers and the
+                # produced overrides won't match the freshly generated ones.
+                if(TARGET brahma)
+                        add_dependencies(${PROJECT_NAME}_generate_interfaces brahma)
+                endif()
+                add_dependencies(${PROJECT_NAME}_core ${PROJECT_NAME}_generate_interfaces)
+                add_dependencies(${PROJECT_NAME}_core_dbg ${PROJECT_NAME}_generate_interfaces)
+        endif()
 
         set(DFTRACER_DEBUG_TARGETS ${PROJECT_NAME}_core_dbg ${PROJECT_NAME}_preload_dbg)
 
@@ -981,42 +1068,43 @@ else()
         string(APPEND _str "\n")
 
         string(APPEND _str
-        "  DFTRACER_PACKAGE_VERSION:        ${DFTRACER_PACKAGE_VERSION}\n")
+                "  DFTRACER_PACKAGE_VERSION:        ${DFTRACER_PACKAGE_VERSION}\n")
         string(APPEND _str
-        "  DFTRACER_GIT_VERSION:            ${DFTRACER_GIT_VERSION}\n")
+                "  DFTRACER_GIT_VERSION:            ${DFTRACER_GIT_VERSION}\n")
         string(APPEND _str
-        "  GLIBC_VERSION:               ${GLIBC_VERSION}\n")
+                "  GLIBC_VERSION:               ${GLIBC_VERSION}\n")
         string(APPEND _str
-        "  DFTRACER_PYTHON_EXE:               ${DFTRACER_PYTHON_EXE}\n")
+                "  DFTRACER_PYTHON_EXE:               ${DFTRACER_PYTHON_EXE}\n")
         string(APPEND _str
-        "  DFTRACER_PYTHON_SITE:               ${DFTRACER_PYTHON_SITE}\n")
+                "  DFTRACER_PYTHON_SITE:               ${DFTRACER_PYTHON_SITE}\n")
         string(APPEND _str
-        "  MAIN_PYTHON_SITE_PACKAGES:               ${MAIN_PYTHON_SITE_PACKAGES}\n")
+                "  MAIN_PYTHON_SITE_PACKAGES:               ${MAIN_PYTHON_SITE_PACKAGES}\n")
         string(APPEND _str
-        "  DEPENDENCY_LIB:               ${DEPENDENCY_LIB}\n")
+                "  DEPENDENCY_LIB:               ${DEPENDENCY_LIB}\n")
         string(APPEND _str
-        "  CMAKE_BUILD_RPATH:               ${CMAKE_BUILD_RPATH}\n")
+                "  CMAKE_BUILD_RPATH:               ${CMAKE_BUILD_RPATH}\n")
         string(APPEND _str
-        "  CMAKE_INSTALL_RPATH:             ${CMAKE_INSTALL_RPATH}\n")
-        
-        
-        #Print the true/false variables
+                "  CMAKE_INSTALL_RPATH:             ${CMAKE_INSTALL_RPATH}\n")
+
+        # Print the true/false variables
         append_str_tf(_str
-        DFTRACER_GNU_LINUX
-        DFTRACER_LIBDIR_AS_LIB
-        DFTRACER_ENABLE_FTRACING
-        DFTRACER_ENABLE_MPI
-        DFTRACER_HWLOC_ENABLE
-        DFTRACER_HIP_TRACING_ENABLE
-        DFTRACER_USE_CLANG_LIBCXX
-        DFTRACER_WARNINGS_AS_ERRORS
-        DFTRACER_BUILD_PYTHON_BINDINGS
-        DFTRACER_ENABLE_TESTS
-        DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS
-        DFTRACER_ENABLE_PAPER_TESTS
+                DFTRACER_BUILD_PYTHON_BINDINGS
+                DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS
+                DFTRACER_ENABLE_FTRACING
+                DFTRACER_GENERATE_INTERFACES
+                DFTRACER_ENABLE_HDF5
+                DFTRACER_ENABLE_MPI
+                DFTRACER_ENABLE_PAPER_TESTS
+                DFTRACER_ENABLE_TESTS
+                DFTRACER_GNU_LINUX
+                DFTRACER_HIP_TRACING_ENABLE
+                DFTRACER_HWLOC_ENABLE
+                DFTRACER_LIBDIR_AS_LIB
+                DFTRACER_USE_CLANG_LIBCXX
+                DFTRACER_WARNINGS_AS_ERRORS
         )
         string(APPEND _str
-        "\n== End DFTRACER Configuration Summary ==\n")
+                "\n== End DFTRACER Configuration Summary ==\n")
 
         # Output to stdout
         execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${_str}")

@@ -119,6 +119,18 @@ if (DFTRACER_INCLUDE_MPI)
   endif ()
 endif()
 
+set(DFTRACER_INCLUDE_HDF5 @DFTRACER_ENABLE_HDF5@)
+if (DFTRACER_INCLUDE_HDF5)
+  set(HDF5_DIR "@HDF5_DIR@")
+  if (NOT CMAKE_C_COMPILER_LOADED)
+    enable_language(C)
+  endif()
+  find_package(HDF5 QUIET)
+  if (NOT HDF5_FOUND)
+    message(FATAL_ERROR "[DFTRACER] HDF5 is required but not found. Please ensure HDF5 is installed.")
+  endif ()
+endif()
+
 # Backward compatibility: create dftracer alias if only dftracer_core exists
 if (TARGET dftracer::dftracer_core AND NOT TARGET dftracer)
   add_library(dftracer ALIAS dftracer::dftracer_core)

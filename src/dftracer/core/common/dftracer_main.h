@@ -7,6 +7,14 @@
 
 #include <brahma/brahma.h>
 #include <cpp-logger/logger.h>
+#include <dftracer/core/common/logging.h>
+#if defined(DFTRACER_HDF5_ENABLE) && defined(BRAHMA_ENABLE_HDF5)
+#include <dftracer/core/brahma/hdf5.h>
+#endif
+#if defined(DFTRACER_MPI_ENABLE) && defined(BRAHMA_ENABLE_MPI)
+#include <dftracer/core/brahma/mpi.h>
+#include <dftracer/core/brahma/mpiio.h>
+#endif
 #include <dftracer/core/brahma/posix.h>
 #include <dftracer/core/brahma/stdio.h>
 #include <dftracer/core/common/constants.h>
@@ -14,7 +22,6 @@
 #include <dftracer/core/common/datastructure.h>
 #include <dftracer/core/common/enumeration.h>
 #include <dftracer/core/common/error.h>
-#include <dftracer/core/common/logging.h>
 #include <dftracer/core/common/singleton.h>
 #include <dftracer/core/common/typedef.h>
 #include <dftracer/core/df_logger.h>

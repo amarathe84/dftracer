@@ -1,7 +1,48 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/dftracer-utils.cmake)
 dftracer_install_external_project(cpp-logger 1.0.0 "CPP_LOGGER" https://github.com/hariharan-devarajan/cpp-logger.git v0.0.6 ${CMAKE_INSTALL_PREFIX} "")
 dftracer_install_external_project(gotcha 2.3.2 "gotcha" https://github.com/LLNL/GOTCHA.git 1.0.7 ${CMAKE_INSTALL_PREFIX} "-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
-dftracer_install_external_project(brahma 3.0.0 "BRAHMA" https://github.com/hariharan-devarajan/brahma.git v1.0.1 ${CMAKE_INSTALL_PREFIX} "")
+
+# Build Brahma with MPI and/or HDF5 support based on dftracer options
+set(BRAHMA_CONFIGURE_ARGS "")
+
+if(DFTRACER_ENABLE_MPI)
+  string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_BUILD_WITH_MPI=ON")
+endif()
+
+if(DFTRACER_ENABLE_HDF5)
+  if(NOT "${BRAHMA_CONFIGURE_ARGS}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";")
+  endif()
+
+  string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_BUILD_WITH_HDF5=ON")
+endif()
+
+if(DFTRACER_GENERATE_INTERFACES)
+  if(NOT "${BRAHMA_CONFIGURE_ARGS}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";")
+  endif()
+
+  string(APPEND BRAHMA_CONFIGURE_ARGS "-DBRAHMA_GENERATE_INTERFACES=ON")
+
+  # Forward Clang_DIR / LLVM_DIR to brahma so its find_package(Clang) does not
+  # accidentally pick up an unrelated LLVM install on the system (e.g., a
+  # version whose dev libraries are missing on CI runners).
+  if(DEFINED Clang_DIR AND NOT "${Clang_DIR}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";-DClang_DIR=${Clang_DIR}")
+  endif()
+
+  if(DEFINED LLVM_DIR AND NOT "${LLVM_DIR}" STREQUAL "")
+    string(APPEND BRAHMA_CONFIGURE_ARGS ";-DLLVM_DIR=${LLVM_DIR}")
+  endif()
+endif()
+
+# TODO: revert to hariharan-devarajan/brahma once the fixes on this branch
+# are merged and a release is tagged. The branch contains:
+#   - MPI version detection: filter `#define` lines so comment lines in
+#     mpi.h aren't picked up (yields "is" on Ubuntu mpich).
+#   - CMakeLists.txt: build the library + install rules in the same
+#     configure pass as interface generation.
+dftracer_install_external_project(brahma 4.0.0 "BRAHMA" https://github.com/rayandrew/brahma.git fix/bugs-in-checking-mpi-version ${CMAKE_INSTALL_PREFIX} "${BRAHMA_CONFIGURE_ARGS}")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
 find_package(yaml-cpp QUIET)

@@ -139,6 +139,25 @@ bool dftracer::DFTracerCore::finalize() {
           stdio_instance->unbind();
           stdio_instance->finalize();
         }
+#if defined(DFTRACER_MPI_ENABLE) && defined(BRAHMA_ENABLE_MPI)
+        auto mpi_instance = brahma::MPIDFTracer::get_instance();
+        if (mpi_instance != nullptr) {
+          mpi_instance->unbind();
+          mpi_instance->finalize();
+        }
+        auto mpiio_instance = brahma::MPIIODFTracer::get_instance();
+        if (mpiio_instance != nullptr) {
+          mpiio_instance->unbind();
+          mpiio_instance->finalize();
+        }
+#endif
+#if defined(DFTRACER_HDF5_ENABLE) && defined(BRAHMA_ENABLE_HDF5)
+        auto hdf5_instance = brahma::HDF5DFTracer::get_instance();
+        if (hdf5_instance != nullptr) {
+          hdf5_instance->unbind();
+          hdf5_instance->finalize();
+        }
+#endif
       }
     }
     if (logger != nullptr) {
@@ -330,6 +349,16 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             stdio->bind<brahma::STDIODFTracer>("dftracer",
                                                conf->gotcha_priority);
           }
+#if defined(DFTRACER_MPI_ENABLE) && defined(BRAHMA_ENABLE_MPI)
+          auto mpi = brahma::MPIDFTracer::get_instance();
+          mpi->bind<brahma::MPIDFTracer>("dftracer", conf->gotcha_priority);
+          auto mpiio = brahma::MPIIODFTracer::get_instance();
+          mpiio->bind<brahma::MPIIODFTracer>("dftracer", conf->gotcha_priority);
+#endif
+#if defined(DFTRACER_HDF5_ENABLE) && defined(BRAHMA_ENABLE_HDF5)
+          auto hdf5 = brahma::HDF5DFTracer::get_instance();
+          hdf5->bind<brahma::HDF5DFTracer>("dftracer", conf->gotcha_priority);
+#endif
         }
         DFTRACER_LOG_DEBUG("Checking if FTRACING and HIP_TRACING are enabled",
                            "");

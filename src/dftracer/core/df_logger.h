@@ -61,6 +61,7 @@ class DFTLogger {
 #endif
   bool enable_core_affinity;
   std::shared_ptr<dftracer::BufferManager> buffer_manager;
+
   std::vector<unsigned> core_affinity() {
     DFTRACER_LOG_DEBUG("DFTLogger.core_affinity", "");
     auto cores = std::vector<unsigned>();
@@ -255,13 +256,24 @@ class DFTLogger {
   }
 
   inline void handle_mpi(ThreadID tid) {
-#ifdef DFTRACER_MPI_ENABLE
+#if defined(DFTRACER_MPI_ENABLE) && defined(BRAHMA_ENABLE_MPI)
     if (!mpi_event) {
       int initialized;
-      int status = MPI_Initialized(&initialized);
+      int status = MPI_SUCCESS;
+#if defined(BRAHMA_MPI_IMPL_CRAYMPICH) || defined(BRAHMA_MPI_IMPL_MPICH) || \
+    defined(BRAHMA_MPI_IMPL_OPENMPI)
+      status = PMPI_Initialized(&initialized);
+#else
+      status = MPI_Initialized(&initialized);
+#endif
       if (status == MPI_SUCCESS && initialized == true) {
         int rank = 0;
+#if defined(BRAHMA_MPI_IMPL_CRAYMPICH) || defined(BRAHMA_MPI_IMPL_MPICH) || \
+    defined(BRAHMA_MPI_IMPL_OPENMPI)
+        PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#else
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
         if (this->buffer_manager != nullptr) {
           this->buffer_manager->set_rank(rank);
         }
