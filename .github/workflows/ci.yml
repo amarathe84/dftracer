@@ -3,7 +3,17 @@ name: Build and Test
 on:
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
   push:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
 
 jobs:
   build-and-test:

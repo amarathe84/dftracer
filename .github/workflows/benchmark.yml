@@ -3,9 +3,19 @@ name: Benchmark PR with IOR
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
   push:
     branches:
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
 
 jobs:
   benchmark:

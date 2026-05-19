@@ -88,9 +88,6 @@ html_theme = "sphinx_rtd_theme"
 #
 html_theme_options = {"logo_only": True}
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_themes"]
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -98,7 +95,7 @@ html_static_path = ["_static"]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "images/dftracer-logo.png"
+html_logo = "images/dftracer-logo-light.png"
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -145,7 +142,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "images/dftracer-logo.png"
+latex_logo = "images/dftracer-logo-light.png"
 
 
 # -- Options for manual page output ------------------------------------------

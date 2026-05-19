@@ -3,6 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. image:: images/dftracer-logo-light.png
+   :alt: DFTracer logo
+   :align: center
+   :width: 320
+
+
 ===============================================================================
 DFTracer: is a library for profiling I/O calls and application functions.
 ===============================================================================
