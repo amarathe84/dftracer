@@ -8,6 +8,8 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
+
+static constexpr size_t DFTRACER_SERIALIZATION_EVENT_MAX = 16 * 1024;
 namespace dftracer {
 template <>
 std::shared_ptr<JsonLines> Singleton<JsonLines>::instance = nullptr;
@@ -18,19 +20,20 @@ JsonLines::JsonLines() : include_metadata(false) {
   include_metadata = conf->metadata;
 }
 
-size_t JsonLines::initialize(char *buffer, HashType hostname_hash) {
+size_t JsonLines::initialize(char* buffer, HashType hostname_hash) {
   this->hostname_hash = hostname_hash;
   buffer[0] = '[';
   buffer[1] = '\n';
   return 2;
 }
 
-bool JsonLines::convert_metadata(Metadata *metadata,
-                                 std::stringstream &meta_stream) {
+bool JsonLines::convert_metadata(Metadata* metadata,
+                                 std::stringstream& meta_stream) {
+  if (metadata == nullptr) return false;
   auto meta_size = metadata->size();
   long unsigned int i = 0;
   bool has_meta = false;
-  for (const auto &item : *metadata) {
+  for (const auto& item : *metadata) {
     has_meta = true;
     DFTRACER_FOR_EACH_NUMERIC_TYPE(
         DFTRACER_ANY_CAST_MACRO, std::get<1>(item.second), {
@@ -55,15 +58,16 @@ bool JsonLines::convert_metadata(Metadata *metadata,
     meta_stream.clear();
     meta_stream << temp;
   }
-  if (has_meta && metadata && meta_size > 0) delete (metadata);
+  delete metadata;
   return has_meta;
 }
 
-size_t JsonLines::data(char *buffer, int index, ConstEventNameType event_name,
+size_t JsonLines::data(char* buffer, int index, ConstEventNameType event_name,
                        ConstEventNameType category, TimeResolution start_time,
-                       TimeResolution duration, dftracer::Metadata *metadata,
+                       TimeResolution duration, dftracer::Metadata* metadata,
                        ProcessID process_id, ThreadID thread_id) {
   size_t written_size = 0;
+  int n = 0;
   if (include_metadata && metadata != nullptr) {
     std::stringstream all_stream;
     std::stringstream meta_stream;
@@ -72,32 +76,45 @@ size_t JsonLines::data(char *buffer, int index, ConstEventNameType event_name,
     if (has_meta) {
       all_stream << "," << meta_stream.str();
     }
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"id":%d,"name":"%s","cat":"%s","pid":%d,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":"%s"%s}})",
         index, event_name, category, process_id, thread_id, start_time,
         duration, this->hostname_hash, all_stream.str().c_str());
   } else {
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"id":%d,"name":"%s","cat":"%s","pid":%d,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
         index, event_name, category, process_id, thread_id, start_time,
         duration);
   }
-  if (written_size > 0) {
+  if (n < 0) {
+    return 0;
+  }
+  written_size = (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX)
+                     ? DFTRACER_SERIALIZATION_EVENT_MAX - 1
+                     : static_cast<size_t>(n);
+  if (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX) {
+    DFTRACER_LOG_WARN("JsonLines.data truncated event %d to %zu bytes", index,
+                      DFTRACER_SERIALIZATION_EVENT_MAX - 1);
+  }
+  if (written_size + 1 < DFTRACER_SERIALIZATION_EVENT_MAX) {
     buffer[written_size++] = '\n';
     buffer[written_size] = '\0';
+  } else {
+    buffer[DFTRACER_SERIALIZATION_EVENT_MAX - 1] = '\0';
   }
   DFTRACER_LOG_DEBUG("JsonLines.serialize %s", buffer);
   return written_size;
 }
 
-size_t JsonLines::counter(char *buffer, int index,
+size_t JsonLines::counter(char* buffer, int index,
                           ConstEventNameType event_name,
                           ConstEventNameType category,
                           TimeResolution start_time, ProcessID process_id,
-                          ThreadID thread_id, dftracer::Metadata *metadata) {
+                          ThreadID thread_id, dftracer::Metadata* metadata) {
   size_t written_size = 0;
+  int n = 0;
   if (metadata != nullptr && !metadata->empty()) {
     std::stringstream all_stream;
     std::stringstream meta_stream;
@@ -105,43 +122,71 @@ size_t JsonLines::counter(char *buffer, int index,
     if (has_meta) {
       all_stream << "," << meta_stream.str();
     }
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"name":"%s","cat":"%s","ts":%llu,"ph":"C","pid":%d,"tid":%lu,"args":{"hhash":"%s"%s}})",
         event_name, category, start_time, process_id, thread_id,
         this->hostname_hash, all_stream.str().c_str());
   } else {
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"name":"%s","cat":"%s","ts":%llu,"ph":"C","pid":%d,"tid":%lu})",
         event_name, category, start_time, process_id, thread_id);
   }
-  if (written_size > 0) {
+  if (n < 0) {
+    return 0;
+  }
+  written_size = (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX)
+                     ? DFTRACER_SERIALIZATION_EVENT_MAX - 1
+                     : static_cast<size_t>(n);
+  if (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX) {
+    DFTRACER_LOG_WARN("JsonLines.counter truncated event %d to %zu bytes",
+                      index, DFTRACER_SERIALIZATION_EVENT_MAX - 1);
+  }
+  if (written_size + 1 < DFTRACER_SERIALIZATION_EVENT_MAX) {
     buffer[written_size++] = '\n';
     buffer[written_size] = '\0';
+  } else {
+    buffer[DFTRACER_SERIALIZATION_EVENT_MAX - 1] = '\0';
   }
   DFTRACER_LOG_DEBUG("JsonLines.serialize %s", buffer);
   return written_size;
 }
 
-size_t JsonLines::metadata(char *buffer, ConstEventNameType name,
+size_t JsonLines::metadata(char* buffer, ConstEventNameType name,
                            ConstEventNameType value, ConstEventNameType ph,
                            ProcessID process_id, ThreadID thread_id,
                            bool is_string) {
   size_t written_size = 0;
+  int n = 0;
   if (is_string) {
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"name":"%s","cat":"dftracer","pid":%d,"tid":%lu,"ph":"M","args":{"hhash":"%s","name":"%s","value":"%s"}})",
         ph, process_id, thread_id, this->hostname_hash, name, value);
   } else {
-    written_size = sprintf(
-        buffer,
+    n = snprintf(
+        buffer, DFTRACER_SERIALIZATION_EVENT_MAX,
         R"({"name":"%s","cat":"dftracer","pid":%d,"tid":%lu,"ph":"M","args":{"hhash":"%s","name":"%s","value":%s}})",
         ph, process_id, thread_id, this->hostname_hash, name, value);
   }
-  buffer[written_size++] = '\n';
-  buffer[written_size] = '\0';
+  if (n < 0) {
+    return 0;
+  }
+  written_size = (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX)
+                     ? DFTRACER_SERIALIZATION_EVENT_MAX - 1
+                     : static_cast<size_t>(n);
+  if (static_cast<size_t>(n) >= DFTRACER_SERIALIZATION_EVENT_MAX) {
+    DFTRACER_LOG_WARN(
+        "JsonLines.metadata truncated metadata event to %zu bytes",
+        DFTRACER_SERIALIZATION_EVENT_MAX - 1);
+  }
+  if (written_size + 1 < DFTRACER_SERIALIZATION_EVENT_MAX) {
+    buffer[written_size++] = '\n';
+    buffer[written_size] = '\0';
+  } else {
+    buffer[DFTRACER_SERIALIZATION_EVENT_MAX - 1] = '\0';
+  }
   DFTRACER_LOG_DEBUG("ChromeWriter.convert_json_metadata %s", buffer);
   return written_size;
 }
@@ -151,22 +196,22 @@ size_t JsonLines::metadata(char *buffer, ConstEventNameType name,
     BLOCK;                                    \
   }
 
-size_t JsonLines::aggregated(char *buffer, int index, ProcessID process_id,
-                             dftracer::AggregatedDataType &data) {
+size_t JsonLines::aggregated(char* buffer, int index, ProcessID process_id,
+                             dftracer::AggregatedDataType& data) {
   size_t total_written = 0;
 
   DFTRACER_LOG_INFO("Writing %d intervals", data.size());
-  for (const auto &interval_entry : data) {
-    const TimeResolution &interval = interval_entry.first;
-    const auto &event_map = interval_entry.second;
+  for (const auto& interval_entry : data) {
+    const TimeResolution& interval = interval_entry.first;
+    const auto& event_map = interval_entry.second;
     DFTRACER_LOG_INFO("Writing %d events for %llu", event_map.size(), interval);
-    for (const auto &event_entry : event_map) {
-      AggregatedValues *event_values = event_entry.second;
+    for (const auto& event_entry : event_map) {
+      AggregatedValues* event_values = event_entry.second;
       auto key = event_entry.first;
       auto metadata = key.additional_keys;
-      for (const auto &value_entry : event_values->values) {
-        const std::string &base_key = value_entry.first;
-        BaseAggregatedValue *base_value = value_entry.second;
+      for (const auto& value_entry : event_values->values) {
+        const std::string& base_key = value_entry.first;
+        BaseAggregatedValue* base_value = value_entry.second;
         if (!base_value) continue;
         // metadata->erase(base_key);
         auto id = base_value->_id;
@@ -180,6 +225,7 @@ size_t JsonLines::aggregated(char *buffer, int index, ProcessID process_id,
                                interval, process_id, key.thread_id, metadata);
     }
   }
+  Aggregator::release_aggregated_data(data);
   return total_written;
 }
 

@@ -18,6 +18,7 @@ requires-python = '>=3.7'
 authors = [
   { name = "Hariharan Devarajan (Hari)", email = "hariharandev1@llnl.gov" }
 ]
+license = "MIT"
 keywords = [
   "profiler", 
   "deep learning", 
@@ -36,8 +37,6 @@ classifiers = [
   # Indicate who your project is intended for
   "Intended Audience :: Science/Research",
   "Topic :: Software Development :: Build Tools",
-  # Pick your license as you wish
-  "License :: OSI Approved :: MIT License",
   # Specify the Python versions you support here. In particular, ensure
   # that you indicate you support Python 3. These classifiers are *not*
   # checked by 'pip install'. See instead 'python_requires' below.

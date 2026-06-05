@@ -62,7 +62,7 @@ uint32_t rotateLeft(uint32_t x, uint32_t n) {
 /*
  * Initialize a context
  */
-void md5Init(MD5Context *ctx) {
+void md5Init(MD5Context* ctx) {
   ctx->size = (uint64_t)0;
 
   ctx->buffer[0] = (uint32_t)A;
@@ -77,7 +77,7 @@ void md5Init(MD5Context *ctx) {
  * If the input fills out a block of 512 bits, apply the algorithm (md5Step)
  * and save the result in the buffer. Also updates the overall size.
  */
-void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
+void md5Update(MD5Context* ctx, uint8_t* input_buffer, size_t input_len) {
   uint32_t input[16];
   unsigned int offset = ctx->size % 64;
   ctx->size += (uint64_t)input_len;
@@ -110,7 +110,7 @@ void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
  * Pad the current input to get to 448 bytes, append the size in bits to the
  * very end, and save the result of the final iteration into digest.
  */
-void md5Finalize(MD5Context *ctx) {
+void md5Finalize(MD5Context* ctx) {
   uint32_t input[16];
   unsigned int offset = ctx->size % 64;
   unsigned int padding_length = offset < 56 ? 56 - offset : (56 + 64) - offset;
@@ -146,7 +146,7 @@ void md5Finalize(MD5Context *ctx) {
 /*
  * Step on 512 bits of input with the main MD5 algorithm.
  */
-void md5Step(uint32_t *buffer, uint32_t *input) {
+void md5Step(uint32_t* buffer, uint32_t* input) {
   uint32_t AA = buffer[0];
   uint32_t BB = buffer[1];
   uint32_t CC = buffer[2];
@@ -193,24 +193,24 @@ void md5Step(uint32_t *buffer, uint32_t *input) {
  * Functions that run the algorithm on the provided input and put the digest
  * into result. result should be able to store 16 bytes.
  */
-void md5String(char *input, uint8_t *result) {
+void md5String(char* input, uint8_t* result) {
   MD5Context ctx;
   md5Init(&ctx);
-  md5Update(&ctx, (uint8_t *)input, strlen(input));
+  md5Update(&ctx, (uint8_t*)input, strlen(input));
   md5Finalize(&ctx);
 
   memcpy(result, ctx.digest, 16);
 }
 
-void md5File(FILE *file, uint8_t *result) {
-  char *input_buffer = (char *)malloc(1024);
+void md5File(FILE* file, uint8_t* result) {
+  char* input_buffer = (char*)malloc(1024);
   size_t input_size = 0;
 
   MD5Context ctx;
   md5Init(&ctx);
 
   while ((input_size = fread(input_buffer, 1, 1024, file)) > 0) {
-    md5Update(&ctx, (uint8_t *)input_buffer, input_size);
+    md5Update(&ctx, (uint8_t*)input_buffer, input_size);
   }
 
   md5Finalize(&ctx);

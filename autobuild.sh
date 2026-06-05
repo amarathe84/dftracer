@@ -652,6 +652,13 @@ export DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS="${ENABLE_DLIO_TESTS}"
 export DFTRACER_ENABLE_PAPER_TESTS="${ENABLE_PAPER_TESTS}"
 export DFTRACER_GENERATE_INTERFACES="${GENERATE_INTERFACES}"
 
+# Pip build isolation hides venv site-packages. When interface generation is
+# enabled, the generator imports clang.cindex, so mirror CI's default behavior.
+if [ "${INSTALL_MODE}" = "pip" ] && [ "${GENERATE_INTERFACES}" = "ON" ] && [ -z "${DFTRACER_PIP_NO_BUILD_ISOLATION+x}" ]; then
+    export DFTRACER_PIP_NO_BUILD_ISOLATION="1"
+    echo -e "${YELLOW}Info: Enabled DFTRACER_PIP_NO_BUILD_ISOLATION=1 for interface generation (clang.cindex required).${NC}"
+fi
+
 if [ -n "${INSTALL_PREFIX}" ]; then
     export DFTRACER_INSTALL_DIR="${INSTALL_PREFIX}"
 fi

@@ -16,6 +16,11 @@
  * @tparam T
  */
 namespace dftracer {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
+
 template <typename T>
 class Singleton {
  public:
@@ -29,6 +34,8 @@ class Singleton {
    */
   template <typename... Args>
   static std::shared_ptr<T> get_instance(Args... args) {
+    auto& stop_creating_instances = stop_flag();
+    auto& instance = instance_ref();
     if (stop_creating_instances) return nullptr;
     if (instance == nullptr) {
       instance = std::make_shared<T>(std::forward<Args>(args)...);
@@ -40,12 +47,22 @@ class Singleton {
   /**
    * Operators
    */
-  Singleton &operator=(const Singleton) = delete; /* deleting = operatos*/
+  Singleton& operator=(const Singleton) = delete; /* deleting = operatos*/
  public:
-  Singleton(const Singleton &) = delete; /* deleting copy constructor. */
-  static void finalize() {
-    stop_creating_instances = true;
-    if (instance == nullptr) return;
+  Singleton(const Singleton&) = delete; /* deleting copy constructor. */
+  static void finalize() { stop_flag() = true; }
+
+ private:
+  // Keep singleton storage alive until process exit to avoid destruction-order
+  // races across shared libraries.
+  static std::shared_ptr<T>& instance_ref() {
+    static auto* singleton_instance = new std::shared_ptr<T>();
+    return *singleton_instance;
+  }
+
+  static bool& stop_flag() {
+    static auto* stop = new bool(false);
+    return *stop;
   }
 
  protected:
@@ -55,6 +72,10 @@ class Singleton {
 
   Singleton() {} /* hidden default constructor. */
 };
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 }  // namespace dftracer
 #endif  // DFTRACER_SINGLETON_H

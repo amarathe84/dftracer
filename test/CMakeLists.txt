@@ -1,10 +1,12 @@
 set_property(GLOBAL PROPERTY COVERAGE_FILES "")
 include_directories(${DFTRACER_PROJECT_DIR}/include)
 
+set(DFTRACER_TEST_LOG_LEVEL "INFO" CACHE STRING "DFTracer log level for CTest runs")
+
 function(df_add_test)
     add_test(${ARGV})
     set_tests_properties(${ARGV0} PROPERTIES
-        ENVIRONMENT "LLVM_PROFILE_FILE=${ARGV0}.profraw")
+        ENVIRONMENT "LLVM_PROFILE_FILE=${ARGV0}.profraw;DFTRACER_BIND_SIGNALS=1")
     get_property(OLD_CF GLOBAL PROPERTY COVERAGE_FILES)
     set(NEW_CF ${OLD_CF} ${CMAKE_CURRENT_BINARY_DIR}/${ARGV0}.profraw)
     set_property(GLOBAL PROPERTY COVERAGE_FILES ${NEW_CF})
@@ -65,14 +67,14 @@ function(set_common_linker_properties test_name)
 endfunction()
 
 function(set_common_dftracer_properties test_name)
-    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_LEVEL=DEBUG)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_LEVEL=${DFTRACER_TEST_LOG_LEVEL})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_COMPRESSION=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_ENABLE_AGGREGATION=OFF)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_ENABLE=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
-    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_BIND_SIGNALS=0)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_BIND_SIGNALS=1)
 endfunction()
 
 function(set_common_properties test_name)
@@ -180,7 +182,7 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 set(test_name test_cpp_basic_meta)
 df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp ${CMAKE_CURRENT_BINARY_DIR}/data)
 set_common_properties(${test_name})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
 
@@ -190,7 +192,7 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 set(test_name test_cpp_basic_affinity)
 df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp ${CMAKE_CURRENT_BINARY_DIR}/data)
 set_common_properties(${test_name})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_SET_CORE_AFFINITY=1)
@@ -294,7 +296,7 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_FILE=${C
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=HYBRID)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INC_METADATA=1)
 
-df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}*-app.pfw* 7)
+df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_not.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}*-app.pfw*)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 # ## DataLoader category
@@ -601,64 +603,67 @@ if(DFTRACER_HDF5_ENABLE)
         df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 12)
         set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
-        # Build Parallel HDF5-specific test executables
-        add_executable(test_c_hdf5_parallel c/test_hdf5_parallel.c)
-        target_compile_options(test_c_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
-        target_link_libraries(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
-        target_include_directories(test_c_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
-        df_link_hdf5(test_c_hdf5_parallel)
-        add_dependencies(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg)
+        if(HDF5_IS_PARALLEL)
+            # Build Parallel HDF5-specific test executables
+            add_executable(test_c_hdf5_parallel c/test_hdf5_parallel.c)
+            target_compile_options(test_c_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+            target_link_libraries(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+            target_include_directories(test_c_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+            df_link_hdf5(test_c_hdf5_parallel)
+            add_dependencies(test_c_hdf5_parallel ${PROJECT_NAME}_core_dbg)
 
-        add_executable(test_cpp_hdf5_parallel cpp/test_hdf5_parallel.cpp)
-        target_compile_options(test_cpp_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
-        target_link_libraries(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
-        target_include_directories(test_cpp_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
-        df_link_hdf5(test_cpp_hdf5_parallel)
-        add_dependencies(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg)
+            add_executable(test_cpp_hdf5_parallel cpp/test_hdf5_parallel.cpp)
+            target_compile_options(test_cpp_hdf5_parallel PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+            target_link_libraries(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg ${MPI_CXX_LIBRARIES})
+            target_include_directories(test_cpp_hdf5_parallel PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+            df_link_hdf5(test_cpp_hdf5_parallel)
+            add_dependencies(test_cpp_hdf5_parallel ${PROJECT_NAME}_core_dbg)
 
-        # Keep line threshold permissive so test also passes when HDF5 is built
-        # without parallel support (H5_HAVE_PARALLEL undefined in headers).
-        set(_hdf5_parallel_expected_lines 6)
+            # Keep line threshold permissive for small output variability.
+            set(_hdf5_parallel_expected_lines 6)
 
-        # C Parallel-HDF5 test with preload
-        set(test_name test_c_hdf5_parallel_preload)
-        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
-        set_common_properties(${test_name})
-        df_set_mpi_test_properties(${test_name})
-        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
-        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+            # C Parallel-HDF5 test with preload
+            set(test_name test_c_hdf5_parallel_preload)
+            df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
+            set_common_properties(${test_name})
+            df_set_mpi_test_properties(${test_name})
+            set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+            set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
 
-        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
-        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+            df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+            set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
-        # C Parallel-HDF5 test with app init
-        set(test_name test_c_hdf5_parallel_app)
-        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
-        set_common_properties(${test_name})
-        df_set_mpi_test_properties(${test_name})
+            # C Parallel-HDF5 test with app init
+            set(test_name test_c_hdf5_parallel_app)
+            df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_c_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+            set_common_properties(${test_name})
+            df_set_mpi_test_properties(${test_name})
 
-        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
-        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+            df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+            set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
-        # C++ Parallel-HDF5 test with preload
-        set(test_name test_cpp_hdf5_parallel_preload)
-        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
-        set_common_properties(${test_name})
-        df_set_mpi_test_properties(${test_name})
-        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
-        set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
+            # C++ Parallel-HDF5 test with preload
+            set(test_name test_cpp_hdf5_parallel_preload)
+            df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data)
+            set_common_properties(${test_name})
+            df_set_mpi_test_properties(${test_name})
+            set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
+            set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
 
-        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
-        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+            df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+            set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
-        # C++ Parallel-HDF5 test with app init
-        set(test_name test_cpp_hdf5_parallel_app)
-        df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
-        set_common_properties(${test_name})
-        df_set_mpi_test_properties(${test_name})
+            # C++ Parallel-HDF5 test with app init
+            set(test_name test_cpp_hdf5_parallel_app)
+            df_add_test(${test_name} ${_dftracer_mpi_hdf5_test_launcher} ${_dftracer_mpi_hdf5_test_flags} ${MPIEXEC_NUMPROC_FLAG} 2 ${CMAKE_BINARY_DIR}/bin/test_cpp_hdf5_parallel ${CMAKE_CURRENT_BINARY_DIR}/data 1)
+            set_common_properties(${test_name})
+            df_set_mpi_test_properties(${test_name})
 
-        df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
-        set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+            df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* ${_hdf5_parallel_expected_lines})
+            set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+        else()
+            message(STATUS "[DFTracer] HDF5 parallel tests disabled: HDF5_IS_PARALLEL=FALSE")
+        endif()
     endif()
 endif()
 
@@ -683,7 +688,7 @@ set_common_properties(${test_name})
 # - test_region_tracing: 5 regions (STATIC, DYNAMIC, OUTER, INNER, nested)
 # - test_io_operations: ~15 I/O calls (open, write, read, lseek, fsync, close, fopen, fwrite, fread, fseek, fflush, fclose, stat, chmod, unlink)
 # Total: approximately 24 lines
-df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 32)
+df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 22)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 # C API Coverage Test

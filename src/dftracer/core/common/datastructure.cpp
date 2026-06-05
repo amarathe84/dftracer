@@ -2,7 +2,7 @@
 #include <dftracer/core/utils/utils.h>
 namespace dftracer {
 
-void BaseAggregatedValue::update(BaseAggregatedValue *value) {
+void BaseAggregatedValue::update(BaseAggregatedValue* value) {
   if (!value) return;
 
   // Type mismatch check - both must be the same type
@@ -17,8 +17,8 @@ void BaseAggregatedValue::update(BaseAggregatedValue *value) {
                                 value, {});
 }
 
-BaseAggregatedValue *BaseAggregatedValue::get_value() { return _child; }
-std::string Metadata::getTagValue(const std::string &tagKey) const {
+BaseAggregatedValue* BaseAggregatedValue::get_value() { return _child; }
+std::string Metadata::getTagValue(const std::string& tagKey) const {
   auto it = data.find(tagKey);
   if (it != data.end()) {
     DFTRACER_FOR_EACH_NUMERIC_TYPE(DFTRACER_ANY_CAST_MACRO,

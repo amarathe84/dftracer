@@ -25,7 +25,7 @@ class ZlibCompression {
     strm_.opaque = Z_NULL;
     if (deflateInit2(&strm_, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8,
                      Z_DEFAULT_STRATEGY) != Z_OK) {
-      DFTRACER_LOG_ERROR("Failed to initialize zlib for gzip compression", "");
+      DFTRACER_LOG_ERROR("Failed to initialize zlib for gzip compression");
       return -1;
     }
     return 0;
@@ -44,7 +44,7 @@ class ZlibCompression {
 
     int ret = deflate(&strm_, Z_FINISH);
     if (ret != Z_STREAM_END && ret != Z_OK) {
-      DFTRACER_LOG_ERROR("Compression failed", "");
+      DFTRACER_LOG_ERROR("Compression failed");
       return 0;
     }
 

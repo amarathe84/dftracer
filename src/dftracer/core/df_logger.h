@@ -46,12 +46,20 @@ class DFTLogger {
  private:
   std::shared_ptr<dftracer::ConfigurationManager> config;
   std::shared_mutex map_mtx;
+
+  inline void clear_hash_cache() {
+    std::unique_lock<std::shared_mutex> lock(map_mtx);
+    for (auto& hash : computed_hash) {
+      if (hash.second) free(hash.second);
+    }
+    computed_hash.clear();
+  }
   bool throw_error;
   bool is_init, dftracer_tid;
   ProcessID process_id;
   std::unordered_map<std::string, HashType> computed_hash;
   std::atomic_int index;
-  bool is_aggregated;
+  [[maybe_unused]] bool is_aggregated;
   bool has_entry;
 #ifdef DFTRACER_MPI_ENABLE
   bool mpi_event;
@@ -63,7 +71,7 @@ class DFTLogger {
   std::shared_ptr<dftracer::BufferManager> buffer_manager;
 
   std::vector<unsigned> core_affinity() {
-    DFTRACER_LOG_DEBUG("DFTLogger.core_affinity", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.core_affinity");
     auto cores = std::vector<unsigned>();
 #ifdef DFTRACER_HWLOC_ENABLE
     if (enable_core_affinity) {
@@ -93,7 +101,7 @@ class DFTLogger {
 #endif
         enable_core_affinity(false),
         include_metadata(false) {
-    DFTRACER_LOG_DEBUG("DFTLogger.DFTLogger", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.DFTLogger");
     config =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
     enable_core_affinity = config->core_affinity;
@@ -110,21 +118,17 @@ class DFTLogger {
         dftracer::Singleton<dftracer::BufferManager>::get_instance();
     this->is_init = true;
   }
-  ~DFTLogger() {
-    for (auto &hash : computed_hash) {
-      if (hash.second) free(hash.second);
-    }
-  }
+  ~DFTLogger() { clear_hash_cache(); }
 
   void reinitialize() {
-    DFTRACER_LOG_DEBUG("DFTLogger.reinitialize", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.reinitialize");
     index.store(0);
   }
 
-  inline HashType get_hash(char *name) {
+  inline HashType get_hash(char* name) {
     uint8_t result[HASH_OUTPUT];
     md5String(name, result);
-    char *hash_str = (char *)malloc(HASH_OUTPUT * 2 + 1);
+    char* hash_str = (char*)malloc(HASH_OUTPUT * 2 + 1);
     for (int i = 0; i < HASH_OUTPUT; i += 2) {
       sprintf(hash_str + i, "%02x", result[i]);
     }
@@ -147,16 +151,23 @@ class DFTLogger {
     char hostname[256];
     gethostname(hostname, 256);
     hostname_hash = get_hash(hostname);
+    insert_hash(hostname, hostname_hash);
     if (this->buffer_manager != nullptr) {
       this->buffer_manager->initialize(log_file.c_str(), hostname_hash);
-      hostname_hash = hash_and_store(hostname, METADATA_NAME_HOSTNAME_HASH);
+      char hostname_event[256];
+      strcpy(hostname_event, hostname);
+      hostname_event[255] = '\0';
+      fix_str(hostname_event, sizeof(hostname_event));
+      this->buffer_manager->log_metadata_event(hostname_event, hostname_hash,
+                                               METADATA_NAME_HOSTNAME_HASH,
+                                               this->process_id, tid, true);
       char thread_name[128];
       auto size = sprintf(thread_name, "%d", this->process_id);
       thread_name[size] = '\0';
       this->buffer_manager->log_metadata_event(
           thread_name, METADATA_NAME_THREAD_NAME, METADATA_NAME_THREAD_NAME,
           this->process_id, tid);
-      dftracer::Metadata *meta = nullptr;
+      dftracer::Metadata* meta = nullptr;
       if (include_metadata) {
         meta = new dftracer::Metadata();
         char cwd[PATH_MAX];
@@ -248,7 +259,7 @@ class DFTLogger {
   }
 
   inline TimeResolution get_time() {
-    DFTRACER_LOG_DEBUG("DFTLogger.get_time", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.get_time");
     struct timeval tv{};
     gettimeofday(&tv, NULL);
     TimeResolution t = 1000000 * tv.tv_sec + tv.tv_usec;
@@ -294,8 +305,8 @@ class DFTLogger {
 
   inline void log(ConstEventNameType event_name, ConstEventNameType category,
                   TimeResolution start_time, TimeResolution duration,
-                  dftracer::Metadata *metadata) {
-    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
+                  dftracer::Metadata* metadata) {
+    DFTRACER_LOG_DEBUG("DFTLogger.log");
 
     // Get thread id and process id from metadata if it exists
     ThreadID tid = 0;
@@ -322,7 +333,7 @@ class DFTLogger {
   }
 
   inline void log_metadata(ConstEventNameType key, ConstEventNameType value) {
-    DFTRACER_LOG_DEBUG("DFTLogger.log_metadata", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.log_metadata");
     ThreadID tid = 0;
     if (dftracer_tid) {
       tid = df_gettid();
@@ -332,7 +343,7 @@ class DFTLogger {
                                              this->process_id, tid);
   }
 
-  inline HashType hash_and_store(char *filename, ConstEventNameType name) {
+  inline HashType hash_and_store(char* filename, ConstEventNameType name) {
     if (filename == NULL) return NO_HASH_DEFAULT;
     char file[PATH_MAX];
     strcpy(file, filename);
@@ -354,7 +365,7 @@ class DFTLogger {
     }
   }
 
-  void fix_str(char *str, size_t len) {
+  void fix_str(char* str, size_t len) {
     for (size_t i = 0; i < len && str[i] != '\0'; ++i) {
       if (ignore_chars(str[i])) str[i] = ' ';
     }
@@ -377,7 +388,7 @@ class DFTLogger {
     return hash;
   }
 
-  inline HashType hash_and_store(const char *filename,
+  inline HashType hash_and_store(const char* filename,
                                  ConstEventNameType name) {
     if (filename == NULL) return NO_HASH_DEFAULT;
     char file[PATH_MAX];
@@ -387,7 +398,7 @@ class DFTLogger {
   }
 
   inline void finalize() {
-    DFTRACER_LOG_DEBUG("DFTLogger.finalize", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.finalize");
     if (this->buffer_manager != nullptr) {
       auto meta = new dftracer::Metadata();
       meta->insert_or_assign("num_events", index.load());
@@ -398,11 +409,13 @@ class DFTLogger {
                                            this->process_id, tid);
       this->exit_event();
       this->buffer_manager->finalize(index.load(), this->process_id, true);
-      DFTRACER_LOG_INFO("Released Logger", "");
+      DFTRACER_LOG_INFO("Released Logger");
       this->buffer_manager.reset();
+      clear_hash_cache();
     } else {
       DFTRACER_LOG_WARN("DFTLogger.finalize buffer manager not initialized",
                         "");
+      clear_hash_cache();
     }
   }
 };
@@ -425,25 +438,27 @@ class DFTLogger {
     DFT_LOGGER_UPDATE(value##_hash);                                  \
   }
 
-#define DFT_LOGGER_START(entity)                           \
-  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__); \
-  HashType fhash = is_traced(entity, __FUNCTION__);        \
-  bool trace = fhash != NO_HASH_DEFAULT;                   \
-  TimeResolution start_time = 0;                           \
-  dftracer::Metadata *metadata = nullptr;                  \
-  if (trace) {                                             \
-    if (this->logger->include_metadata) {                  \
-      metadata = new dftracer::Metadata();                 \
-      DFT_LOGGER_UPDATE(fhash);                            \
-    }                                                      \
-    this->logger->enter_event();                           \
-    start_time = this->logger->get_time();                 \
+#define DFT_LOGGER_START(entity)                             \
+  HashType fhash = is_traced(entity, __FUNCTION__);          \
+  bool trace = fhash != NO_HASH_DEFAULT;                     \
+  if (trace) {                                               \
+    DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__); \
+  }                                                          \
+  TimeResolution start_time = 0;                             \
+  dftracer::Metadata* metadata = nullptr;                    \
+  if (trace) {                                               \
+    if (this->logger->include_metadata) {                    \
+      metadata = new dftracer::Metadata();                   \
+      DFT_LOGGER_UPDATE(fhash);                              \
+    }                                                        \
+    this->logger->enter_event();                             \
+    start_time = this->logger->get_time();                   \
   }
 #define DFT_LOGGER_START_ALWAYS()                          \
   DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__); \
   bool trace = true;                                       \
   TimeResolution start_time = 0;                           \
-  dftracer::Metadata *metadata = nullptr;                  \
+  dftracer::Metadata* metadata = nullptr;                  \
   if (trace) {                                             \
     if (this->logger->include_metadata) {                  \
       metadata = new dftracer::Metadata();                 \
@@ -451,12 +466,12 @@ class DFTLogger {
     this->logger->enter_event();                           \
     start_time = this->logger->get_time();                 \
   }
-#define DFT_LOGGER_END()                                          \
-  if (trace) {                                                    \
-    TimeResolution end_time = this->logger->get_time();           \
-    this->logger->log((char *)__FUNCTION__, CATEGORY, start_time, \
-                      end_time - start_time, metadata);           \
-    this->logger->exit_event();                                   \
+#define DFT_LOGGER_END()                                         \
+  if (trace) {                                                   \
+    TimeResolution end_time = this->logger->get_time();          \
+    this->logger->log((char*)__FUNCTION__, CATEGORY, start_time, \
+                      end_time - start_time, metadata);          \
+    this->logger->exit_event();                                  \
   }
 
 #endif  // DFTRACER_GENERIC_LOGGER_H
