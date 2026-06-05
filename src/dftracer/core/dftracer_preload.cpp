@@ -21,7 +21,7 @@ void dftracer_init(void) {
   auto conf =
       dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
   if (conf != nullptr) {
-    DFTRACER_LOG_DEBUG("dftracer_init", "");
+    DFTRACER_LOG_DEBUG("dftracer_init");
     if (conf->init_type == PROFILER_INIT_LD_PRELOAD) {
       dftracer::Singleton<dftracer::DFTracerCore>::get_instance(
           ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_PRELOAD);
@@ -32,7 +32,7 @@ void dftracer_init(void) {
 void dftracer_fini(void) {
   auto conf =
       dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
-  DFTRACER_LOG_DEBUG("dftracer_fini", "");
+  DFTRACER_LOG_DEBUG("dftracer_fini");
   auto dftracer_inst =
       dftracer::Singleton<dftracer::DFTracerCore>::get_instance(
           ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_PRELOAD);

@@ -31,7 +31,7 @@ void foo() {
   }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int init = 0;
   if (argc > 2) {
     if (strcmp(argv[2], "1") == 0) {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   sprintf(filename_link, "%s/demofile_link.txt", argv[1]);
   foo();
   truncate(filename, 0);
-  FILE *fh = fopen(filename, "w+");
+  FILE* fh = fopen(filename, "w+");
   if (fh != nullptr) {
     fwrite("hello", sizeof("hello"), 1, fh);
     fwrite("hello", sizeof("hello"), 1, fh);

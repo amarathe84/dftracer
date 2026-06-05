@@ -73,6 +73,16 @@ ENV Variables supported
                                             ``DFTRACER_INC_METADATA`` needs to be enabled.
    DFTRACER_GOTCHA_PRIORITY         INT     PRIORITY of DFTracer in GOTCHA (default: 1).
    DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ``ERROR``/``WARN``/``INFO``/``DEBUG`` (default ``ERROR``).
+   DFTRACER_BIND_SIGNALS            INT     Install DFTracer signal and exception handlers (default: 0).
+                                            When set to ``1``, DFTracer registers handlers for the following signals:
+                                            ``SIGSEGV`` (segmentation fault), ``SIGABRT`` (abort / assertion failure),
+                                            ``SIGHUP`` (hangup), ``SIGTERM`` (termination request),
+                                            ``SIGINT`` (keyboard interrupt / Ctrl-C), and ``SIGUSR1`` (user-defined).
+                                            A C++ ``std::terminate`` handler is also installed to catch unhandled exceptions.
+                                            On any of these events, DFTracer prints a full stack trace to ``stderr``,
+                                            flushes output buffers, calls ``dft_finalize()`` to flush trace data, and
+                                            then re-raises the original signal so that the process exits with the
+                                            correct signal-based exit status (visible to ``waitpid`` / shell ``$?``).
    DFTRACER_DISABLE_IO              INT     Disable automatic binding of all I/O calls (default: 0).
    DFTRACER_DISABLE_POSIX           INT     Disable automatic binding of POSIX I/O calls (default: 0).
    DFTRACER_DISABLE_STDIO           INT     Disable automatic binding of STDIO I/O calls (default: 0).

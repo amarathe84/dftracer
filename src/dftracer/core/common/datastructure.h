@@ -31,7 +31,7 @@ class Metadata {
                              std::tuple<MetadataType, std::any, std::size_t>>
       DataMap;
   DataMap data;
-  std::size_t get_hash(const std::any &value, const MetadataType &type) const {
+  std::size_t get_hash(const std::any& value, const MetadataType& type) const {
     if (type != MetadataType::MT_KEY) {
       return 0;
     }
@@ -48,24 +48,24 @@ class Metadata {
  public:
   Metadata() {}
   ~Metadata() {}
-  std::pair<DataMap::iterator, bool> insert_or_assign(const std::string &key,
-                                                      const std::any &value) {
+  std::pair<DataMap::iterator, bool> insert_or_assign(const std::string& key,
+                                                      const std::any& value) {
     auto ret = data.insert_or_assign(
         key, std::make_tuple(MetadataType::MT_KEY, value,
                              get_hash(value, MetadataType::MT_KEY)));
     return ret;
   }
   std::pair<DataMap::iterator, bool> insert_or_assign(
-      const std::string &key, const std::any &value, const MetadataType &type) {
+      const std::string& key, const std::any& value, const MetadataType& type) {
     auto ret = data.insert_or_assign(
         key, std::make_tuple(type, value, get_hash(value, type)));
     return ret;
   }
-  bool contains(const std::string &key) const {
+  bool contains(const std::string& key) const {
     return data.find(key) != data.end();
   }
 
-  size_t erase(const std::string &key) { return data.erase(key); }
+  size_t erase(const std::string& key) { return data.erase(key); }
 
   size_t size() const { return data.size(); }
 
@@ -73,32 +73,32 @@ class Metadata {
 
   void clear() { data.clear(); }
 
-  std::pair<DataMap::iterator, bool> insert(const std::string &key,
-                                            const std::any &value) {
+  std::pair<DataMap::iterator, bool> insert(const std::string& key,
+                                            const std::any& value) {
     return data.insert(
         {key, std::make_tuple(MetadataType::MT_KEY, value,
                               get_hash(value, MetadataType::MT_KEY))});
   }
-  std::pair<DataMap::iterator, bool> insert(const std::string &key,
-                                            const std::any &value,
-                                            const MetadataType &type) {
+  std::pair<DataMap::iterator, bool> insert(const std::string& key,
+                                            const std::any& value,
+                                            const MetadataType& type) {
     return data.insert(
         {key, std::make_tuple(type, value, get_hash(value, type))});
   }
 
-  DataMap::iterator find(const std::string &key) { return data.find(key); }
+  DataMap::iterator find(const std::string& key) { return data.find(key); }
 
-  DataMap::const_iterator find(const std::string &key) const {
+  DataMap::const_iterator find(const std::string& key) const {
     return data.find(key);
   }
 
-  std::tuple<MetadataType, std::any, std::size_t> &operator[](
-      const std::string &key) {
+  std::tuple<MetadataType, std::any, std::size_t>& operator[](
+      const std::string& key) {
     return data[key];
   }
 
-  const std::tuple<MetadataType, std::any, std::size_t> &at(
-      const std::string &key) const {
+  const std::tuple<MetadataType, std::any, std::size_t>& at(
+      const std::string& key) const {
     return data.at(key);
   }
 
@@ -110,10 +110,10 @@ class Metadata {
 
   DataMap::const_iterator end() const { return data.end(); }
 
-  std::string getTagValue(const std::string &tagKey) const;
+  std::string getTagValue(const std::string& tagKey) const;
 };
 
-inline bool compare_any(const std::any &a, const std::any &b) {
+inline bool compare_any(const std::any& a, const std::any& b) {
   if (a.type() != b.type()) return false;
   DFTRACER_FOR_EACH_NUMERIC_TYPE(DFTRACER_COMPARE_TYPE, NULL,
                                  { return result; })
@@ -126,11 +126,11 @@ struct AggregatedKey {
   std::string event_name;
   TimeResolution time_interval;
   ThreadID thread_id;
-  Metadata *additional_keys;
+  Metadata* additional_keys;
   /* These attributes are just holder for rules not used in aggregation-key */
   TimeResolution duration;
-  const char *app_name;
-  const int *rank;
+  const char* app_name;
+  const int* rank;
   mutable size_t _cached_hash;  // Cached hash value
 
   AggregatedKey()
@@ -146,8 +146,8 @@ struct AggregatedKey {
 
   AggregatedKey(ConstEventNameType category_, ConstEventNameType event_name_,
                 TimeResolution time_interval_, TimeResolution duration_,
-                ThreadID thread_id_, Metadata *metadata_, const char *app_name_,
-                const int *rank_)
+                ThreadID thread_id_, Metadata* metadata_, const char* app_name_,
+                const int* rank_)
       : category(category_),
         event_name(event_name_),
         time_interval(time_interval_),
@@ -157,7 +157,7 @@ struct AggregatedKey {
         app_name(app_name_),
         rank(rank_),
         _cached_hash(0) {}
-  AggregatedKey(const AggregatedKey &other)
+  AggregatedKey(const AggregatedKey& other)
       : category(other.category),
         event_name(other.event_name),
         time_interval(other.time_interval),
@@ -167,7 +167,7 @@ struct AggregatedKey {
         app_name(other.app_name),
         rank(other.rank),
         _cached_hash(other._cached_hash) {}
-  bool operator==(const AggregatedKey &other) const {
+  bool operator==(const AggregatedKey& other) const {
     if (category != other.category || event_name != other.event_name ||
         time_interval != other.time_interval || thread_id != other.thread_id) {
       return false;
@@ -175,7 +175,7 @@ struct AggregatedKey {
 
     // Compare additional_keys for MetadataType::MT_KEY
     if (additional_keys && other.additional_keys) {
-      for (const auto &pair : *additional_keys) {
+      for (const auto& pair : *additional_keys) {
         if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           auto it = other.additional_keys->find(pair.first);
           if (it == other.additional_keys->end() ||
@@ -185,7 +185,7 @@ struct AggregatedKey {
           }
         }
       }
-      for (const auto &pair : *other.additional_keys) {
+      for (const auto& pair : *other.additional_keys) {
         if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           auto it = additional_keys->find(pair.first);
           if (it == additional_keys->end() ||
@@ -209,7 +209,7 @@ struct AggregatedKey {
 namespace std {
 template <>
 struct hash<dftracer::AggregatedKey> {
-  std::size_t operator()(const dftracer::AggregatedKey &key) const {
+  std::size_t operator()(const dftracer::AggregatedKey& key) const {
     // Use cached hash if available
     if (key._cached_hash != 0) {
       return key._cached_hash;
@@ -223,7 +223,7 @@ struct hash<dftracer::AggregatedKey> {
 
     std::size_t h5 = 0;
     if (key.additional_keys && !key.additional_keys->empty()) {
-      for (const auto &pair : *key.additional_keys) {
+      for (const auto& pair : *key.additional_keys) {
         if (std::get<0>(pair.second) == MetadataType::MT_KEY) {
           h5 ^= std::hash<std::string>()(pair.first);
           // For std::any, we can only hash the type info
@@ -240,7 +240,7 @@ struct hash<dftracer::AggregatedKey> {
     result ^= h5 + 0x9e3779b9 + (result << 6) + (result >> 2);
 
     // Cache for next time
-    const_cast<dftracer::AggregatedKey &>(key)._cached_hash = result;
+    const_cast<dftracer::AggregatedKey&>(key)._cached_hash = result;
     return result;
   }
 };
@@ -250,36 +250,36 @@ namespace dftracer {
 
 struct BaseAggregatedValue {
  public:
-  BaseAggregatedValue *_child;
+  BaseAggregatedValue* _child;
   ValueType _type;
   std::type_index _id;
 
  protected:
-  BaseAggregatedValue(BaseAggregatedValue *child, ValueType type,
+  BaseAggregatedValue(BaseAggregatedValue* child, ValueType type,
                       std::type_index id)
       : _child(child), _type(type), _id(id) {}
 
  public:
   virtual ~BaseAggregatedValue() = default;
-  void update(BaseAggregatedValue *value);
-  BaseAggregatedValue *get_value();
+  void update(BaseAggregatedValue* value);
+  BaseAggregatedValue* get_value();
 };
 
 template <typename T>
 struct AggregatedValue : public BaseAggregatedValue {
  protected:
-  AggregatedValue(const AggregatedValue<T> &value, BaseAggregatedValue *child)
+  AggregatedValue(const AggregatedValue<T>& value, BaseAggregatedValue* child)
       : BaseAggregatedValue(child, ValueType::VALUE_TYPE_STRING, typeid(T)),
         count(value.count) {}
-  AggregatedValue(const AggregatedValue<T> &value, BaseAggregatedValue *child,
+  AggregatedValue(const AggregatedValue<T>& value, BaseAggregatedValue* child,
                   ValueType id, std::type_index tid)
       : BaseAggregatedValue(child, id, tid), count(value.count) {}
-  AggregatedValue(BaseAggregatedValue *child, ValueType id, std::type_index tid)
+  AggregatedValue(BaseAggregatedValue* child, ValueType id, std::type_index tid)
       : BaseAggregatedValue(child, id, tid), count(1) {}
 
  public:
   size_t count;
-  void update(AggregatedValue<T> *value) { count += value->count; }
+  void update(AggregatedValue<T>* value) { count += value->count; }
   AggregatedValue(T value)
       : BaseAggregatedValue(nullptr, ValueType::VALUE_TYPE_STRING, typeid(T)),
         count(1) {}
@@ -289,7 +289,7 @@ template <typename T>
 struct NumberAggregationValue : public AggregatedValue<T> {
  public:
   T min, max, sum;
-  NumberAggregationValue(NumberAggregationValue<T> &value)
+  NumberAggregationValue(NumberAggregationValue<T>& value)
       : AggregatedValue<T>(value, nullptr, ValueType::VALUE_TYPE_NUMBER,
                            typeid(T)),
         min(value.min),
@@ -300,7 +300,7 @@ struct NumberAggregationValue : public AggregatedValue<T> {
         min(value),
         max(value),
         sum(value) {}
-  void update(NumberAggregationValue<T> *value) {
+  void update(NumberAggregationValue<T>* value) {
     if (value->min < min) min = value->min;
     if (value->max > max) max = value->max;
     sum += value->sum;
@@ -312,9 +312,9 @@ class AggregatedValues {
  public:
   AggregatedValues() {}
   ~AggregatedValues() {}
-  std::unordered_map<std::string, BaseAggregatedValue *> values;
-  int update(const std::string &key, const std::type_info &id,
-             BaseAggregatedValue *value) {
+  std::unordered_map<std::string, BaseAggregatedValue*> values;
+  int update(const std::string& key, const std::type_info& id,
+             BaseAggregatedValue* value) {
     auto it = values.find(key);
     if (it != values.end()) {
       it->second->update(value);
@@ -382,11 +382,11 @@ struct RuleAST {
 };
 
 // Helper functions for field extraction and comparison
-inline std::optional<Value> getFieldValue(const AggregatedKey *key,
-                                          const Field &field) {
+inline std::optional<Value> getFieldValue(const AggregatedKey* key,
+                                          const Field& field) {
   // Extract field value from AggregatedKey based on field.path
   if (!key || field.path.empty()) return std::nullopt;
-  const std::string &fieldName = field.path[0];
+  const std::string& fieldName = field.path[0];
 
   if (fieldName == "cat") {
     return Value{key->category};
@@ -409,7 +409,7 @@ inline std::optional<Value> getFieldValue(const AggregatedKey *key,
   return std::nullopt;
 }
 
-inline bool compareValues(const Value &lhs, const Value &rhs, RuleOp op) {
+inline bool compareValues(const Value& lhs, const Value& rhs, RuleOp op) {
   if (lhs.data.index() != rhs.data.index()) return false;
   if (std::holds_alternative<TimeResolution>(lhs.data)) {
     int l = std::get<TimeResolution>(lhs.data);
@@ -452,8 +452,8 @@ inline bool compareValues(const Value &lhs, const Value &rhs, RuleOp op) {
     }
   }
   if (std::holds_alternative<std::string>(lhs.data)) {
-    const std::string &l = std::get<std::string>(lhs.data);
-    const std::string &r = std::get<std::string>(rhs.data);
+    const std::string& l = std::get<std::string>(lhs.data);
+    const std::string& r = std::get<std::string>(rhs.data);
     switch (op) {
       case RuleOp::EQ:
         return l == r;
@@ -466,7 +466,7 @@ inline bool compareValues(const Value &lhs, const Value &rhs, RuleOp op) {
   return false;
 }
 
-inline bool likeMatch(const std::string &value, const std::string &pattern) {
+inline bool likeMatch(const std::string& value, const std::string& pattern) {
   // Handles patterns: "*stat", "*stat*", "stat*"
   if (pattern == "*") return true;  // matches anything
 

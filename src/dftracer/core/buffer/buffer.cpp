@@ -51,8 +51,7 @@ int BufferManager::initialize(const char* filename, HashType hostname_hash) {
   }
   buffer_pos = 0;
   if (!buffer) {
-    DFTRACER_LOG_ERROR("BufferManager.BufferManager Failed to allocate buffer",
-                       "");
+    DFTRACER_LOG_ERROR("BufferManager.BufferManager Failed to allocate buffer");
   }
   this->writer = dftracer::Singleton<dftracer::STDIOWriter>::get_instance();
   this->writer->initialize(filename);

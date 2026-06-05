@@ -23,9 +23,9 @@
 
 static ConstEventNameType CATEGORY = "FUNC";
 extern "C" {
-void __cyg_profile_func_enter(void *, void *)
+void __cyg_profile_func_enter(void*, void*)
     __attribute__((no_instrument_function));
-void __cyg_profile_func_exit(void *, void *)
+void __cyg_profile_func_exit(void*, void*)
     __attribute__((no_instrument_function));
 }
 namespace dftracer {
@@ -39,7 +39,7 @@ class Function {
   std::shared_ptr<DFTLogger> logger;
   bool enable;
   Function() : enable(false) {
-    DFTRACER_LOG_DEBUG("Function class intercepted", "");
+    DFTRACER_LOG_DEBUG("Function class intercepted");
     logger = DFT_LOGGER_INIT();
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
@@ -47,20 +47,20 @@ class Function {
   }
 
   void finalize() {
-    DFTRACER_LOG_DEBUG("Finalizing Function", "");
+    DFTRACER_LOG_DEBUG("Finalizing Function");
     stop_trace = true;
   }
   ~Function() {}
   static std::shared_ptr<Function> get_instance() {
-    DFTRACER_LOG_DEBUG("POSIX class get_instance", "");
+    DFTRACER_LOG_DEBUG("POSIX class get_instance");
     if (!stop_trace && instance == nullptr) {
       instance = std::make_shared<Function>();
     }
     return instance;
   }
   bool is_active() { return !stop_trace && enable; }
-  int enter_event(std::string &name);
-  int exit_event(std::string &name, TimeResolution &start);
+  int enter_event(std::string& name);
+  int exit_event(std::string& name, TimeResolution& start);
 };
 
 }  // namespace dftracer

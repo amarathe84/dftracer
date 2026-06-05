@@ -6,14 +6,14 @@ std::shared_ptr<dftracer::Function> dftracer::Function::instance = nullptr;
 thread_local std::unordered_map<std::string, TimeResolution>
     dftracer::Function::map = std::unordered_map<std::string, TimeResolution>();
 bool dftracer::Function::stop_trace = false;
-int dftracer::Function::enter_event(std::string &name) {
+int dftracer::Function::enter_event(std::string& name) {
   if (stop_trace) return -1;
   auto start = this->logger->get_time();
   map.insert_or_assign(name, start);
   return 0;
 }
 
-int dftracer::Function::exit_event(std::string &name, TimeResolution &start) {
+int dftracer::Function::exit_event(std::string& name, TimeResolution& start) {
   if (stop_trace) return -1;
   auto tmap = map.find(name);
   if (tmap != map.end()) {
@@ -24,7 +24,7 @@ int dftracer::Function::exit_event(std::string &name, TimeResolution &start) {
   return -1;
 }
 
-void __cyg_profile_func_enter(void *func, void *caller) {
+void __cyg_profile_func_enter(void* func, void* caller) {
   auto function = dftracer::Function::get_instance();
   if (!function || !function->is_active() || !function->logger) return;
   Dl_info info;
@@ -43,7 +43,7 @@ void __cyg_profile_func_enter(void *func, void *caller) {
   function->enter_event(event_name);
 }
 
-void __cyg_profile_func_exit(void *func, void *caller) {
+void __cyg_profile_func_exit(void* func, void* caller) {
   auto function = dftracer::Function::get_instance();
   if (!function || !function->is_active() || !function->logger) return;
   auto end_time = function->logger->get_time();
@@ -61,10 +61,10 @@ void __cyg_profile_func_exit(void *func, void *caller) {
   TimeResolution start_time;
   int status = function->exit_event(event_name, start_time);
   if (status == 0) {
-    dftracer::Metadata *metadata = nullptr;
+    dftracer::Metadata* metadata = nullptr;
     if (function->logger->include_metadata) {
       metadata = new dftracer::Metadata();
-      const char *so = info.dli_fname;
+      const char* so = info.dli_fname;
       metadata->insert_or_assign("so", so);
     }
     function->logger->enter_event();

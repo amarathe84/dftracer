@@ -6,22 +6,24 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 namespace dftracer {
 class STDIOWriter {
  public:
   STDIOWriter() : max_size_(0), fh_(nullptr) {}
   void initialize(const char* filename) {
-    this->filename = filename;
+    filename_ = (filename != nullptr) ? filename : "";
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
     max_size_ = conf->write_buffer_size;
-    fh_ = fopen(filename, "ab+");
+    fh_ = fopen(filename_.c_str(), "ab+");
     if (fh_ == nullptr) {
       DFTRACER_LOG_ERROR("unable to create log file %s: errno=%d (%s)",
-                         filename, errno, strerror(errno));  // GCOVR_EXCL_LINE
+                         filename_.c_str(), errno,
+                         strerror(errno));  // GCOVR_EXCL_LINE
     } else {
       setvbuf(fh_, NULL, _IOLBF, max_size_ + 16 * 1024);
-      DFTRACER_LOG_INFO("created log file %s", filename);
+      DFTRACER_LOG_INFO("created log file %s", filename_.c_str());
     }
   }
 
@@ -30,7 +32,7 @@ class STDIOWriter {
   ~STDIOWriter() {}
   void finalize(int index) {
     if (fh_ != nullptr) {
-      DFTRACER_LOG_INFO("Finalizing STDIOWriter", "");
+      DFTRACER_LOG_INFO("Finalizing STDIOWriter");
       fflush(fh_);
       long file_size = 0;
       if (fh_ != nullptr) {
@@ -39,12 +41,12 @@ class STDIOWriter {
         fseek(fh_, 0, SEEK_SET);
       }
       int status = fclose(fh_);
-      if ((index < 5 || file_size == 0) && filename != nullptr) {
-        unlink(filename);
+      if ((index < 5 || file_size == 0) && !filename_.empty()) {
+        unlink(filename_.c_str());
       }
       if (status != 0) {
         DFTRACER_LOG_ERROR("unable to close log file %s",
-                           this->filename);  // GCOVR_EXCL_LINE
+                           filename_.c_str());  // GCOVR_EXCL_LINE
       }
       fh_ = nullptr;
     }
@@ -62,14 +64,14 @@ class STDIOWriter {
       funlockfile(fh_);
       if (written != len) {
         DFTRACER_LOG_ERROR("unable to write log file %s",
-                           this->filename);  // GCOVR_EXCL_LINE
+                           filename_.c_str());  // GCOVR_EXCL_LINE
       }
     }
     return len;
   }
 
  private:
-  const char* filename;
+  std::string filename_;
   size_t max_size_;
   FILE* fh_;
 };

@@ -73,7 +73,7 @@ class HIPFunction : public dftracer::GenericFunction {
   static void tool_fini(void* tool_data);
 
   void initialize() override {
-    DFTRACER_LOG_DEBUG("Initializing HIPFunction instance", "");
+    DFTRACER_LOG_DEBUG("Initializing HIPFunction instance");
     rocprofiler_force_configure(&conf::roc_conf);
     rocprofiler_status_t status;
     status = rocprofiler_start_context(client_ctx);
@@ -84,7 +84,7 @@ class HIPFunction : public dftracer::GenericFunction {
   }
 
   void finalize() override {
-    DFTRACER_LOG_DEBUG("Finalizing HIPFunction instance", "");
+    DFTRACER_LOG_DEBUG("Finalizing HIPFunction instance");
     rocprofiler_stop_context(client_ctx);
     rocprofiler_flush_buffer(client_buffer);
   }

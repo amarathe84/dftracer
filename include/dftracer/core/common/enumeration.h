@@ -31,7 +31,7 @@ enum AggregationType : uint8_t {
 };
 enum class RuleOp { AND, OR, NOT, EQ, NEQ, GT, LT, GTE, LTE, IN, LIKE };
 
-inline MetadataType convert(const int &s) {
+inline MetadataType convert(const int& s) {
   if (s == 0) {
     return MetadataType::MT_KEY;
   } else if (s == 1) {
@@ -43,7 +43,7 @@ inline MetadataType convert(const int &s) {
   }
 }
 
-inline void convert(const int &s, MetadataType &type) {
+inline void convert(const int& s, MetadataType& type) {
   if (s == 0) {
     type = MetadataType::MT_KEY;
   } else if (s == 1) {
@@ -55,7 +55,7 @@ inline void convert(const int &s, MetadataType &type) {
   }
 }
 
-inline void convert(const std::string &s, ProfileInitType &type) {
+inline void convert(const std::string& s, ProfileInitType& type) {
   if (s == "PRELOAD") {
     type = ProfileInitType::PROFILER_INIT_LD_PRELOAD;
   } else if (s == "FUNCTION") {
@@ -64,18 +64,18 @@ inline void convert(const std::string &s, ProfileInitType &type) {
     type = ProfileInitType::PROFILER_INIT_NONE;
   }
 }
-inline void convert(const std::string &s, cpplogger::LoggerType &type) {
+inline void convert(const std::string& s, cpplogger::LoggerType& type) {
   if (s == "DEBUG") {
-    type = cpplogger::LoggerType::LOG_DEBUG;
+    type = cpplogger::LoggerType::CPP_LOGGER_DEBUG;
   } else if (s == "INFO") {
-    type = cpplogger::LoggerType::LOG_INFO;
+    type = cpplogger::LoggerType::CPP_LOGGER_INFO;
   } else if (s == "WARN") {
-    type = cpplogger::LoggerType::LOG_WARN;
+    type = cpplogger::LoggerType::CPP_LOGGER_WARN;
   } else {
-    type = cpplogger::LoggerType::LOG_ERROR;
+    type = cpplogger::LoggerType::CPP_LOGGER_ERROR;
   }
 }
-inline void convert(const std::string &s, AggregationType &type) {
+inline void convert(const std::string& s, AggregationType& type) {
   if (s == "FULL") {
     type = AggregationType::AGGREGATION_TYPE_FULL;
   } else if (s == "SELECTIVE") {
@@ -84,7 +84,7 @@ inline void convert(const std::string &s, AggregationType &type) {
     type = AggregationType::AGGREGATION_TYPE_FULL;
   }
 }
-inline std::string to_string(const AggregationType &type) {
+inline std::string to_string(const AggregationType& type) {
   switch (type) {
     case AggregationType::AGGREGATION_TYPE_FULL:
       return "FULL";

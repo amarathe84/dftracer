@@ -53,18 +53,18 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Acreate1(hid_t loc_id, const char *name, hid_t type_id,
+  hid_t H5Acreate1(hid_t loc_id, const char* name, hid_t type_id,
                    hid_t space_id, hid_t acpl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id,
+  hid_t H5Acreate2(hid_t loc_id, const char* attr_name, hid_t type_id,
                    hid_t space_id, hid_t acpl_id, hid_t aapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Acreate_async(hid_t loc_id, const char *attr_name, hid_t type_id,
+  hid_t H5Acreate_async(hid_t loc_id, const char* attr_name, hid_t type_id,
                         hid_t space_id, hid_t acpl_id, hid_t aapl_id,
                         hid_t es_id) override;
 #endif
@@ -72,13 +72,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Acreate_by_name(hid_t loc_id, const char *obj_name,
-                          const char *attr_name, hid_t type_id, hid_t space_id,
+  hid_t H5Acreate_by_name(hid_t loc_id, const char* obj_name,
+                          const char* attr_name, hid_t type_id, hid_t space_id,
                           hid_t acpl_id, hid_t aapl_id, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Acreate_by_name_async(hid_t loc_id, const char *obj_name,
-                                const char *attr_name, hid_t type_id,
+  hid_t H5Acreate_by_name_async(hid_t loc_id, const char* obj_name,
+                                const char* attr_name, hid_t type_id,
                                 hid_t space_id, hid_t acpl_id, hid_t aapl_id,
                                 hid_t lapl_id, hid_t es_id) override;
 #endif
@@ -86,13 +86,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Adelete(hid_t loc_id, const char *attr_name) override;
+  herr_t H5Adelete(hid_t loc_id, const char* attr_name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Adelete_by_idx(hid_t loc_id, const char *obj_name,
+  herr_t H5Adelete_by_idx(hid_t loc_id, const char* obj_name,
                           H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                           hid_t lapl_id) override;
 #endif
@@ -100,29 +100,29 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Adelete_by_name(hid_t loc_id, const char *obj_name,
-                           const char *attr_name, hid_t lapl_id) override;
+  herr_t H5Adelete_by_name(hid_t loc_id, const char* obj_name,
+                           const char* attr_name, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Aexists(hid_t obj_id, const char *attr_name) override;
+  htri_t H5Aexists(hid_t obj_id, const char* attr_name) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Aexists_async(hid_t obj_id, const char *attr_name, hbool_t *exists,
+  herr_t H5Aexists_async(hid_t obj_id, const char* attr_name, hbool_t* exists,
                          hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Aexists_by_name(hid_t obj_id, const char *obj_name,
-                           const char *attr_name, hid_t lapl_id) override;
+  htri_t H5Aexists_by_name(hid_t obj_id, const char* obj_name,
+                           const char* attr_name, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Aexists_by_name_async(hid_t loc_id, const char *obj_name,
-                                 const char *attr_name, hbool_t *exists,
+  herr_t H5Aexists_by_name_async(hid_t loc_id, const char* obj_name,
+                                 const char* attr_name, hbool_t* exists,
                                  hid_t lapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -135,38 +135,38 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aget_info(hid_t attr_id, H5A_info_t *ainfo) override;
+  herr_t H5Aget_info(hid_t attr_id, H5A_info_t* ainfo) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aget_info_by_idx(hid_t loc_id, const char *obj_name,
+  herr_t H5Aget_info_by_idx(hid_t loc_id, const char* obj_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, H5A_info_t *ainfo,
+                            hsize_t n, H5A_info_t* ainfo,
                             hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aget_info_by_name(hid_t loc_id, const char *obj_name,
-                             const char *attr_name, H5A_info_t *ainfo,
+  herr_t H5Aget_info_by_name(hid_t loc_id, const char* obj_name,
+                             const char* attr_name, H5A_info_t* ainfo,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) override;
+  ssize_t H5Aget_name(hid_t attr_id, size_t buf_size, char* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Aget_name_by_idx(hid_t loc_id, const char *obj_name,
+  ssize_t H5Aget_name_by_idx(hid_t loc_id, const char* obj_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, char *name, size_t size,
+                             hsize_t n, char* name, size_t size,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -197,45 +197,45 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aiterate1(hid_t loc_id, unsigned int *idx, H5A_operator1_t op,
-                     void *op_data) override;
+  herr_t H5Aiterate1(hid_t loc_id, unsigned int* idx, H5A_operator1_t op,
+                     void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Aiterate2(hid_t loc_id, H5_index_t idx_type, H5_iter_order_t order,
-                     hsize_t *idx, H5A_operator2_t op, void *op_data) override;
+                     hsize_t* idx, H5A_operator2_t op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aiterate_by_name(hid_t loc_id, const char *obj_name,
+  herr_t H5Aiterate_by_name(hid_t loc_id, const char* obj_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t *idx, H5A_operator2_t op, void *op_data,
+                            hsize_t* idx, H5A_operator2_t op, void* op_data,
                             hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Aopen(hid_t obj_id, const char *attr_name, hid_t aapl_id) override;
+  hid_t H5Aopen(hid_t obj_id, const char* attr_name, hid_t aapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Aopen_async(hid_t obj_id, const char *attr_name, hid_t aapl_id,
+  hid_t H5Aopen_async(hid_t obj_id, const char* attr_name, hid_t aapl_id,
                       hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Aopen_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type,
+  hid_t H5Aopen_by_idx(hid_t loc_id, const char* obj_name, H5_index_t idx_type,
                        H5_iter_order_t order, hsize_t n, hid_t aapl_id,
                        hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Aopen_by_idx_async(hid_t loc_id, const char *obj_name,
+  hid_t H5Aopen_by_idx_async(hid_t loc_id, const char* obj_name,
                              H5_index_t idx_type, H5_iter_order_t order,
                              hsize_t n, hid_t aapl_id, hid_t lapl_id,
                              hid_t es_id) override;
@@ -244,13 +244,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Aopen_by_name(hid_t loc_id, const char *obj_name,
-                        const char *attr_name, hid_t aapl_id,
+  hid_t H5Aopen_by_name(hid_t loc_id, const char* obj_name,
+                        const char* attr_name, hid_t aapl_id,
                         hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Aopen_by_name_async(hid_t loc_id, const char *obj_name,
-                              const char *attr_name, hid_t aapl_id,
+  hid_t H5Aopen_by_name_async(hid_t loc_id, const char* obj_name,
+                              const char* attr_name, hid_t aapl_id,
                               hid_t lapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -263,58 +263,58 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Aopen_name(hid_t loc_id, const char *name) override;
+  hid_t H5Aopen_name(hid_t loc_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Aread(hid_t attr_id, hid_t type_id, void *buf) override;
+  herr_t H5Aread(hid_t attr_id, hid_t type_id, void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Aread_async(hid_t attr_id, hid_t dtype_id, void *buf,
+  herr_t H5Aread_async(hid_t attr_id, hid_t dtype_id, void* buf,
                        hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Arename(hid_t loc_id, const char *old_name,
-                   const char *new_name) override;
+  herr_t H5Arename(hid_t loc_id, const char* old_name,
+                   const char* new_name) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Arename_async(hid_t loc_id, const char *old_name,
-                         const char *new_name, hid_t es_id) override;
+  herr_t H5Arename_async(hid_t loc_id, const char* old_name,
+                         const char* new_name, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Arename_by_name(hid_t loc_id, const char *obj_name,
-                           const char *old_attr_name, const char *new_attr_name,
+  herr_t H5Arename_by_name(hid_t loc_id, const char* obj_name,
+                           const char* old_attr_name, const char* new_attr_name,
                            hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Arename_by_name_async(hid_t loc_id, const char *obj_name,
-                                 const char *old_attr_name,
-                                 const char *new_attr_name, hid_t lapl_id,
+  herr_t H5Arename_by_name_async(hid_t loc_id, const char* obj_name,
+                                 const char* old_attr_name,
+                                 const char* new_attr_name, hid_t lapl_id,
                                  hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Awrite(hid_t attr_id, hid_t type_id, const void *buf) override;
+  herr_t H5Awrite(hid_t attr_id, hid_t type_id, const void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Awrite_async(hid_t attr_id, hid_t type_id, const void *buf,
+  herr_t H5Awrite_async(hid_t attr_id, hid_t type_id, const void* buf,
                         hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, int cb,
-                       void *op_data) override;
+                       void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -329,14 +329,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id,
+  hid_t H5Dcreate1(hid_t loc_id, const char* name, hid_t type_id,
                    hid_t space_id, hid_t dcpl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id,
+  hid_t H5Dcreate2(hid_t loc_id, const char* name, hid_t type_id,
                    hid_t space_id, hid_t lcpl_id, hid_t dcpl_id,
                    hid_t dapl_id) override;
 #endif
@@ -348,7 +348,7 @@ class HDF5DFTracer : public HDF5 {
                        hid_t dcpl_id, hid_t dapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Dcreate_async(hid_t loc_id, const char *name, hid_t type_id,
+  hid_t H5Dcreate_async(hid_t loc_id, const char* name, hid_t type_id,
                         hid_t space_id, hid_t lcpl_id, hid_t dcpl_id,
                         hid_t dapl_id, hid_t es_id) override;
 #endif
@@ -368,7 +368,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dfill(const void *fill, hid_t fill_type_id, void *buf,
+  herr_t H5Dfill(const void* fill, hid_t fill_type_id, void* buf,
                  hid_t buf_type_id, hid_t space_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -385,9 +385,9 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dgather(hid_t src_space_id, const void *src_buf, hid_t type_id,
-                   size_t dst_buf_size, void *dst_buf, H5D_gather_func_t op,
-                   void *op_data) override;
+  herr_t H5Dgather(hid_t src_space_id, const void* src_buf, hid_t type_id,
+                   size_t dst_buf_size, void* dst_buf, H5D_gather_func_t op,
+                   void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -399,28 +399,28 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dget_chunk_index_type(hid_t did,
-                                 H5D_chunk_index_t *idx_type) override;
+                                 H5D_chunk_index_t* idx_type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_idx,
-                           hsize_t *offset, unsigned int *filter_mask,
-                           haddr_t *addr, hsize_t *size) override;
+                           hsize_t* offset, unsigned int* filter_mask,
+                           haddr_t* addr, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset,
-                                    unsigned int *filter_mask, haddr_t *addr,
-                                    hsize_t *size) override;
+  herr_t H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t* offset,
+                                    unsigned int* filter_mask, haddr_t* addr,
+                                    hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset,
-                                   hsize_t *chunk_bytes) override;
+  herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t* offset,
+                                   hsize_t* chunk_bytes) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -432,7 +432,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id,
-                           hsize_t *nchunks) override;
+                           hsize_t* nchunks) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -454,7 +454,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dget_space_status(hid_t dset_id,
-                             H5D_space_status_t *allocation) override;
+                             H5D_space_status_t* allocation) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -472,23 +472,23 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Diterate(void *buf, hid_t type_id, hid_t space_id, H5D_operator_t op,
-                    void *operator_data) override;
+  herr_t H5Diterate(void* buf, hid_t type_id, hid_t space_id, H5D_operator_t op,
+                    void* operator_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Dopen1(hid_t loc_id, const char *name) override;
+  hid_t H5Dopen1(hid_t loc_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id) override;
+  hid_t H5Dopen2(hid_t loc_id, const char* name, hid_t dapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Dopen_async(hid_t loc_id, const char *name, hid_t dapl_id,
+  hid_t H5Dopen_async(hid_t loc_id, const char* name, hid_t dapl_id,
                       hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -496,28 +496,28 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                 hid_t file_space_id, hid_t dxpl_id, void *buf) override;
+                 hid_t file_space_id, hid_t dxpl_id, void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dread_async(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                       hid_t file_space_id, hid_t dxpl_id, void *buf,
+                       hid_t file_space_id, hid_t dxpl_id, void* buf,
                        hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset,
-                       uint32_t *filters, void *buf) override;
+  herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t* offset,
+                       uint32_t* filters, void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[],
                        hid_t mem_space_id[], hid_t file_space_id[],
-                       hid_t dxpl_id, void *buf[]) override;
+                       hid_t dxpl_id, void* buf[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dread_multi_async(size_t count, hid_t dset_id[], hid_t mem_type_id[],
                              hid_t mem_space_id[], hid_t file_space_id[],
-                             hid_t dxpl_id, void *buf[], hid_t es_id) override;
+                             hid_t dxpl_id, void* buf[], hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -528,8 +528,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Dscatter(H5D_scatter_func_t op, void *op_data, hid_t type_id,
-                    hid_t dst_space_id, void *dst_buf) override;
+  herr_t H5Dscatter(H5D_scatter_func_t op, void* op_data, hid_t type_id,
+                    hid_t dst_space_id, void* dst_buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -546,48 +546,48 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dvlen_get_buf_size(hid_t dset_id, hid_t type_id, hid_t space_id,
-                              hsize_t *size) override;
+                              hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id,
-                         void *buf) override;
+                         void* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                  hid_t file_space_id, hid_t dxpl_id, const void *buf) override;
+                  hid_t file_space_id, hid_t dxpl_id, const void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dwrite_async(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                        hid_t file_space_id, hid_t dxpl_id, const void *buf,
+                        hid_t file_space_id, hid_t dxpl_id, const void* buf,
                         hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters,
-                        const hsize_t *offset, size_t data_size,
-                        const void *buf) override;
+                        const hsize_t* offset, size_t data_size,
+                        const void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dwrite_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[],
                         hid_t mem_space_id[], hid_t file_space_id[],
-                        hid_t dxpl_id, const void *buf[]) override;
+                        hid_t dxpl_id, const void* buf[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Dwrite_multi_async(size_t count, hid_t dset_id[],
                               hid_t mem_type_id[], hid_t mem_space_id[],
                               hid_t file_space_id[], hid_t dxpl_id,
-                              const void *buf[], hid_t es_id) override;
+                              const void* buf[], hid_t es_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5EScancel(hid_t es_id, size_t *num_not_canceled,
-                    hbool_t *err_occurred) override;
+  herr_t H5EScancel(hid_t es_id, size_t* num_not_canceled,
+                    hbool_t* err_occurred) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5ESclose(hid_t es_id) override;
@@ -599,39 +599,39 @@ class HDF5DFTracer : public HDF5 {
   herr_t H5ESfree_err_info(size_t num_err_info, int err_info[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESget_count(hid_t es_id, size_t *count) override;
+  herr_t H5ESget_count(hid_t es_id, size_t* count) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESget_err_count(hid_t es_id, size_t *num_errs) override;
+  herr_t H5ESget_err_count(hid_t es_id, size_t* num_errs) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5ESget_err_info(hid_t es_id, size_t num_err_info, int err_info[],
-                          size_t *err_cleared) override;
+                          size_t* err_cleared) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESget_err_status(hid_t es_id, hbool_t *err_occurred) override;
+  herr_t H5ESget_err_status(hid_t es_id, hbool_t* err_occurred) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESget_op_counter(hid_t es_id, uint64_t *counter) override;
+  herr_t H5ESget_op_counter(hid_t es_id, uint64_t* counter) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5ESget_requests(hid_t es_id, H5_iter_order_t order,
-                          hid_t *connector_ids, void **requests,
-                          size_t array_len, size_t *count) override;
+                          hid_t* connector_ids, void** requests,
+                          size_t array_len, size_t* count) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5ESinsert_request(hid_t es_id, hid_t connector_id,
-                            void *request) override;
+                            void* request) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESregister_complete_func(hid_t es_id, int func, void *ctx) override;
+  herr_t H5ESregister_complete_func(hid_t es_id, int func, void* ctx) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESregister_insert_func(hid_t es_id, int func, void *ctx) override;
+  herr_t H5ESregister_insert_func(hid_t es_id, int func, void* ctx) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5ESwait(hid_t es_id, uint64_t timeout, size_t *num_in_progress,
-                  hbool_t *err_occurred) override;
+  herr_t H5ESwait(hid_t es_id, uint64_t timeout, size_t* num_in_progress,
+                  hbool_t* err_occurred) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
@@ -642,7 +642,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eauto_is_v2(hid_t err_stack, unsigned int *is_stack) override;
+  herr_t H5Eauto_is_v2(hid_t err_stack, unsigned int* is_stack) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -672,7 +672,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Ecreate_msg(hid_t cls, H5E_type_t msg_type, const char *msg) override;
+  hid_t H5Ecreate_msg(hid_t cls, H5E_type_t msg_type, const char* msg) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -684,20 +684,20 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eget_auto1(H5E_auto1_t *func, void **client_data) override;
+  herr_t H5Eget_auto1(H5E_auto1_t* func, void** client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eget_auto2(hid_t estack_id, H5E_auto2_t *func,
-                      void **client_data) override;
+  herr_t H5Eget_auto2(hid_t estack_id, H5E_auto2_t* func,
+                      void** client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Eget_class_name(hid_t class_id, char *name, size_t size) override;
+  ssize_t H5Eget_class_name(hid_t class_id, char* name, size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -709,19 +709,19 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  char *H5Eget_major(H5E_major_t maj) override;
+  char* H5Eget_major(H5E_major_t maj) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  char *H5Eget_minor(H5E_minor_t min) override;
+  char* H5Eget_minor(H5E_minor_t min) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Eget_msg(hid_t msg_id, H5E_type_t *type, char *msg,
+  ssize_t H5Eget_msg(hid_t msg_id, H5E_type_t* type, char* msg,
                      size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -731,7 +731,7 @@ class HDF5DFTracer : public HDF5 {
   ssize_t H5Eget_num(hid_t error_stack_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Eis_paused(hid_t stack_id, hbool_t *is_paused) override;
+  herr_t H5Eis_paused(hid_t stack_id, hbool_t* is_paused) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Epause_stack(hid_t stack_id) override;
@@ -746,27 +746,27 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eprint1(FILE *stream) override;
+  herr_t H5Eprint1(FILE* stream) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eprint2(hid_t err_stack, FILE *stream) override;
+  herr_t H5Eprint2(hid_t err_stack, FILE* stream) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Epush1(const char *file, const char *func, unsigned int line,
-                  H5E_major_t maj, H5E_minor_t min, const char *str) override;
+  herr_t H5Epush1(const char* file, const char* func, unsigned int line,
+                  H5E_major_t maj, H5E_minor_t min, const char* str) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Eregister_class(const char *cls_name, const char *lib_name,
-                          const char *version) override;
+  hid_t H5Eregister_class(const char* cls_name, const char* lib_name,
+                          const char* version) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Eresume_stack(hid_t stack_id) override;
@@ -775,14 +775,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Eset_auto1(H5E_auto1_t func, void *client_data) override;
+  herr_t H5Eset_auto1(H5E_auto1_t func, void* client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Eset_auto2(hid_t estack_id, H5E_auto2_t func,
-                      void *client_data) override;
+                      void* client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -801,14 +801,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ewalk1(H5E_direction_t direction, H5E_walk1_t func,
-                  void *client_data) override;
+                  void* client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ewalk2(hid_t err_stack, H5E_direction_t direction, H5E_walk2_t func,
-                  void *client_data) override;
+                  void* client_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -893,72 +893,72 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  haddr_t H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id,
+  haddr_t H5FDalloc(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id,
                     hsize_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDclose(H5FD_t *file) override;
+  herr_t H5FDclose(H5FD_t* file) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  int H5FDcmp(const H5FD_t *f1, const H5FD_t *f2) override;
+  int H5FDcmp(const H5FD_t* f1, const H5FD_t* f2) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDctl(H5FD_t *file, uint64_t op_code, uint64_t flags,
-                 const void *input, void **output) override;
+  herr_t H5FDctl(H5FD_t* file, uint64_t op_code, uint64_t flags,
+                 const void* input, void** output) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDdelete(const char *name, hid_t fapl_id) override;
+  herr_t H5FDdelete(const char* name, hid_t fapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDdriver_query(hid_t driver_id, unsigned long *flags) override;
+  herr_t H5FDdriver_query(hid_t driver_id, unsigned long* flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing) override;
+  herr_t H5FDflush(H5FD_t* file, hid_t dxpl_id, hbool_t closing) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900)
-  herr_t H5FDflush(H5FD_t *file, hid_t dxpl_id, unsigned int closing) override;
+  herr_t H5FDflush(H5FD_t* file, hid_t dxpl_id, unsigned int closing) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
+  herr_t H5FDfree(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
                   hsize_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  haddr_t H5FDget_eoa(H5FD_t *file, H5FD_mem_t type) override;
+  haddr_t H5FDget_eoa(H5FD_t* file, H5FD_mem_t type) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900)
-  haddr_t H5FDget_eof(H5FD_t *file) override;
+  haddr_t H5FDget_eof(H5FD_t* file) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  haddr_t H5FDget_eof(H5FD_t *file, H5FD_mem_t type) override;
+  haddr_t H5FDget_eof(H5FD_t* file, H5FD_mem_t type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDget_vfd_handle(H5FD_t *file, hid_t fapl,
-                            void **file_handle) override;
+  herr_t H5FDget_vfd_handle(H5FD_t* file, hid_t fapl,
+                            void** file_handle) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  htri_t H5FDis_driver_registered_by_name(const char *driver_name) override;
+  htri_t H5FDis_driver_registered_by_name(const char* driver_name) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   htri_t H5FDis_driver_registered_by_value(int driver_value) override;
@@ -966,84 +966,84 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDlock(H5FD_t *file, hbool_t rw) override;
+  herr_t H5FDlock(H5FD_t* file, hbool_t rw) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDonion_get_revision_count(const char *filename, hid_t fapl_id,
-                                      uint64_t *revision_count) override;
+  herr_t H5FDonion_get_revision_count(const char* filename, hid_t fapl_id,
+                                      uint64_t* revision_count) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  H5FD_t *H5FDopen(const char *name, unsigned int flags, hid_t fapl_id,
+  H5FD_t* H5FDopen(const char* name, unsigned int flags, hid_t fapl_id,
                    haddr_t maxaddr) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   hid_t H5FDperform_init(int op) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDquery(const H5FD_t *f, unsigned long *flags) override;
+  herr_t H5FDquery(const H5FD_t* f, unsigned long* flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300))
-  int H5FDquery(const H5FD_t *f, unsigned long *flags) override;
+  int H5FDquery(const H5FD_t* f, unsigned long* flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
-                  size_t size, void *buf) override;
+  herr_t H5FDread(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
+                  size_t size, void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id,
+  herr_t H5FDread_from_selection(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id,
                                  uint32_t count, hid_t mem_space_ids[],
                                  hid_t file_space_ids[], haddr_t offsets[],
-                                 size_t element_sizes[], void *bufs[]) override;
+                                 size_t element_sizes[], void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id,
+  herr_t H5FDread_selection(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id,
                             uint32_t count, hid_t mem_spaces[],
                             hid_t file_spaces[], haddr_t offsets[],
-                            size_t element_sizes[], void *bufs[]) override;
+                            size_t element_sizes[], void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count,
+  herr_t H5FDread_vector(H5FD_t* file, hid_t dxpl_id, uint32_t count,
                          H5FD_mem_t types[], haddr_t addrs[], size_t sizes[],
-                         void *bufs[]) override;
+                         void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type,
+  herr_t H5FDread_vector_from_selection(H5FD_t* file, H5FD_mem_t type,
                                         hid_t dxpl_id, uint32_t count,
                                         hid_t mem_spaces[], hid_t file_spaces[],
                                         haddr_t offsets[],
                                         size_t element_sizes[],
-                                        void *bufs[]) override;
+                                        void* bufs[]) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5FDregister(const H5FD_class_t *cls) override;
+  hid_t H5FDregister(const H5FD_class_t* cls) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDset_eoa(H5FD_t *file, H5FD_mem_t type, haddr_t eoa) override;
+  herr_t H5FDset_eoa(H5FD_t* file, H5FD_mem_t type, haddr_t eoa) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing) override;
+  herr_t H5FDtruncate(H5FD_t* file, hid_t dxpl_id, hbool_t closing) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDunlock(H5FD_t *file) override;
+  herr_t H5FDunlock(H5FD_t* file) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1055,35 +1055,35 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
-                   size_t size, const void *buf) override;
+  herr_t H5FDwrite(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr,
+                   size_t size, const void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id,
+  herr_t H5FDwrite_from_selection(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id,
                                   uint32_t count, hid_t mem_space_ids[],
                                   hid_t file_space_ids[], haddr_t offsets[],
                                   size_t element_sizes[],
-                                  const void *bufs[]) override;
+                                  const void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id,
+  herr_t H5FDwrite_selection(H5FD_t* file, H5FD_mem_t type, hid_t dxpl_id,
                              uint32_t count, hid_t mem_spaces[],
                              hid_t file_spaces[], haddr_t offsets[],
                              size_t element_sizes[],
-                             const void *bufs[]) override;
+                             const void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count,
+  herr_t H5FDwrite_vector(H5FD_t* file, hid_t dxpl_id, uint32_t count,
                           H5FD_mem_t types[], haddr_t addrs[], size_t sizes[],
-                          const void *bufs[]) override;
+                          const void* bufs[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type,
+  herr_t H5FDwrite_vector_from_selection(H5FD_t* file, H5FD_mem_t type,
                                          hid_t dxpl_id, uint32_t count,
                                          hid_t mem_spaces[],
                                          hid_t file_spaces[], haddr_t offsets[],
                                          size_t element_sizes[],
-                                         const void *bufs[]) override;
+                                         const void* bufs[]) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1104,16 +1104,16 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Fcreate(const char *filename, unsigned int flags, hid_t fcpl_id,
+  hid_t H5Fcreate(const char* filename, unsigned int flags, hid_t fcpl_id,
                   hid_t fapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Fcreate_async(const char *filename, unsigned int flags, hid_t fcpl_id,
+  hid_t H5Fcreate_async(const char* filename, unsigned int flags, hid_t fcpl_id,
                         hid_t fapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fdelete(const char *filename, hid_t fapl_id) override;
+  herr_t H5Fdelete(const char* filename, hid_t fapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1145,35 +1145,35 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t *minimize) override;
+  herr_t H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t* minimize) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_eoa(hid_t file_id, haddr_t *eoa) override;
+  herr_t H5Fget_eoa(hid_t file_id, haddr_t* eoa) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Fget_file_image(hid_t file_id, void *buf_ptr,
+  ssize_t H5Fget_file_image(hid_t file_id, void* buf_ptr,
                             size_t buf_len) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_fileno(hid_t file_id, unsigned long *fileno) override;
+  herr_t H5Fget_fileno(hid_t file_id, unsigned long* fileno) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_filesize(hid_t file_id, hsize_t *size) override;
+  herr_t H5Fget_filesize(hid_t file_id, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   ssize_t H5Fget_free_sections(hid_t file_id, H5F_mem_t type, size_t nsects,
-                               H5F_sect_info_t *sect_info) override;
+                               H5F_sect_info_t* sect_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1184,70 +1184,70 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_info1(hid_t obj_id, H5F_info1_t *file_info) override;
+  herr_t H5Fget_info1(hid_t obj_id, H5F_info1_t* file_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_info2(hid_t obj_id, H5F_info2_t *file_info) override;
+  herr_t H5Fget_info2(hid_t obj_id, H5F_info2_t* file_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_intent(hid_t file_id, unsigned int *intent) override;
+  herr_t H5Fget_intent(hid_t file_id, unsigned int* intent) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Fget_mdc_config(hid_t file_id,
-                           H5AC_cache_config_t *config_ptr) override;
+                           H5AC_cache_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate_ptr) override;
+  herr_t H5Fget_mdc_hit_rate(hid_t file_id, double* hit_rate_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_mdc_image_info(hid_t file_id, haddr_t *image_addr,
-                               hsize_t *image_size) override;
+  herr_t H5Fget_mdc_image_info(hid_t file_id, haddr_t* image_addr,
+                               hsize_t* image_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_mdc_logging_status(hid_t file_id, hbool_t *is_enabled,
-                                   hbool_t *is_currently_logging) override;
+  herr_t H5Fget_mdc_logging_status(hid_t file_id, hbool_t* is_enabled,
+                                   hbool_t* is_currently_logging) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_mdc_size(hid_t file_id, size_t *max_size_ptr,
-                         size_t *min_clean_size_ptr, size_t *cur_size_ptr,
-                         int *cur_num_entries_ptr) override;
+  herr_t H5Fget_mdc_size(hid_t file_id, size_t* max_size_ptr,
+                         size_t* min_clean_size_ptr, size_t* cur_size_ptr,
+                         int* cur_num_entries_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Fget_metadata_read_retry_info(hid_t file_id,
-                                         H5F_retry_info_t *info) override;
+                                         H5F_retry_info_t* info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag) override;
+  herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t* flag) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Fget_name(hid_t obj_id, char *name, size_t size) override;
+  ssize_t H5Fget_name(hid_t obj_id, char* name, size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1260,7 +1260,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   ssize_t H5Fget_obj_ids(hid_t file_id, unsigned int types, size_t max_objs,
-                         hid_t *obj_id_list) override;
+                         hid_t* obj_id_list) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -1276,7 +1276,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Fget_vfd_handle(hid_t file_id, hid_t fapl,
-                           void **file_handle) override;
+                           void** file_handle) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -1285,30 +1285,30 @@ class HDF5DFTracer : public HDF5 {
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Fis_accessible(const char *container_name, hid_t fapl_id) override;
+  htri_t H5Fis_accessible(const char* container_name, hid_t fapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Fis_hdf5(const char *filename) override;
+  htri_t H5Fis_hdf5(const char* filename) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Fmount(hid_t loc, const char *name, hid_t child,
+  herr_t H5Fmount(hid_t loc, const char* name, hid_t child,
                   hid_t plist) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Fopen(const char *filename, unsigned int flags,
+  hid_t H5Fopen(const char* filename, unsigned int flags,
                 hid_t fapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Fopen_async(const char *filename, unsigned int flags,
+  hid_t H5Fopen_async(const char* filename, unsigned int flags,
                       hid_t access_plist, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1351,11 +1351,11 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300))
   herr_t H5Fset_mdc_config(hid_t file_id,
-                           H5AC_cache_config_t *config_ptr) override;
+                           H5AC_cache_config_t* config_ptr) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Fset_mdc_config(hid_t file_id,
-                           const H5AC_cache_config_t *config_ptr) override;
+                           const H5AC_cache_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1382,7 +1382,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Funmount(hid_t loc, const char *name) override;
+  herr_t H5Funmount(hid_t loc, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1397,13 +1397,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint) override;
+  hid_t H5Gcreate1(hid_t loc_id, const char* name, size_t size_hint) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id,
+  hid_t H5Gcreate2(hid_t loc_id, const char* name, hid_t lcpl_id, hid_t gcpl_id,
                    hid_t gapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1413,7 +1413,7 @@ class HDF5DFTracer : public HDF5 {
   hid_t H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Gcreate_async(hid_t loc_id, const char *name, hid_t lcpl_id,
+  hid_t H5Gcreate_async(hid_t loc_id, const char* name, hid_t lcpl_id,
                         hid_t gcpl_id, hid_t gapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1426,8 +1426,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  int H5Gget_comment(hid_t loc_id, const char *name, size_t bufsize,
-                     char *buf) override;
+  int H5Gget_comment(hid_t loc_id, const char* name, size_t bufsize,
+                     char* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1439,64 +1439,64 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_info(hid_t loc_id, H5G_info_t *ginfo) override;
+  herr_t H5Gget_info(hid_t loc_id, H5G_info_t* ginfo) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Gget_info_async(hid_t loc_id, H5G_info_t *ginfo,
+  herr_t H5Gget_info_async(hid_t loc_id, H5G_info_t* ginfo,
                            hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_info_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Gget_info_by_idx(hid_t loc_id, const char* group_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, H5G_info_t *ginfo,
+                            hsize_t n, H5G_info_t* ginfo,
                             hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Gget_info_by_idx_async(hid_t loc_id, const char *group_name,
+  herr_t H5Gget_info_by_idx_async(hid_t loc_id, const char* group_name,
                                   H5_index_t idx_type, H5_iter_order_t order,
-                                  hsize_t n, H5G_info_t *ginfo, hid_t lapl_id,
+                                  hsize_t n, H5G_info_t* ginfo, hid_t lapl_id,
                                   hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_info_by_name(hid_t loc_id, const char *name, H5G_info_t *ginfo,
+  herr_t H5Gget_info_by_name(hid_t loc_id, const char* name, H5G_info_t* ginfo,
                              hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Gget_info_by_name_async(hid_t loc_id, const char *name,
-                                   H5G_info_t *ginfo, hid_t lapl_id,
+  herr_t H5Gget_info_by_name_async(hid_t loc_id, const char* name,
+                                   H5G_info_t* ginfo, hid_t lapl_id,
                                    hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_linkval(hid_t loc_id, const char *name, size_t size,
-                        char *buf) override;
+  herr_t H5Gget_linkval(hid_t loc_id, const char* name, size_t size,
+                        char* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_num_objs(hid_t loc_id, hsize_t *num_objs) override;
+  herr_t H5Gget_num_objs(hid_t loc_id, hsize_t* num_objs) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gget_objinfo(hid_t loc_id, const char *name, hbool_t follow_link,
-                        H5G_stat_t *statbuf) override;
+  herr_t H5Gget_objinfo(hid_t loc_id, const char* name, hbool_t follow_link,
+                        H5G_stat_t* statbuf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name,
+  ssize_t H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char* name,
                                 size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1509,51 +1509,51 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Giterate(hid_t loc_id, const char *name, int *idx, H5G_iterate_t op,
-                    void *op_data) override;
+  herr_t H5Giterate(hid_t loc_id, const char* name, int* idx, H5G_iterate_t op,
+                    void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Glink(hid_t cur_loc_id, H5L_type_t type, const char *cur_name,
-                 const char *new_name) override;
+  herr_t H5Glink(hid_t cur_loc_id, H5L_type_t type, const char* cur_name,
+                 const char* new_name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Glink2(hid_t cur_loc_id, const char *cur_name, H5L_type_t type,
-                  hid_t new_loc_id, const char *new_name) override;
+  herr_t H5Glink2(hid_t cur_loc_id, const char* cur_name, H5L_type_t type,
+                  hid_t new_loc_id, const char* new_name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gmove(hid_t src_loc_id, const char *src_name,
-                 const char *dst_name) override;
+  herr_t H5Gmove(hid_t src_loc_id, const char* src_name,
+                 const char* dst_name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gmove2(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
-                  const char *dst_name) override;
+  herr_t H5Gmove2(hid_t src_loc_id, const char* src_name, hid_t dst_loc_id,
+                  const char* dst_name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Gopen1(hid_t loc_id, const char *name) override;
+  hid_t H5Gopen1(hid_t loc_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id) override;
+  hid_t H5Gopen2(hid_t loc_id, const char* name, hid_t gapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Gopen_async(hid_t loc_id, const char *name, hid_t gapl_id,
+  hid_t H5Gopen_async(hid_t loc_id, const char* name, hid_t gapl_id,
                       hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1566,14 +1566,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gset_comment(hid_t loc_id, const char *name,
-                        const char *comment) override;
+  herr_t H5Gset_comment(hid_t loc_id, const char* name,
+                        const char* comment) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Gunlink(hid_t loc_id, const char *name) override;
+  herr_t H5Gunlink(hid_t loc_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1609,7 +1609,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Iget_name(hid_t id, char *name, size_t size) override;
+  ssize_t H5Iget_name(hid_t id, char* name, size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1649,28 +1649,28 @@ class HDF5DFTracer : public HDF5 {
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Iiterate(H5I_type_t type, int op, void *op_data) override;
+  herr_t H5Iiterate(H5I_type_t type, int op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Inmembers(H5I_type_t type, hsize_t *num_members) override;
+  herr_t H5Inmembers(H5I_type_t type, hsize_t* num_members) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  void *H5Iobject_verify(hid_t id, H5I_type_t type) override;
+  void* H5Iobject_verify(hid_t id, H5I_type_t type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Iregister(H5I_type_t type, const void *object) override;
+  hid_t H5Iregister(H5I_type_t type, const void* object) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Iregister_future(H5I_type_t type, const void *object, int realize_cb,
+  hid_t H5Iregister_future(H5I_type_t type, const void* object, int realize_cb,
                            int discard_cb) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1684,13 +1684,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  void *H5Iremove_verify(hid_t id, H5I_type_t type) override;
+  void* H5Iremove_verify(hid_t id, H5I_type_t type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  void *H5Isearch(H5I_type_t type, H5I_search_func_t func, void *key) override;
+  void* H5Isearch(H5I_type_t type, H5I_search_func_t func, void* key) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1702,28 +1702,28 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lcopy(hid_t src_loc, const char *src_name, hid_t dst_loc,
-                 const char *dst_name, hid_t lcpl_id, hid_t lapl_id) override;
+  herr_t H5Lcopy(hid_t src_loc, const char* src_name, hid_t dst_loc,
+                 const char* dst_name, hid_t lcpl_id, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lcreate_external(const char *file_name, const char *obj_name,
-                            hid_t link_loc_id, const char *link_name,
+  herr_t H5Lcreate_external(const char* file_name, const char* obj_name,
+                            hid_t link_loc_id, const char* link_name,
                             hid_t lcpl_id, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lcreate_hard(hid_t cur_loc, const char *cur_name, hid_t dst_loc,
-                        const char *dst_name, hid_t lcpl_id,
+  herr_t H5Lcreate_hard(hid_t cur_loc, const char* cur_name, hid_t dst_loc,
+                        const char* dst_name, hid_t lcpl_id,
                         hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Lcreate_hard_async(hid_t cur_loc_id, const char *cur_name,
-                              hid_t new_loc_id, const char *new_name,
+  herr_t H5Lcreate_hard_async(hid_t cur_loc_id, const char* cur_name,
+                              hid_t new_loc_id, const char* new_name,
                               hid_t lcpl_id, hid_t lapl_id,
                               hid_t es_id) override;
 #endif
@@ -1731,43 +1731,43 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lcreate_soft(const char *link_target, hid_t link_loc_id,
-                        const char *link_name, hid_t lcpl_id,
+  herr_t H5Lcreate_soft(const char* link_target, hid_t link_loc_id,
+                        const char* link_name, hid_t lcpl_id,
                         hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Lcreate_soft_async(const char *link_target, hid_t link_loc_id,
-                              const char *link_name, hid_t lcpl_id,
+  herr_t H5Lcreate_soft_async(const char* link_target, hid_t link_loc_id,
+                              const char* link_name, hid_t lcpl_id,
                               hid_t lapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lcreate_ud(hid_t link_loc_id, const char *link_name,
-                      H5L_type_t link_type, const void *udata,
+  herr_t H5Lcreate_ud(hid_t link_loc_id, const char* link_name,
+                      H5L_type_t link_type, const void* udata,
                       size_t udata_size, hid_t lcpl_id, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ldelete(hid_t loc_id, const char *name, hid_t lapl_id) override;
+  herr_t H5Ldelete(hid_t loc_id, const char* name, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Ldelete_async(hid_t loc_id, const char *name, hid_t lapl_id,
+  herr_t H5Ldelete_async(hid_t loc_id, const char* name, hid_t lapl_id,
                          hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ldelete_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Ldelete_by_idx(hid_t loc_id, const char* group_name,
                           H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                           hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Ldelete_by_idx_async(hid_t loc_id, const char *group_name,
+  herr_t H5Ldelete_by_idx_async(hid_t loc_id, const char* group_name,
                                 H5_index_t idx_type, H5_iter_order_t order,
                                 hsize_t n, hid_t lapl_id, hid_t es_id) override;
 #endif
@@ -1775,69 +1775,69 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id) override;
+  htri_t H5Lexists(hid_t loc_id, const char* name, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Lexists_async(hid_t loc_id, const char *name, hbool_t *exists,
+  herr_t H5Lexists_async(hid_t loc_id, const char* name, hbool_t* exists,
                          hid_t lapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Lget_info(hid_t loc_id, const char *name, H5L_info_t *linfo,
+  herr_t H5Lget_info(hid_t loc_id, const char* name, H5L_info_t* linfo,
                      hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_info1(hid_t loc_id, const char *name, int *linfo,
+  herr_t H5Lget_info1(hid_t loc_id, const char* name, int* linfo,
                       hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_info2(hid_t loc_id, const char *name, int *linfo,
+  herr_t H5Lget_info2(hid_t loc_id, const char* name, int* linfo,
                       hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Lget_info_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Lget_info_by_idx(hid_t loc_id, const char* group_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, H5L_info_t *linfo,
+                            hsize_t n, H5L_info_t* linfo,
                             hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_info_by_idx1(hid_t loc_id, const char *group_name,
+  herr_t H5Lget_info_by_idx1(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, int *linfo, hid_t lapl_id) override;
+                             hsize_t n, int* linfo, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_info_by_idx2(hid_t loc_id, const char *group_name,
+  herr_t H5Lget_info_by_idx2(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, int *linfo, hid_t lapl_id) override;
+                             hsize_t n, int* linfo, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Lget_name_by_idx(hid_t loc_id, const char *group_name,
+  ssize_t H5Lget_name_by_idx(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, char *name, size_t size,
+                             hsize_t n, char* name, size_t size,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_val(hid_t loc_id, const char *name, void *buf, size_t size,
+  herr_t H5Lget_val(hid_t loc_id, const char* name, void* buf, size_t size,
                     hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lget_val_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Lget_val_by_idx(hid_t loc_id, const char* group_name,
                            H5_index_t idx_type, H5_iter_order_t order,
-                           hsize_t n, void *buf, size_t size,
+                           hsize_t n, void* buf, size_t size,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1849,64 +1849,64 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
   herr_t H5Literate(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                    hsize_t *idx, H5L_iterate_t op, void *op_data) override;
+                    hsize_t* idx, H5L_iterate_t op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Literate1(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                     hsize_t *idx, int op, void *op_data) override;
+                     hsize_t* idx, int op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Literate2(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                     hsize_t *idx, int op, void *op_data) override;
+                     hsize_t* idx, int op, void* op_data) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Literate_async(hid_t group_id, H5_index_t idx_type,
-                          H5_iter_order_t order, hsize_t *idx_p, int op,
-                          void *op_data, hid_t es_id) override;
+                          H5_iter_order_t order, hsize_t* idx_p, int op,
+                          void* op_data, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Literate_by_name(hid_t loc_id, const char *group_name,
+  herr_t H5Literate_by_name(hid_t loc_id, const char* group_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t *idx, H5L_iterate_t op, void *op_data,
+                            hsize_t* idx, H5L_iterate_t op, void* op_data,
                             hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Literate_by_name1(hid_t loc_id, const char *group_name,
+  herr_t H5Literate_by_name1(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t *idx, int op, void *op_data,
+                             hsize_t* idx, int op, void* op_data,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Literate_by_name2(hid_t loc_id, const char *group_name,
+  herr_t H5Literate_by_name2(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t *idx, int op, void *op_data,
+                             hsize_t* idx, int op, void* op_data,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lmove(hid_t src_loc, const char *src_name, hid_t dst_loc,
-                 const char *dst_name, hid_t lcpl_id, hid_t lapl_id) override;
+  herr_t H5Lmove(hid_t src_loc, const char* src_name, hid_t dst_loc,
+                 const char* dst_name, hid_t lcpl_id, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lregister(const H5L_class_t *cls) override;
+  herr_t H5Lregister(const H5L_class_t* cls) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lunpack_elink_val(const void *ext_linkval, size_t link_size,
-                             unsigned int *flags, const char **filename,
-                             const char **obj_path) override;
+  herr_t H5Lunpack_elink_val(const void* ext_linkval, size_t link_size,
+                             unsigned int* flags, const char** filename,
+                             const char** obj_path) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1917,42 +1917,42 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
   herr_t H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                  H5L_iterate_t op, void *op_data) override;
+                  H5L_iterate_t op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Lvisit1(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                   int op, void *op_data) override;
+                   int op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Lvisit2(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-                   int op, void *op_data) override;
+                   int op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Lvisit_by_name(hid_t loc_id, const char *group_name,
+  herr_t H5Lvisit_by_name(hid_t loc_id, const char* group_name,
                           H5_index_t idx_type, H5_iter_order_t order,
-                          H5L_iterate_t op, void *op_data,
+                          H5L_iterate_t op, void* op_data,
                           hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lvisit_by_name1(hid_t loc_id, const char *group_name,
+  herr_t H5Lvisit_by_name1(hid_t loc_id, const char* group_name,
                            H5_index_t idx_type, H5_iter_order_t order, int op,
-                           void *op_data, hid_t lapl_id) override;
+                           void* op_data, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Lvisit_by_name2(hid_t loc_id, const char *group_name,
+  herr_t H5Lvisit_by_name2(hid_t loc_id, const char* group_name,
                            H5_index_t idx_type, H5_iter_order_t order, int op,
-                           void *op_data, hid_t lapl_id) override;
+                           void* op_data, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Oare_mdc_flushes_disabled(hid_t object_id,
-                                     hbool_t *are_disabled) override;
+                                     hbool_t* are_disabled) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -1967,12 +1967,12 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
-                 const char *dst_name, hid_t ocpypl_id, hid_t lcpl_id) override;
+  herr_t H5Ocopy(hid_t src_loc_id, const char* src_name, hid_t dst_loc_id,
+                 const char* dst_name, hid_t ocpypl_id, hid_t lcpl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Ocopy_async(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
-                       const char *dst_name, hid_t ocpypl_id, hid_t lcpl_id,
+  herr_t H5Ocopy_async(hid_t src_loc_id, const char* src_name, hid_t dst_loc_id,
+                       const char* dst_name, hid_t ocpypl_id, hid_t lcpl_id,
                        hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -1995,7 +1995,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Oexists_by_name(hid_t loc_id, const char *name,
+  htri_t H5Oexists_by_name(hid_t loc_id, const char* name,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2010,125 +2010,125 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Oget_comment(hid_t obj_id, char *comment, size_t bufsize) override;
+  ssize_t H5Oget_comment(hid_t obj_id, char* comment, size_t bufsize) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comment,
+  ssize_t H5Oget_comment_by_name(hid_t loc_id, const char* name, char* comment,
                                  size_t bufsize, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo) override;
+  herr_t H5Oget_info(hid_t loc_id, H5O_info_t* oinfo) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info1(hid_t loc_id, H5O_info_t *oinfo) override;
+  herr_t H5Oget_info1(hid_t loc_id, H5O_info_t* oinfo) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info1(hid_t loc_id, int *oinfo) override;
+  herr_t H5Oget_info1(hid_t loc_id, int* oinfo) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info2(hid_t loc_id, H5O_info_t *oinfo,
+  herr_t H5Oget_info2(hid_t loc_id, H5O_info_t* oinfo,
                       unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info2(hid_t loc_id, int *oinfo, unsigned int fields) override;
+  herr_t H5Oget_info2(hid_t loc_id, int* oinfo, unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info3(hid_t loc_id, int *oinfo, unsigned int fields) override;
+  herr_t H5Oget_info3(hid_t loc_id, int* oinfo, unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Oget_info_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx(hid_t loc_id, const char* group_name,
                             H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, H5O_info_t *oinfo,
+                            hsize_t n, H5O_info_t* oinfo,
                             hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info_by_idx1(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx1(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, H5O_info_t *oinfo,
+                             hsize_t n, H5O_info_t* oinfo,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_idx1(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx1(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, int *oinfo, hid_t lapl_id) override;
+                             hsize_t n, int* oinfo, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info_by_idx2(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx2(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, H5O_info_t *oinfo, unsigned int fields,
+                             hsize_t n, H5O_info_t* oinfo, unsigned int fields,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_idx2(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx2(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, int *oinfo, unsigned int fields,
+                             hsize_t n, int* oinfo, unsigned int fields,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_idx3(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_info_by_idx3(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
-                             hsize_t n, int *oinfo, unsigned int fields,
+                             hsize_t n, int* oinfo, unsigned int fields,
                              hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Oget_info_by_name(hid_t loc_id, const char *name, H5O_info_t *oinfo,
+  herr_t H5Oget_info_by_name(hid_t loc_id, const char* name, H5O_info_t* oinfo,
                              hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info_t *oinfo,
+  herr_t H5Oget_info_by_name1(hid_t loc_id, const char* name, H5O_info_t* oinfo,
                               hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_name1(hid_t loc_id, const char *name, int *oinfo,
+  herr_t H5Oget_info_by_name1(hid_t loc_id, const char* name, int* oinfo,
                               hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info_t *oinfo,
+  herr_t H5Oget_info_by_name2(hid_t loc_id, const char* name, H5O_info_t* oinfo,
                               unsigned int fields, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_name2(hid_t loc_id, const char *name, int *oinfo,
+  herr_t H5Oget_info_by_name2(hid_t loc_id, const char* name, int* oinfo,
                               unsigned int fields, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_info_by_name3(hid_t loc_id, const char *name, int *oinfo,
+  herr_t H5Oget_info_by_name3(hid_t loc_id, const char* name, int* oinfo,
                               unsigned int fields, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Oget_info_by_name_async(hid_t loc_id, const char *name, int *oinfo,
+  herr_t H5Oget_info_by_name_async(hid_t loc_id, const char* name, int* oinfo,
                                    unsigned int fields, hid_t lapl_id,
                                    hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_native_info(hid_t loc_id, int *oinfo,
+  herr_t H5Oget_native_info(hid_t loc_id, int* oinfo,
                             unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name,
+  herr_t H5Oget_native_info_by_idx(hid_t loc_id, const char* group_name,
                                    H5_index_t idx_type, H5_iter_order_t order,
-                                   hsize_t n, int *oinfo, unsigned int fields,
+                                   hsize_t n, int* oinfo, unsigned int fields,
                                    hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oget_native_info_by_name(hid_t loc_id, const char *name, int *oinfo,
+  herr_t H5Oget_native_info_by_name(hid_t loc_id, const char* name, int* oinfo,
                                     unsigned int fields,
                                     hid_t lapl_id) override;
 #endif
@@ -2142,17 +2142,17 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name,
+  herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, const char* new_name,
                  hid_t lcpl_id, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Oopen(hid_t loc_id, const char *name, hid_t lapl_id) override;
+  hid_t H5Oopen(hid_t loc_id, const char* name, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Oopen_async(hid_t loc_id, const char *name, hid_t lapl_id,
+  hid_t H5Oopen_async(hid_t loc_id, const char* name, hid_t lapl_id,
                       hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -2165,12 +2165,12 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Oopen_by_idx(hid_t loc_id, const char *group_name,
+  hid_t H5Oopen_by_idx(hid_t loc_id, const char* group_name,
                        H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                        hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Oopen_by_idx_async(hid_t loc_id, const char *group_name,
+  hid_t H5Oopen_by_idx_async(hid_t loc_id, const char* group_name,
                              H5_index_t idx_type, H5_iter_order_t order,
                              hsize_t n, hid_t lapl_id, hid_t es_id) override;
 #endif
@@ -2190,127 +2190,127 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oset_comment(hid_t obj_id, const char *comment) override;
+  herr_t H5Oset_comment(hid_t obj_id, const char* comment) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Oset_comment_by_name(hid_t loc_id, const char *name,
-                                const char *comment, hid_t lapl_id) override;
+  herr_t H5Oset_comment_by_name(hid_t loc_id, const char* name,
+                                const char* comment, hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Otoken_cmp(hid_t loc_id, const int *token1, const int *token2,
-                      int *cmp_value) override;
+  herr_t H5Otoken_cmp(hid_t loc_id, const int* token1, const int* token2,
+                      int* cmp_value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Otoken_from_str(hid_t loc_id, const char *token_str,
-                           int *token) override;
+  herr_t H5Otoken_from_str(hid_t loc_id, const char* token_str,
+                           int* token) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Otoken_to_str(hid_t loc_id, const int *token,
-                         char **token_str) override;
+  herr_t H5Otoken_to_str(hid_t loc_id, const int* token,
+                         char** token_str) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
   herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                  H5O_iterate_t op, void *op_data) override;
+                  H5O_iterate_t op, void* op_data) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
   herr_t H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                   H5O_iterate_t op, void *op_data) override;
+                   H5O_iterate_t op, void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                   int op, void *op_data) override;
+                   int op, void* op_data) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
   herr_t H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                   H5O_iterate_t op, void *op_data,
+                   H5O_iterate_t op, void* op_data,
                    unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                   int op, void *op_data, unsigned int fields) override;
+                   int op, void* op_data, unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ovisit3(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                   int op, void *op_data, unsigned int fields) override;
+                   int op, void* op_data, unsigned int fields) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Ovisit_by_name(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name(hid_t loc_id, const char* obj_name,
                           H5_index_t idx_type, H5_iter_order_t order,
-                          H5O_iterate_t op, void *op_data,
+                          H5O_iterate_t op, void* op_data,
                           hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Ovisit_by_name1(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name1(hid_t loc_id, const char* obj_name,
                            H5_index_t idx_type, H5_iter_order_t order,
-                           H5O_iterate_t op, void *op_data,
+                           H5O_iterate_t op, void* op_data,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ovisit_by_name1(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name1(hid_t loc_id, const char* obj_name,
                            H5_index_t idx_type, H5_iter_order_t order, int op,
-                           void *op_data, hid_t lapl_id) override;
+                           void* op_data, hid_t lapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Ovisit_by_name2(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name2(hid_t loc_id, const char* obj_name,
                            H5_index_t idx_type, H5_iter_order_t order,
-                           H5O_iterate_t op, void *op_data, unsigned int fields,
+                           H5O_iterate_t op, void* op_data, unsigned int fields,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ovisit_by_name2(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name2(hid_t loc_id, const char* obj_name,
                            H5_index_t idx_type, H5_iter_order_t order, int op,
-                           void *op_data, unsigned int fields,
+                           void* op_data, unsigned int fields,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Ovisit_by_name3(hid_t loc_id, const char *obj_name,
+  herr_t H5Ovisit_by_name3(hid_t loc_id, const char* obj_name,
                            H5_index_t idx_type, H5_iter_order_t order, int op,
-                           void *op_data, unsigned int fields,
+                           void* op_data, unsigned int fields,
                            hid_t lapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLappend(const char *search_path) override;
+  herr_t H5PLappend(const char* search_path) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5PLget(unsigned int index, char *path_buf, size_t buf_size) override;
+  ssize_t H5PLget(unsigned int index, char* path_buf, size_t buf_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLget_loading_state(unsigned int *plugin_control_mask) override;
+  herr_t H5PLget_loading_state(unsigned int* plugin_control_mask) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLinsert(const char *search_path, unsigned int index) override;
+  herr_t H5PLinsert(const char* search_path, unsigned int index) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLprepend(const char *search_path) override;
+  herr_t H5PLprepend(const char* search_path) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2322,7 +2322,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLreplace(const char *search_path, unsigned int index) override;
+  herr_t H5PLreplace(const char* search_path, unsigned int index) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2334,14 +2334,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5PLsize(unsigned int *num_paths) override;
+  herr_t H5PLsize(unsigned int* num_paths) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Padd_merge_committed_dtype_path(hid_t plist_id,
-                                           const char *path) override;
+                                           const char* path) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2371,7 +2371,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name) override;
+  herr_t H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2383,26 +2383,26 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Pcreate_class(hid_t parent, const char *name,
-                        H5P_cls_create_func_t create, void *create_data,
-                        H5P_cls_copy_func_t copy, void *copy_data,
-                        H5P_cls_close_func_t close, void *close_data) override;
+  hid_t H5Pcreate_class(hid_t parent, const char* name,
+                        H5P_cls_create_func_t create, void* create_data,
+                        H5P_cls_copy_func_t copy, void* copy_data,
+                        H5P_cls_close_func_t close, void* close_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Pdecode(const void *buf) override;
+  hid_t H5Pdecode(const void* buf) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100)
-  herr_t H5Pencode(hid_t plist_id, void *buf, size_t *nalloc) override;
+  herr_t H5Pencode(hid_t plist_id, void* buf, size_t* nalloc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc) override;
+  herr_t H5Pencode1(hid_t plist_id, void* buf, size_t* nalloc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pencode2(hid_t plist_id, void *buf, size_t *nalloc,
+  herr_t H5Pencode2(hid_t plist_id, void* buf, size_t* nalloc,
                     hid_t fapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -2415,13 +2415,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Pexist(hid_t plist_id, const char *name) override;
+  htri_t H5Pexist(hid_t plist_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pfill_value_defined(hid_t plist, H5D_fill_value_t *status) override;
+  herr_t H5Pfill_value_defined(hid_t plist, H5D_fill_value_t* status) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2433,72 +2433,72 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget(hid_t plist_id, const char *name, void *value) override;
+  herr_t H5Pget(hid_t plist_id, const char* name, void* value) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pget_actual_selection_io_mode(
-      hid_t plist_id, uint32_t *actual_selection_io_mode) override;
+      hid_t plist_id, uint32_t* actual_selection_io_mode) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_alignment(hid_t fapl_id, hsize_t *threshold,
-                          hsize_t *alignment) override;
+  herr_t H5Pget_alignment(hid_t fapl_id, hsize_t* threshold,
+                          hsize_t* alignment) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_all_coll_metadata_ops(hid_t plist_id,
-                                      hbool_t *is_collective) override;
+                                      hbool_t* is_collective) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_alloc_time(hid_t plist_id,
-                           H5D_alloc_time_t *alloc_time) override;
+                           H5D_alloc_time_t* alloc_time) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_append_flush(hid_t dapl_id, unsigned int dims,
-                             hsize_t boundary[], H5D_append_cb_t *func,
-                             void **udata) override;
+                             hsize_t boundary[], H5D_append_cb_t* func,
+                             void** udata) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_attr_creation_order(hid_t plist_id,
-                                    unsigned int *crt_order_flags) override;
+                                    unsigned int* crt_order_flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_attr_phase_change(hid_t plist_id, unsigned int *max_compact,
-                                  unsigned int *min_dense) override;
+  herr_t H5Pget_attr_phase_change(hid_t plist_id, unsigned int* max_compact,
+                                  unsigned int* min_dense) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_btree_ratios(hid_t plist_id, double *left, double *middle,
-                             double *right) override;
+  herr_t H5Pget_btree_ratios(hid_t plist_id, double* left, double* middle,
+                             double* right) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_cache(hid_t plist_id, int *mdc_nelmts, size_t *rdcc_nslots,
-                      size_t *rdcc_nbytes, double *rdcc_w0) override;
+  herr_t H5Pget_cache(hid_t plist_id, int* mdc_nelmts, size_t* rdcc_nslots,
+                      size_t* rdcc_nbytes, double* rdcc_w0) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding) override;
+  herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t* encoding) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2510,13 +2510,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots,
-                            size_t *rdcc_nbytes, double *rdcc_w0) override;
+  herr_t H5Pget_chunk_cache(hid_t dapl_id, size_t* rdcc_nslots,
+                            size_t* rdcc_nbytes, double* rdcc_w0) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_chunk_opts(hid_t plist_id, unsigned int *opts) override;
+  herr_t H5Pget_chunk_opts(hid_t plist_id, unsigned int* opts) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2528,7 +2528,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  char *H5Pget_class_name(hid_t pclass_id) override;
+  char* H5Pget_class_name(hid_t pclass_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2540,34 +2540,34 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_coll_metadata_write(hid_t plist_id,
-                                    hbool_t *is_collective) override;
+                                    hbool_t* is_collective) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_copy_object(hid_t plist_id,
-                            unsigned int *copy_options) override;
+                            unsigned int* copy_options) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled,
-                                    size_t *page_size) override;
+  herr_t H5Pget_core_write_tracking(hid_t fapl_id, hbool_t* is_enabled,
+                                    size_t* page_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_create_intermediate_group(hid_t plist_id,
-                                          unsigned int *crt_intmd) override;
+                                          unsigned int* crt_intmd) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_data_transform(hid_t plist_id, char *expression,
+  ssize_t H5Pget_data_transform(hid_t plist_id, char* expression,
                                 size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -2577,27 +2577,27 @@ class HDF5DFTracer : public HDF5 {
   hid_t H5Pget_driver(hid_t plist_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  ssize_t H5Pget_driver_config_str(hid_t fapl_id, char *config_buf,
+  ssize_t H5Pget_driver_config_str(hid_t fapl_id, char* config_buf,
                                    size_t buf_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  const void *H5Pget_driver_info(hid_t plist_id) override;
+  const void* H5Pget_driver_info(hid_t plist_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900)
-  void *H5Pget_driver_info(hid_t plist_id) override;
+  void* H5Pget_driver_info(hid_t plist_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_dset_no_attrs_hint(hid_t dcpl_id, hbool_t *minimize) override;
+  herr_t H5Pget_dset_no_attrs_hint(hid_t dcpl_id, hbool_t* minimize) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t *xfer_mode) override;
+  herr_t H5Pget_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2609,21 +2609,21 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_efile_prefix(hid_t dapl_id, char *prefix,
+  ssize_t H5Pget_efile_prefix(hid_t dapl_id, char* prefix,
                               size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_elink_acc_flags(hid_t lapl_id, unsigned int *flags) override;
+  herr_t H5Pget_elink_acc_flags(hid_t lapl_id, unsigned int* flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func,
-                         void **op_data) override;
+  herr_t H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t* func,
+                         void** op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2636,33 +2636,33 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_elink_file_cache_size(hid_t plist_id,
-                                      unsigned int *efc_size) override;
+                                      unsigned int* efc_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_elink_prefix(hid_t plist_id, char *prefix,
+  ssize_t H5Pget_elink_prefix(hid_t plist_id, char* prefix,
                               size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_est_link_info(hid_t plist_id, unsigned int *est_num_entries,
-                              unsigned int *est_name_len) override;
+  herr_t H5Pget_est_link_info(hid_t plist_id, unsigned int* est_num_entries,
+                              unsigned int* est_name_len) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close) override;
+  herr_t H5Pget_evict_on_close(hid_t fapl_id, hbool_t* evict_on_close) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_external(hid_t plist_id, unsigned int idx, size_t name_size,
-                         char *name, off_t *offset, hsize_t *size) override;
+                         char* name, off_t* offset, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2674,114 +2674,114 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_family_offset(hid_t fapl_id, hsize_t *offset) override;
+  herr_t H5Pget_family_offset(hid_t fapl_id, hsize_t* offset) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fapl_core(hid_t fapl_id, size_t *increment,
-                          hbool_t *backing_store) override;
+  herr_t H5Pget_fapl_core(hid_t fapl_id, size_t* increment,
+                          hbool_t* backing_store) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fapl_family(hid_t fapl_id, hsize_t *memb_size,
-                            hid_t *memb_fapl_id) override;
+  herr_t H5Pget_fapl_family(hid_t fapl_id, hsize_t* memb_size,
+                            hid_t* memb_fapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300))
-  herr_t H5Pget_fapl_hdfs(hid_t fapl_id, int *fa_out) override;
+  herr_t H5Pget_fapl_hdfs(hid_t fapl_id, int* fa_out) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fapl_mpio(hid_t fapl_id, int *comm, int *info) override;
+  herr_t H5Pget_fapl_mpio(hid_t fapl_id, int* comm, int* info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map,
-                           hid_t *memb_fapl, char **memb_name,
-                           haddr_t *memb_addr, hbool_t *relax) override;
+  herr_t H5Pget_fapl_multi(hid_t fapl_id, H5FD_mem_t* memb_map,
+                           hid_t* memb_fapl, char** memb_name,
+                           haddr_t* memb_addr, hbool_t* relax) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Pget_fapl_onion(hid_t fapl_id, int *fa_out) override;
+  herr_t H5Pget_fapl_onion(hid_t fapl_id, int* fa_out) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fapl_splitter(hid_t fapl_id, int *config_ptr) override;
+  herr_t H5Pget_fapl_splitter(hid_t fapl_id, int* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_fclose_degree(hid_t fapl_id,
-                              H5F_close_degree_t *degree) override;
+                              H5F_close_degree_t* degree) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_file_image(hid_t fapl_id, void **buf_ptr_ptr,
-                           size_t *buf_len_ptr) override;
+  herr_t H5Pget_file_image(hid_t fapl_id, void** buf_ptr_ptr,
+                           size_t* buf_len_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_file_image_callbacks(
-      hid_t fapl_id, H5FD_file_image_callbacks_t *callbacks_ptr) override;
+      hid_t fapl_id, H5FD_file_image_callbacks_t* callbacks_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking,
-                             hbool_t *ignore_when_disabled) override;
+  herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t* use_file_locking,
+                             hbool_t* ignore_when_disabled) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_file_space(hid_t plist_id, H5F_file_space_type_t *strategy,
-                           hsize_t *threshold) override;
+  herr_t H5Pget_file_space(hid_t plist_id, H5F_file_space_type_t* strategy,
+                           hsize_t* threshold) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_file_space_page_size(hid_t plist_id,
-                                     hsize_t *fsp_size) override;
+                                     hsize_t* fsp_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_file_space_strategy(hid_t plist_id,
-                                    H5F_fspace_strategy_t *strategy,
-                                    hbool_t *persist,
-                                    hsize_t *threshold) override;
+                                    H5F_fspace_strategy_t* strategy,
+                                    hbool_t* persist,
+                                    hsize_t* threshold) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time) override;
+  herr_t H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t* fill_time) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_fill_value(hid_t plist_id, hid_t type_id, void *value) override;
+  herr_t H5Pget_fill_value(hid_t plist_id, hid_t type_id, void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   H5Z_filter_t H5Pget_filter1(hid_t plist_id, unsigned int filter,
-                              unsigned int *flags, size_t *cd_nelmts,
+                              unsigned int* flags, size_t* cd_nelmts,
                               unsigned int cd_values[], size_t namelen,
                               char name[]) override;
 #endif
@@ -2790,17 +2790,17 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   H5Z_filter_t H5Pget_filter2(hid_t plist_id, unsigned int idx,
-                              unsigned int *flags, size_t *cd_nelmts,
+                              unsigned int* flags, size_t* cd_nelmts,
                               unsigned int cd_values[], size_t namelen,
                               char name[],
-                              unsigned int *filter_config) override;
+                              unsigned int* filter_config) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_filter_by_id1(hid_t plist_id, H5Z_filter_t id,
-                              unsigned int *flags, size_t *cd_nelmts,
+                              unsigned int* flags, size_t* cd_nelmts,
                               unsigned int cd_values[], size_t namelen,
                               char name[]) override;
 #endif
@@ -2809,28 +2809,28 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_filter_by_id2(hid_t plist_id, H5Z_filter_t filter_id,
-                              unsigned int *flags, size_t *cd_nelmts,
+                              unsigned int* flags, size_t* cd_nelmts,
                               unsigned int cd_values[], size_t namelen,
                               char name[],
-                              unsigned int *filter_config) override;
+                              unsigned int* filter_config) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_gc_references(hid_t fapl_id, unsigned int *gc_ref) override;
+  herr_t H5Pget_gc_references(hid_t fapl_id, unsigned int* gc_ref) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_hyper_vector_size(hid_t fapl_id, size_t *size) override;
+  herr_t H5Pget_hyper_vector_size(hid_t fapl_id, size_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_istore_k(hid_t plist_id, unsigned int *ik) override;
+  herr_t H5Pget_istore_k(hid_t plist_id, unsigned int* ik) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2842,76 +2842,76 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_libver_bounds(hid_t plist_id, H5F_libver_t *low,
-                              H5F_libver_t *high) override;
+  herr_t H5Pget_libver_bounds(hid_t plist_id, H5F_libver_t* low,
+                              H5F_libver_t* high) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_link_creation_order(hid_t plist_id,
-                                    unsigned int *crt_order_flags) override;
+                                    unsigned int* crt_order_flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_link_phase_change(hid_t plist_id, unsigned int *max_compact,
-                                  unsigned int *min_dense) override;
+  herr_t H5Pget_link_phase_change(hid_t plist_id, unsigned int* max_compact,
+                                  unsigned int* min_dense) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_local_heap_size_hint(hid_t plist_id,
-                                     size_t *size_hint) override;
+                                     size_t* size_hint) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t *func,
-                               void **op_data) override;
+  herr_t H5Pget_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t* func,
+                               void** op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_mdc_config(hid_t plist_id,
-                           H5AC_cache_config_t *config_ptr) override;
+                           H5AC_cache_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_mdc_image_config(
-      hid_t plist_id, H5AC_cache_image_config_t *config_ptr) override;
+      hid_t plist_id, H5AC_cache_image_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_mdc_log_options(hid_t plist_id, hbool_t *is_enabled,
-                                char *location, size_t *location_size,
-                                hbool_t *start_on_access) override;
+  herr_t H5Pget_mdc_log_options(hid_t plist_id, hbool_t* is_enabled,
+                                char* location, size_t* location_size,
+                                hbool_t* start_on_access) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_meta_block_size(hid_t fapl_id, hsize_t *size) override;
+  herr_t H5Pget_meta_block_size(hid_t fapl_id, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_metadata_read_attempts(hid_t plist_id,
-                                       unsigned int *attempts) override;
+                                       unsigned int* attempts) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pget_modify_write_buf(hid_t plist_id,
-                                 hbool_t *modify_write_buf) override;
+                                 hbool_t* modify_write_buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_mpi_params(hid_t fapl_id, int *comm, int *info) override;
+  herr_t H5Pget_mpi_params(hid_t fapl_id, int* comm, int* info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2919,28 +2919,28 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_mpio_actual_chunk_opt_mode(
       hid_t plist_id,
-      H5D_mpio_actual_chunk_opt_mode_t *actual_chunk_opt_mode) override;
+      H5D_mpio_actual_chunk_opt_mode_t* actual_chunk_opt_mode) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_mpio_actual_io_mode(
-      hid_t plist_id, H5D_mpio_actual_io_mode_t *actual_io_mode) override;
+      hid_t plist_id, H5D_mpio_actual_io_mode_t* actual_io_mode) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_mpio_no_collective_cause(
-      hid_t plist_id, uint32_t *local_no_collective_cause,
-      uint32_t *global_no_collective_cause) override;
+      hid_t plist_id, uint32_t* local_no_collective_cause,
+      uint32_t* global_no_collective_cause) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t *type) override;
+  herr_t H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t* type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2952,36 +2952,36 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks) override;
+  herr_t H5Pget_nlinks(hid_t plist_id, size_t* nlinks) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pget_no_selection_io_cause(hid_t plist_id,
-                                      uint32_t *no_selection_io_cause) override;
+                                      uint32_t* no_selection_io_cause) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_nprops(hid_t id, size_t *nprops) override;
+  herr_t H5Pget_nprops(hid_t id, size_t* nprops) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_obj_track_times(hid_t plist_id, hbool_t *track_times) override;
+  herr_t H5Pget_obj_track_times(hid_t plist_id, hbool_t* track_times) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_object_flush_cb(hid_t plist_id, H5F_flush_cb_t *func,
-                                void **udata) override;
+  herr_t H5Pget_object_flush_cb(hid_t plist_id, H5F_flush_cb_t* func,
+                                void** udata) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_page_buffer_size(hid_t plist_id, size_t *buf_size,
-                                 unsigned int *min_meta_perc,
-                                 unsigned int *min_raw_perc) override;
+  herr_t H5Pget_page_buffer_size(hid_t plist_id, size_t* buf_size,
+                                 unsigned int* min_meta_perc,
+                                 unsigned int* min_raw_perc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -2991,113 +2991,113 @@ class HDF5DFTracer : public HDF5 {
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pget_relax_file_integrity_checks(hid_t plist_id,
-                                            uint64_t *flags) override;
+                                            uint64_t* flags) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Pget_selection_io(hid_t plist_id, int *selection_io_mode) override;
+  herr_t H5Pget_selection_io(hid_t plist_id, int* selection_io_mode) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_shared_mesg_index(hid_t plist_id, unsigned int index_num,
-                                  unsigned int *mesg_type_flags,
-                                  unsigned int *min_mesg_size) override;
+                                  unsigned int* mesg_type_flags,
+                                  unsigned int* min_mesg_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pget_shared_mesg_nindexes(hid_t plist_id,
-                                     unsigned int *nindexes) override;
+                                     unsigned int* nindexes) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_shared_mesg_phase_change(hid_t plist_id, unsigned int *max_list,
-                                         unsigned int *min_btree) override;
+  herr_t H5Pget_shared_mesg_phase_change(hid_t plist_id, unsigned int* max_list,
+                                         unsigned int* min_btree) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size) override;
+  herr_t H5Pget_sieve_buf_size(hid_t fapl_id, size_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_size(hid_t id, const char *name, size_t *size) override;
+  herr_t H5Pget_size(hid_t id, const char* name, size_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_sizes(hid_t plist_id, size_t *sizeof_addr,
-                      size_t *sizeof_size) override;
+  herr_t H5Pget_sizes(hid_t plist_id, size_t* sizeof_addr,
+                      size_t* sizeof_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_small_data_block_size(hid_t fapl_id, hsize_t *size) override;
+  herr_t H5Pget_small_data_block_size(hid_t fapl_id, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_sym_k(hid_t plist_id, unsigned int *ik,
-                      unsigned int *lk) override;
+  herr_t H5Pget_sym_k(hid_t plist_id, unsigned int* ik,
+                      unsigned int* lk) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t *op,
-                             void **operate_data) override;
+  herr_t H5Pget_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t* op,
+                             void** operate_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_userblock(hid_t plist_id, hsize_t *size) override;
+  herr_t H5Pget_userblock(hid_t plist_id, hsize_t* size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_version(hid_t plist_id, unsigned int *boot,
-                        unsigned int *freelist, unsigned int *stab,
-                        unsigned int *shhdr) override;
+  herr_t H5Pget_version(hid_t plist_id, unsigned int* boot,
+                        unsigned int* freelist, unsigned int* stab,
+                        unsigned int* shhdr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_virtual_count(hid_t dcpl_id, size_t *count) override;
+  herr_t H5Pget_virtual_count(hid_t dcpl_id, size_t* count) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_virtual_dsetname(hid_t dcpl_id, size_t index, char *name,
+  ssize_t H5Pget_virtual_dsetname(hid_t dcpl_id, size_t index, char* name,
                                   size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_virtual_filename(hid_t dcpl_id, size_t index, char *name,
+  ssize_t H5Pget_virtual_filename(hid_t dcpl_id, size_t index, char* name,
                                   size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Pget_virtual_prefix(hid_t dapl_id, char *prefix,
+  ssize_t H5Pget_virtual_prefix(hid_t dapl_id, char* prefix,
                                 size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size) override;
+  herr_t H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t* gap_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3107,7 +3107,7 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view) override;
+  herr_t H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t* view) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3118,26 +3118,26 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_vlen_mem_manager(hid_t plist_id, H5MM_allocate_t *alloc_func,
-                                 void **alloc_info, H5MM_free_t *free_func,
-                                 void **free_info) override;
+  herr_t H5Pget_vlen_mem_manager(hid_t plist_id, H5MM_allocate_t* alloc_func,
+                                 void** alloc_info, H5MM_free_t* free_func,
+                                 void** free_info) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Pget_vol_cap_flags(hid_t plist_id, uint64_t *cap_flags) override;
+  herr_t H5Pget_vol_cap_flags(hid_t plist_id, uint64_t* cap_flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_vol_id(hid_t plist_id, hid_t *vol_id) override;
+  herr_t H5Pget_vol_id(hid_t plist_id, hid_t* vol_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pget_vol_info(hid_t plist_id, void **vol_info) override;
+  herr_t H5Pget_vol_info(hid_t plist_id, void** vol_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pinsert1(hid_t plist_id, const char *name, size_t size, void *value,
+  herr_t H5Pinsert1(hid_t plist_id, const char* name, size_t size, void* value,
                     H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get,
                     H5P_prp_delete_func_t prp_delete,
                     H5P_prp_copy_func_t prp_copy,
@@ -3147,7 +3147,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pinsert2(hid_t plist_id, const char *name, size_t size, void *value,
+  herr_t H5Pinsert2(hid_t plist_id, const char* name, size_t size, void* value,
                     H5P_prp_set_func_t set, H5P_prp_get_func_t get,
                     H5P_prp_delete_func_t prp_del, H5P_prp_copy_func_t copy,
                     H5P_prp_compare_func_t compare,
@@ -3163,8 +3163,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  int H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func,
-                 void *iter_data) override;
+  int H5Piterate(hid_t id, int* idx, H5P_iterate_t iter_func,
+                 void* iter_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3178,8 +3178,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pregister1(hid_t cls_id, const char *name, size_t size,
-                      void *def_value, H5P_prp_create_func_t prp_create,
+  herr_t H5Pregister1(hid_t cls_id, const char* name, size_t size,
+                      void* def_value, H5P_prp_create_func_t prp_create,
                       H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get,
                       H5P_prp_delete_func_t prp_del,
                       H5P_prp_copy_func_t prp_copy,
@@ -3189,8 +3189,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pregister2(hid_t cls_id, const char *name, size_t size,
-                      void *def_value, H5P_prp_create_func_t create,
+  herr_t H5Pregister2(hid_t cls_id, const char* name, size_t size,
+                      void* def_value, H5P_prp_create_func_t create,
                       H5P_prp_set_func_t set, H5P_prp_get_func_t get,
                       H5P_prp_delete_func_t prp_del, H5P_prp_copy_func_t copy,
                       H5P_prp_compare_func_t compare,
@@ -3200,7 +3200,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Premove(hid_t plist_id, const char *name) override;
+  herr_t H5Premove(hid_t plist_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3211,10 +3211,10 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset(hid_t plist_id, const char *name, const void *value) override;
+  herr_t H5Pset(hid_t plist_id, const char* name, const void* value) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900)
-  herr_t H5Pset(hid_t plist_id, const char *name, void *value) override;
+  herr_t H5Pset(hid_t plist_id, const char* name, void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3241,7 +3241,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_append_flush(hid_t dapl_id, unsigned int ndims,
                              const hsize_t boundary[], H5D_append_cb_t func,
-                             void *udata) override;
+                             void* udata) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3268,8 +3268,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_buffer(hid_t plist_id, size_t size, void *tconv,
-                       void *bkg) override;
+  herr_t H5Pset_buffer(hid_t plist_id, size_t size, void* tconv,
+                       void* bkg) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3332,7 +3332,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_data_transform(hid_t plist_id, const char *expression) override;
+  herr_t H5Pset_data_transform(hid_t plist_id, const char* expression) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pset_dataset_io_hyperslab_selection(
@@ -3351,15 +3351,15 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_driver(hid_t plist_id, hid_t driver_id,
-                       const void *driver_info) override;
+                       const void* driver_info) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Pset_driver_by_name(hid_t plist_id, const char *driver_name,
-                               const char *driver_config) override;
+  herr_t H5Pset_driver_by_name(hid_t plist_id, const char* driver_name,
+                               const char* driver_config) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
   herr_t H5Pset_driver_by_value(hid_t plist_id, int driver_value,
-                                const char *driver_config) override;
+                                const char* driver_config) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3410,7 +3410,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_efile_prefix(hid_t dapl_id, const char *prefix) override;
+  herr_t H5Pset_efile_prefix(hid_t dapl_id, const char* prefix) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3423,7 +3423,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func,
-                         void *op_data) override;
+                         void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3442,7 +3442,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_elink_prefix(hid_t plist_id, const char *prefix) override;
+  herr_t H5Pset_elink_prefix(hid_t plist_id, const char* prefix) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3460,7 +3460,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_external(hid_t plist_id, const char *name, off_t offset,
+  herr_t H5Pset_external(hid_t plist_id, const char* name, off_t offset,
                          hsize_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -3486,13 +3486,13 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300))
-  herr_t H5Pset_fapl_hdfs(hid_t fapl_id, int *fa) override;
+  herr_t H5Pset_fapl_hdfs(hid_t fapl_id, int* fa) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_fapl_log(hid_t fapl_id, const char *logfile,
+  herr_t H5Pset_fapl_log(hid_t fapl_id, const char* logfile,
                          unsigned long long flags, size_t buf_size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -3505,12 +3505,12 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_fapl_multi(hid_t fapl_id, const H5FD_mem_t *memb_map,
-                           const hid_t *memb_fapl, const char *const *memb_name,
-                           const haddr_t *memb_addr, hbool_t relax) override;
+  herr_t H5Pset_fapl_multi(hid_t fapl_id, const H5FD_mem_t* memb_map,
+                           const hid_t* memb_fapl, const char* const* memb_name,
+                           const haddr_t* memb_addr, hbool_t relax) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Pset_fapl_onion(hid_t fapl_id, const int *fa) override;
+  herr_t H5Pset_fapl_onion(hid_t fapl_id, const int* fa) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3522,14 +3522,14 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_fapl_split(hid_t fapl, const char *meta_ext,
-                           hid_t meta_plist_id, const char *raw_ext,
+  herr_t H5Pset_fapl_split(hid_t fapl, const char* meta_ext,
+                           hid_t meta_plist_id, const char* raw_ext,
                            hid_t raw_plist_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_fapl_splitter(hid_t fapl_id, int *config_ptr) override;
+  herr_t H5Pset_fapl_splitter(hid_t fapl_id, int* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3548,7 +3548,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_file_image(hid_t fapl_id, void *buf_ptr,
+  herr_t H5Pset_file_image(hid_t fapl_id, void* buf_ptr,
                            size_t buf_len) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -3556,7 +3556,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_file_image_callbacks(
-      hid_t fapl_id, H5FD_file_image_callbacks_t *callbacks_ptr) override;
+      hid_t fapl_id, H5FD_file_image_callbacks_t* callbacks_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3594,7 +3594,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_fill_value(hid_t plist_id, hid_t type_id,
-                           const void *value) override;
+                           const void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3609,7 +3609,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_filter_callback(hid_t plist_id, H5Z_filter_func_t func,
-                                void *op_data) override;
+                                void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3673,26 +3673,26 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t func,
-                               void *op_data) override;
+                               void* op_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_mdc_config(hid_t plist_id,
-                           H5AC_cache_config_t *config_ptr) override;
+                           H5AC_cache_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_mdc_image_config(
-      hid_t plist_id, H5AC_cache_image_config_t *config_ptr) override;
+      hid_t plist_id, H5AC_cache_image_config_t* config_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_mdc_log_options(hid_t plist_id, hbool_t is_enabled,
-                                const char *location,
+                                const char* location,
                                 hbool_t start_on_access) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -3743,7 +3743,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_object_flush_cb(hid_t plist_id, H5F_flush_cb_t func,
-                                void *udata) override;
+                                void* udata) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3838,7 +3838,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t op,
-                             void *operate_data) override;
+                             void* operate_data) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -3850,13 +3850,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_virtual(hid_t dcpl_id, hid_t vspace_id,
-                        const char *src_file_name, const char *src_dset_name,
+                        const char* src_file_name, const char* src_dset_name,
                         hid_t src_space_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix) override;
+  herr_t H5Pset_virtual_prefix(hid_t dapl_id, const char* prefix) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -3873,90 +3873,90 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_vlen_mem_manager(hid_t plist_id, H5MM_allocate_t alloc_func,
-                                 void *alloc_info, H5MM_free_t free_func,
-                                 void *free_info) override;
+                                 void* alloc_info, H5MM_free_t free_func,
+                                 void* free_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Pset_vol(hid_t plist_id, hid_t new_vol_id,
-                    const void *new_vol_info) override;
+                    const void* new_vol_info) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Punregister(hid_t pclass_id, const char *name) override;
+  herr_t H5Punregister(hid_t pclass_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rcopy(const int *src_ref_ptr, int *dst_ref_ptr) override;
+  herr_t H5Rcopy(const int* src_ref_ptr, int* dst_ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rcreate(void *ref, hid_t loc_id, const char *name,
+  herr_t H5Rcreate(void* ref, hid_t loc_id, const char* name,
                    H5R_type_t ref_type, hid_t space_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rcreate_attr(hid_t loc_id, const char *name, const char *attr_name,
-                        hid_t oapl_id, int *ref_ptr) override;
+  herr_t H5Rcreate_attr(hid_t loc_id, const char* name, const char* attr_name,
+                        hid_t oapl_id, int* ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rcreate_object(hid_t loc_id, const char *name, hid_t oapl_id,
-                          int *ref_ptr) override;
+  herr_t H5Rcreate_object(hid_t loc_id, const char* name, hid_t oapl_id,
+                          int* ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rcreate_region(hid_t loc_id, const char *name, hid_t space_id,
-                          hid_t oapl_id, int *ref_ptr) override;
+  herr_t H5Rcreate_region(hid_t loc_id, const char* name, hid_t space_id,
+                          hid_t oapl_id, int* ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   hid_t H5Rdereference1(hid_t obj_id, H5R_type_t ref_type,
-                        const void *ref) override;
+                        const void* ref) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900)
   hid_t H5Rdereference2(hid_t dataset, H5R_type_t ref_type,
-                        const void *ref) override;
+                        const void* ref) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   hid_t H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type,
-                        const void *ref) override;
+                        const void* ref) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rdestroy(int *ref_ptr) override;
+  herr_t H5Rdestroy(int* ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Requal(const int *ref1_ptr, const int *ref2_ptr) override;
+  htri_t H5Requal(const int* ref1_ptr, const int* ref2_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Rget_attr_name(const int *ref_ptr, char *name,
+  ssize_t H5Rget_attr_name(const int* ref_ptr, char* name,
                            size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Rget_file_name(const int *ref_ptr, char *name,
+  ssize_t H5Rget_file_name(const int* ref_ptr, char* name,
                            size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, const void *ref,
-                      char *name, size_t size) override;
+  ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, const void* ref,
+                      char* name, size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  ssize_t H5Rget_obj_name(int *ref_ptr, hid_t rapl_id, char *name,
+  ssize_t H5Rget_obj_name(int* ref_ptr, hid_t rapl_id, char* name,
                           size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -3964,53 +3964,53 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   H5G_obj_t H5Rget_obj_type1(hid_t id, H5R_type_t ref_type,
-                             const void *ref) override;
+                             const void* ref) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rget_obj_type2(hid_t id, H5R_type_t ref_type, const void *_ref,
-                          H5O_type_t *obj_type) override;
+  herr_t H5Rget_obj_type2(hid_t id, H5R_type_t ref_type, const void* _ref,
+                          H5O_type_t* obj_type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Rget_obj_type3(int *ref_ptr, hid_t rapl_id,
-                          H5O_type_t *obj_type) override;
+  herr_t H5Rget_obj_type3(int* ref_ptr, hid_t rapl_id,
+                          H5O_type_t* obj_type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   hid_t H5Rget_region(hid_t dataset, H5R_type_t ref_type,
-                      const void *ref) override;
+                      const void* ref) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  H5R_type_t H5Rget_type(const int *ref_ptr) override;
+  H5R_type_t H5Rget_type(const int* ref_ptr) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Ropen_attr(int *ref_ptr, hid_t rapl_id, hid_t aapl_id) override;
+  hid_t H5Ropen_attr(int* ref_ptr, hid_t rapl_id, hid_t aapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Ropen_attr_async(int *ref_ptr, hid_t rapl_id, hid_t aapl_id,
+  hid_t H5Ropen_attr_async(int* ref_ptr, hid_t rapl_id, hid_t aapl_id,
                            hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Ropen_object(int *ref_ptr, hid_t rapl_id, hid_t oapl_id) override;
+  hid_t H5Ropen_object(int* ref_ptr, hid_t rapl_id, hid_t oapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Ropen_object_async(unsigned int app_line, int *ref_ptr, hid_t rapl_id,
+  hid_t H5Ropen_object_async(unsigned int app_line, int* ref_ptr, hid_t rapl_id,
                              hid_t oapl_id, hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Ropen_region(int *ref_ptr, hid_t rapl_id, hid_t oapl_id) override;
+  hid_t H5Ropen_region(int* ref_ptr, hid_t rapl_id, hid_t oapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Ropen_region_async(int *ref_ptr, hid_t rapl_id, hid_t oapl_id,
+  hid_t H5Ropen_region_async(int* ref_ptr, hid_t rapl_id, hid_t oapl_id,
                              hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4056,19 +4056,19 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Sdecode(const void *buf) override;
+  hid_t H5Sdecode(const void* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100))
-  herr_t H5Sencode(hid_t obj_id, void *buf, size_t *nalloc) override;
+  herr_t H5Sencode(hid_t obj_id, void* buf, size_t* nalloc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Sencode1(hid_t obj_id, void *buf, size_t *nalloc) override;
+  herr_t H5Sencode1(hid_t obj_id, void* buf, size_t* nalloc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc,
+  herr_t H5Sencode2(hid_t obj_id, void* buf, size_t* nalloc,
                     hid_t fapl) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4183,7 +4183,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Soffset_simple(hid_t space_id, const hssize_t *offset) override;
+  herr_t H5Soffset_simple(hid_t space_id, const hssize_t* offset) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
@@ -4197,8 +4197,8 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Ssel_iter_get_seq_list(hid_t sel_iter_id, size_t maxseq,
-                                  size_t maxbytes, size_t *nseq, size_t *nbytes,
-                                  hsize_t *off, size_t *len) override;
+                                  size_t maxbytes, size_t* nseq, size_t* nbytes,
+                                  hsize_t* off, size_t* len) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
@@ -4207,7 +4207,7 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Sselect_adjust(hid_t spaceid, const hssize_t *offset) override;
+  herr_t H5Sselect_adjust(hid_t spaceid, const hssize_t* offset) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4225,7 +4225,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Sselect_elements(hid_t space_id, H5S_seloper_t op, size_t num_elem,
-                            const hsize_t *coord) override;
+                            const hsize_t* coord) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4239,8 +4239,8 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  htri_t H5Sselect_intersect_block(hid_t space_id, const hsize_t *start,
-                                   const hsize_t *end) override;
+  htri_t H5Sselect_intersect_block(hid_t space_id, const hsize_t* start,
+                                   const hsize_t* end) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4279,13 +4279,13 @@ class HDF5DFTracer : public HDF5 {
                               const hsize_t max[]) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5TSmutex_acquire(unsigned int lock_count, int *acquired) override;
+  herr_t H5TSmutex_acquire(unsigned int lock_count, int* acquired) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5TSmutex_get_attempt_count(unsigned int *count) override;
+  herr_t H5TSmutex_get_attempt_count(unsigned int* count) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5TSmutex_release(unsigned int *lock_count) override;
+  herr_t H5TSmutex_release(unsigned int* lock_count) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4314,13 +4314,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id) override;
+  herr_t H5Tcommit1(hid_t loc_id, const char* name, hid_t type_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id,
+  herr_t H5Tcommit2(hid_t loc_id, const char* name, hid_t type_id,
                     hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4331,7 +4331,7 @@ class HDF5DFTracer : public HDF5 {
                         hid_t tapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5Tcommit_async(hid_t loc_id, const char *name, hid_t type_id,
+  herr_t H5Tcommit_async(hid_t loc_id, const char* name, hid_t type_id,
                          hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id,
                          hid_t es_id) override;
 #endif
@@ -4351,8 +4351,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf,
-                    void *background, hid_t plist_id) override;
+  herr_t H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void* buf,
+                    void* background, hid_t plist_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4370,7 +4370,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Tdecode(const void *buf) override;
+  hid_t H5Tdecode(const void* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4382,7 +4382,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tencode(hid_t obj_id, void *buf, size_t *nalloc) override;
+  herr_t H5Tencode(hid_t obj_id, void* buf, size_t* nalloc) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4394,21 +4394,21 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tenum_insert(hid_t type, const char *name,
-                        const void *value) override;
+  herr_t H5Tenum_insert(hid_t type, const char* name,
+                        const void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tenum_nameof(hid_t type, const void *value, char *name,
+  herr_t H5Tenum_nameof(hid_t type, const void* value, char* name,
                         size_t size) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tenum_valueof(hid_t type, const char *name, void *value) override;
+  herr_t H5Tenum_valueof(hid_t type, const char* name, void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4420,7 +4420,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata) override;
+  H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t** pcdata) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -4467,8 +4467,8 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, size_t *esize,
-                       size_t *mpos, size_t *msize) override;
+  herr_t H5Tget_fields(hid_t type_id, size_t* spos, size_t* epos, size_t* esize,
+                       size_t* mpos, size_t* msize) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4486,13 +4486,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  int H5Tget_member_index(hid_t type_id, const char *name) override;
+  int H5Tget_member_index(hid_t type_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  char *H5Tget_member_name(hid_t type_id, unsigned int membno) override;
+  char* H5Tget_member_name(hid_t type_id, unsigned int membno) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4505,7 +4505,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Tget_member_value(hid_t type_id, unsigned int membno,
-                             void *value) override;
+                             void* value) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4541,7 +4541,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tget_pad(hid_t type_id, H5T_pad_t *lsb, H5T_pad_t *msb) override;
+  herr_t H5Tget_pad(hid_t type_id, H5T_pad_t* lsb, H5T_pad_t* msb) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4565,13 +4565,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  char *H5Tget_tag(hid_t type) override;
+  char* H5Tget_tag(hid_t type) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tinsert(hid_t parent_id, const char *name, size_t offset,
+  herr_t H5Tinsert(hid_t parent_id, const char* name, size_t offset,
                    hid_t member_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4590,16 +4590,16 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Topen1(hid_t loc_id, const char *name) override;
+  hid_t H5Topen1(hid_t loc_id, const char* name) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  hid_t H5Topen2(hid_t loc_id, const char *name, hid_t tapl_id) override;
+  hid_t H5Topen2(hid_t loc_id, const char* name, hid_t tapl_id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  hid_t H5Topen_async(hid_t loc_id, const char *name, hid_t tapl_id,
+  hid_t H5Topen_async(hid_t loc_id, const char* name, hid_t tapl_id,
                       hid_t es_id) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4611,7 +4611,7 @@ class HDF5DFTracer : public HDF5 {
 #if ((BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Treclaim(hid_t type_id, hid_t space_id, hid_t plist_id,
-                    void *buf) override;
+                    void* buf) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
@@ -4622,7 +4622,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tregister(H5T_pers_t pers, const char *name, hid_t src_id,
+  herr_t H5Tregister(H5T_pers_t pers, const char* name, hid_t src_id,
                      hid_t dst_id, H5T_conv_t func) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4702,13 +4702,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tset_tag(hid_t type, const char *tag) override;
+  herr_t H5Tset_tag(hid_t type, const char* tag) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Tunregister(H5T_pers_t pers, const char *name, hid_t src_id,
+  herr_t H5Tunregister(H5T_pers_t pers, const char* name, hid_t src_id,
                        hid_t dst_id, H5T_conv_t func) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
@@ -4728,13 +4728,13 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
   herr_t H5Zget_filter_info(H5Z_filter_t filter,
-                            unsigned int *filter_config_flags) override;
+                            unsigned int* filter_config_flags) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5Zregister(const void *cls) override;
+  herr_t H5Zregister(const void* cls) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4743,7 +4743,7 @@ class HDF5DFTracer : public HDF5 {
   herr_t H5Zunregister(H5Z_filter_t id) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5atclose(int func, void *ctx) override;
+  herr_t H5atclose(int func, void* ctx) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4768,7 +4768,7 @@ class HDF5DFTracer : public HDF5 {
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5free_memory(void *mem) override;
+  herr_t H5free_memory(void* mem) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
@@ -4778,23 +4778,23 @@ class HDF5DFTracer : public HDF5 {
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 101011 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300))
-  herr_t H5get_alloc_stats(int *stats) override;
+  herr_t H5get_alloc_stats(int* stats) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5get_libversion(unsigned int *majnum, unsigned int *minnum,
-                          unsigned int *relnum) override;
+  herr_t H5get_libversion(unsigned int* majnum, unsigned int* minnum,
+                          unsigned int* relnum) override;
 #endif
 #if (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500)
-  herr_t H5is_library_terminating(hbool_t *is_terminating) override;
+  herr_t H5is_library_terminating(hbool_t* is_terminating) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
      (BRAHMA_HDF5_VERSION >= 101203 && BRAHMA_HDF5_VERSION < 101300) || \
      (BRAHMA_HDF5_VERSION >= 101405 && BRAHMA_HDF5_VERSION < 101500))
-  herr_t H5is_library_threadsafe(hbool_t *is_ts) override;
+  herr_t H5is_library_threadsafe(hbool_t* is_ts) override;
 #endif
 #if ((BRAHMA_HDF5_VERSION >= 100823 && BRAHMA_HDF5_VERSION < 100900) || \
      (BRAHMA_HDF5_VERSION >= 101005 && BRAHMA_HDF5_VERSION < 101100) || \
