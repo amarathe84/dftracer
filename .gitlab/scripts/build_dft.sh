@@ -5,8 +5,7 @@ LOG_FILE="$PWD/build.log"
 echo "Running build_dft.sh on $(hostname) and logging to $LOG_FILE" | tee -a "$LOG_FILE"
 
 # shellcheck source=/dev/null
-
-export site=$(ls -d $CUSTOM_CI_ENV_DIR/$ENV_NAME/lib/python*/site-packages/ 2>>"$LOG_FILE")
+export site=$(ls -d ${CUSTOM_CI_ENV_DIR}/$ENV_NAME/lib/python*/site-packages/ 2>>"$LOG_FILE")
 
 
 echo "Remove preinstall version of dftracer" | tee -a "$LOG_FILE"

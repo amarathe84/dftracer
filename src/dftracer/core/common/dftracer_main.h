@@ -37,6 +37,7 @@ namespace dftracer {
 class DFTracerCore {
  private:
   std::string log_file;
+  std::string log_file_prefix;
   std::string data_dirs;
   std::shared_ptr<dftracer::ConfigurationManager> conf;
   ProcessID process_id;

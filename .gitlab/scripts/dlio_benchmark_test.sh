@@ -3,6 +3,7 @@
 set -e  # Exit on any error
 set -x  # Print each command before executing it
 
+
 trap 'echo "Error occurred at line $LINENO"; exit 1' ERR
 
 

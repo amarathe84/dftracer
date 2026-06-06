@@ -4,6 +4,7 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
+
 log "Starting generate_summary.sh on $(hostname)"
 
 log "Exporting DFTRACER_VERSION..."
