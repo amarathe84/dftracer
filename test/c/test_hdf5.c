@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int create_and_validate_dataset(const char* file_path) {
   hid_t file = H5Fcreate(file_path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -85,7 +86,8 @@ int main(int argc, char* argv[]) {
 
   const char* data_dir = (argc > 1) ? argv[1] : "/tmp";
   char filename[1024];
-  snprintf(filename, sizeof(filename), "%s/test_hdf5_smoke.h5", data_dir);
+  snprintf(filename, sizeof(filename), "%s/test_hdf5_smoke_pid_%ld.h5",
+           data_dir, (long)getpid());
 
   DFTRACER_C_METADATA(meta, "hdf5_test", "hdf5_smoke_test");
 

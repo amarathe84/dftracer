@@ -87,6 +87,7 @@ size_t JsonLines::data(char* buffer, int index, ConstEventNameType event_name,
         R"({"id":%d,"name":"%s","cat":"%s","pid":%d,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
         index, event_name, category, process_id, thread_id, start_time,
         duration);
+    delete metadata;
   }
   if (n < 0) {
     return 0;

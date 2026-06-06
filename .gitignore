@@ -50,6 +50,7 @@ spack-env
 build
 /build-dlio/
 /build_dlio/
+/.pr-ci-venv/
 /cmake_example.egg-info/
 /cmake-build-debug/
 /cmake-build-debug-1/

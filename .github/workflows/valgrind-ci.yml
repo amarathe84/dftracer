@@ -1,0 +1,265 @@
+name: Valgrind Gates
+
+'on':
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
+
+jobs:
+  valgrind-gates:
+    name: Valgrind Gates (Python-3.11 GCC-11)
+    runs-on: ubuntu-22.04
+    env:
+      CC: gcc-11
+      CXX: g++-11
+      INSTALL_MODE: pip
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            clang \
+            clang-15 \
+            cmake \
+            gdb \
+            git \
+            hwloc \
+            libclang-dev \
+            libclang-15-dev \
+            libclang-common-15-dev \
+            libhdf5-mpich-dev \
+            libhwloc-dev \
+            libmpich-dev \
+            libyaml-cpp-dev \
+            llvm-dev \
+            llvm-15-dev \
+            mpich \
+            ninja-build \
+            pkg-config \
+            python3-clang \
+            python3-dev \
+            python3-venv \
+            valgrind \
+            wget
+
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-11 g++-11
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          echo "VENV_PATH=$PWD/venv" >> $GITHUB_ENV
+          source venv/bin/activate
+          python -m pip install --upgrade pip setuptools wheel
+          pip install pybind11 ninja cmake>=3.12 setuptools>=64 setuptools-scm>=8
+          pip install pytest>=6.0 numpy>=1.24.3 pandas>=2.0.3
+          pip install -r scripts/requirements-valgrind-runners.txt
+
+      - name: Build with pip install mode
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+          export CFLAGS="${CFLAGS:-} -g3 -fno-omit-frame-pointer"
+          export CXXFLAGS="${CXXFLAGS:-} -g3 -fno-omit-frame-pointer"
+          export DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON;-DDFTRACER_TEST_LOG_LEVEL=INFO"
+          export DFTRACER_PIP_NO_BUILD_ISOLATION=1
+          ./autobuild.sh --enable-tests --enable-mpi --enable-hdf5
+          pip install -r test/py/requirements.txt
+
+      - name: Valgrind gate for all CTests
+        id: valgrind_ctest
+        continue-on-error: true
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
+          python3 scripts/valgrind_ctest_runner.py \
+            --build-dir "$DFTRACER_DIR" \
+            --log-dir "$DFTRACER_DIR/valgrind-ctest-ci" \
+            --summary-json "$DFTRACER_DIR/valgrind-ctest-ci/summary.json" \
+            --log-level INFO \
+            --debug-rerun-on-failure \
+            --debug-log-level DEBUG \
+            --suppression "$PWD/test/valgrind/test_cpp_known_syscall.supp"
+
+      - name: Valgrind gate for all Python CTests
+        id: valgrind_ctest_python
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          source ${VENV_PATH:-venv}/bin/activate
+          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
+
+          (
+            while true; do
+              echo "[valgrind-python-ctest] keepalive: still running at $(date -u +'%H:%M:%SZ')"
+              sleep 30
+            done
+          ) &
+          KEEPALIVE_PID=$!
+          trap 'kill "$KEEPALIVE_PID" >/dev/null 2>&1 || true' EXIT
+
+          PYTHONUNBUFFERED=1 python3 -u scripts/valgrind_ctest_python_runner.py \
+            --build-dir "$DFTRACER_DIR" \
+            --log-dir "$DFTRACER_DIR/valgrind-python-ctest-ci" \
+            --summary-json "$DFTRACER_DIR/valgrind-python-ctest-ci/summary.json" \
+            --log-level INFO \
+            --valgrind-track-origins no \
+            --valgrind-num-callers 20 \
+            --fail-on-project-leaks-only \
+            --project-frame-regex '(/dftracer/(src|include|python|scripts|test)/|libdftracer|dft_)' \
+            --suppression "$PWD/test/valgrind/test_cpp_known_syscall.supp"
+
+          kill "$KEEPALIVE_PID" >/dev/null 2>&1 || true
+          trap - EXIT
+
+      - name: Publish valgrind summary
+        if: always()
+        run: |
+          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
+          SUMMARY_JSON="$DFTRACER_DIR/valgrind-ctest-ci/summary.json"
+          echo "## Valgrind Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f "$SUMMARY_JSON" ]; then
+            echo "No valgrind summary file was generated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 - "$SUMMARY_JSON" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+          with open(sys.argv[1], "r", encoding="utf-8") as f:
+            data = json.load(f)
+          with open(sys.argv[2], "a", encoding="utf-8") as out:
+            out.write(f"- Selected tests: {data.get('selected_tests', 0)}\\n")
+            out.write(f"- Executed under valgrind: {data.get('valgrind_executed', 0)}\\n")
+            out.write(f"- Tests skipped for valgrind: {data.get('wrapper_skipped', 0)}\\n")
+            out.write(f"- Python-wrapper skips: {data.get('wrapper_skipped_python', data.get('wrapper_skipped', 0))}\\n")
+            out.write(f"- Other skips: {data.get('wrapper_skipped_other', 0)}\\n")
+            out.write(f"- Failures: {data.get('failures', 0)}\\n")
+          PY
+
+      - name: Publish python valgrind summary
+        if: always()
+        run: |
+          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
+          SUMMARY_JSON="$DFTRACER_DIR/valgrind-python-ctest-ci/summary.json"
+          echo "## Python Valgrind Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f "$SUMMARY_JSON" ]; then
+            echo "No python valgrind summary file was generated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 - "$SUMMARY_JSON" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+          with open(sys.argv[1], "r", encoding="utf-8") as f:
+            data = json.load(f)
+          with open(sys.argv[2], "a", encoding="utf-8") as out:
+            out.write(f"- Selected Python tests: {data.get('selected_tests', 0)}\\n")
+            out.write(f"- Executed under valgrind: {data.get('valgrind_executed', 0)}\\n")
+            out.write(f"- Failures: {data.get('failures', 0)}\\n")
+          PY
+
+      - name: Enforce valgrind gate result
+        if: always()
+        run: |
+          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
+          python3 - "$DFTRACER_DIR" "$DFTRACER_DIR/valgrind-ctest-ci/summary.json" "$DFTRACER_DIR/valgrind-python-ctest-ci/summary.json" <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          build_dir = Path(sys.argv[1])
+          common_summary = Path(sys.argv[2])
+          python_summary = Path(sys.argv[3])
+
+          if not common_summary.is_file():
+            print(f"[valgrind-coverage] missing summary file: {common_summary}")
+            sys.exit(1)
+          if not python_summary.is_file():
+            print(f"[valgrind-coverage] missing summary file: {python_summary}")
+            sys.exit(1)
+
+          raw = subprocess.check_output(["ctest", "--show-only=json-v1"], cwd=build_dir, text=True)
+          ctest_total = len(json.loads(raw).get("tests", []))
+
+          with common_summary.open("r", encoding="utf-8") as f:
+            common = json.load(f)
+          with python_summary.open("r", encoding="utf-8") as f:
+            py = json.load(f)
+
+          common_selected = int(common.get("selected_tests", 0))
+          common_executed = int(common.get("valgrind_executed", 0))
+          common_skipped = int(common.get("wrapper_skipped", 0))
+          common_skipped_python = int(common.get("wrapper_skipped_python", common_skipped))
+          common_skipped_other = int(common.get("wrapper_skipped_other", max(0, common_skipped - common_skipped_python)))
+          py_selected = int(py.get("selected_tests", 0))
+          py_executed = int(py.get("valgrind_executed", 0))
+
+          errors = []
+          if common_selected != ctest_total:
+            errors.append(
+              f"non-python runner selected {common_selected}, expected full ctest total {ctest_total}"
+            )
+          if common_skipped_python != py_selected:
+            errors.append(
+              f"non-python python-skipped={common_skipped_python} does not match python selected_tests={py_selected}"
+            )
+          if py_selected != py_executed:
+            errors.append(
+              f"python runner selected_tests={py_selected} but valgrind_executed={py_executed}"
+            )
+          if common_executed + py_executed + common_skipped_other != ctest_total:
+            errors.append(
+              "combined valgrind executed tests "
+              f"({common_executed} non-python + {py_executed} python + {common_skipped_other} non-python skipped-other) "
+              f"!= ctest total ({ctest_total})"
+            )
+
+          if errors:
+            print("[valgrind-coverage] FAIL: not all CTests were executed under valgrind")
+            print(f"[valgrind-coverage] ctest_total={ctest_total}")
+            print(
+              "[valgrind-coverage] non_python: "
+              f"selected={common_selected} executed={common_executed} "
+              f"skipped_total={common_skipped} skipped_python={common_skipped_python} "
+              f"skipped_other={common_skipped_other}"
+            )
+            print(
+              "[valgrind-coverage] python: "
+              f"selected={py_selected} executed={py_executed}"
+            )
+            for err in errors:
+              print(f"[valgrind-coverage] {err}")
+            sys.exit(1)
+
+          print(
+            "[valgrind-coverage] PASS: all CTests executed under valgrind "
+            f"(total={ctest_total}, non-python={common_executed}, python={py_executed}, "
+            f"skipped-other={common_skipped_other})"
+          )
+          PY
+
+          if [ "${{ steps.valgrind_ctest.outcome }}" = "failure" ]; then
+            echo "Valgrind gate detected unsuppressed issues"
+            exit 1
+          fi
+          if [ "${{ steps.valgrind_ctest_python.outcome }}" = "failure" ]; then
+            echo "Python valgrind gate detected unsuppressed issues"
+            exit 1
+          fi

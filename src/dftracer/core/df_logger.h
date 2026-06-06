@@ -125,6 +125,11 @@ class DFTLogger {
     index.store(0);
   }
 
+  // Returns false once finalize() has been called (is_init set to false).
+  // Interceptors should treat a false return as a signal to skip tracing
+  // and pass through to the real function.
+  inline bool is_active() const { return is_init; }
+
   inline HashType get_hash(char* name) {
     uint8_t result[HASH_OUTPUT];
     md5String(name, result);
@@ -326,6 +331,10 @@ class DFTLogger {
 
     int current_index = this->increment_index();
     handle_mpi(tid);
+    // Defensive null check: buffer_manager is reset during finalize(); any
+    // interceptor still firing after finalization (e.g. via GOTCHA hooks
+    // during Py_FinalizeEx) must not dereference a destroyed manager.
+    if (this->buffer_manager == nullptr) return;
     this->buffer_manager->log_data_event(current_index, event_name, category,
                                          start_time, duration, metadata,
                                          this->process_id, tid);
@@ -411,6 +420,7 @@ class DFTLogger {
       this->buffer_manager->finalize(index.load(), this->process_id, true);
       DFTRACER_LOG_INFO("Released Logger");
       this->buffer_manager.reset();
+      this->is_init = false;
       clear_hash_cache();
     } else {
       DFTRACER_LOG_WARN("DFTLogger.finalize buffer manager not initialized",
@@ -454,17 +464,17 @@ class DFTLogger {
     this->logger->enter_event();                             \
     start_time = this->logger->get_time();                   \
   }
-#define DFT_LOGGER_START_ALWAYS()                          \
-  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__); \
-  bool trace = true;                                       \
-  TimeResolution start_time = 0;                           \
-  dftracer::Metadata* metadata = nullptr;                  \
-  if (trace) {                                             \
-    if (this->logger->include_metadata) {                  \
-      metadata = new dftracer::Metadata();                 \
-    }                                                      \
-    this->logger->enter_event();                           \
-    start_time = this->logger->get_time();                 \
+#define DFT_LOGGER_START_ALWAYS()                                 \
+  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
+  bool trace = this->logger->is_active(); /* skip if finalized */ \
+  TimeResolution start_time = 0;                                  \
+  dftracer::Metadata* metadata = nullptr;                         \
+  if (trace) {                                                    \
+    if (this->logger->include_metadata) {                         \
+      metadata = new dftracer::Metadata();                        \
+    }                                                             \
+    this->logger->enter_event();                                  \
+    start_time = this->logger->get_time();                        \
   }
 #define DFT_LOGGER_END()                                         \
   if (trace) {                                                   \

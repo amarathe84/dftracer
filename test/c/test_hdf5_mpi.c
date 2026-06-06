@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int write_rank_file(const char* file_path, int rank, int size) {
   hid_t file = H5Fcreate(file_path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -94,8 +95,8 @@ int main(int argc, char* argv[]) {
 
   const char* data_dir = (argc > 1) ? argv[1] : "/tmp";
   char filename[1024];
-  snprintf(filename, sizeof(filename), "%s/test_hdf5_mpi_rank_%d.h5", data_dir,
-           rank);
+  snprintf(filename, sizeof(filename), "%s/test_hdf5_mpi_rank_%d_pid_%ld.h5",
+           data_dir, rank, (long)getpid());
 
   DFTRACER_C_METADATA(meta, "hdf5_mpi_test", "hdf5_mpi_smoke_c");
 

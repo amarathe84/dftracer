@@ -99,3 +99,34 @@
    ...
    fun:main
 }
+
+# Known external leak in /usr/bin/bash parser teardown (not DFTracer code).
+{
+   known_external_bash_parser_leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:make_if_command
+   fun:yyparse
+   fun:parse_command
+   fun:read_command
+   fun:reader_loop
+   fun:main
+   obj:/usr/bin/bash
+}
+
+# Known external leak from libnl route initialization in runner/service startup.
+{
+   known_external_libnl_trans_list_add_leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:strdup
+   fun:__trans_list_add
+   ...
+   obj:*/libnl-3.so*
+   ...
+   obj:*/libnl-route-3.so*
+   ...
+   fun:_dl_init
+}

@@ -1,0 +1,380 @@
+name: DLIO Benchmark Integration
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
+  workflow_dispatch:
+
+jobs:
+  dlio-benchmark:
+    name: DLIO ${{ matrix.workload }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - workload: bert_v100
+            phase: train
+            generate_data: true
+          - workload: cosmoflow_h100
+            phase: train
+            generate_data: true
+          - workload: dlrm
+            phase: train
+            generate_data: true
+          - workload: resnet50_tf
+            phase: train
+            generate_data: true
+          - workload: resnet50_h100
+            phase: train
+            generate_data: true
+          - workload: unet3d_h100
+            phase: train
+            generate_data: true
+
+    env:
+      CC: gcc-11
+      CXX: g++-11
+      INSTALL_MODE: pip
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Free up disk space
+        run: |
+          echo "Available disk space before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          echo "Available disk space after cleanup:"
+          df -h
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            ccache \
+            clang \
+            clang-15 \
+            cmake \
+            curl \
+            gdb \
+            git \
+            hwloc \
+            libclang-dev \
+            libclang-15-dev \
+            libclang-common-15-dev \
+            libhdf5-mpich-dev \
+            libhwloc-dev \
+            libmpich12 \
+            libmpich-dev \
+            libyaml-cpp-dev \
+            llvm-dev \
+            llvm-15-dev \
+            mpich \
+            ninja-build \
+            pkg-config \
+            python3-clang \
+            python3-dev \
+            python3-venv \
+            software-properties-common \
+            valgrind \
+            wget
+
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-11 g++-11
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+
+          if [ ! -e /usr/lib/x86_64-linux-gnu/libmpi.so.12 ] && [ -e /usr/lib/x86_64-linux-gnu/libmpich.so.12 ]; then
+            sudo ln -sf /usr/lib/x86_64-linux-gnu/libmpich.so.12 /usr/lib/x86_64-linux-gnu/libmpi.so.12
+          fi
+          sudo ldconfig
+          command -v valgrind
+          valgrind --version
+          command -v gdb
+          gdb --version
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-dlio-ccache-gcc11-py311-${{ hashFiles('CMakeLists.txt', 'dependency/CMakeLists.txt', 'cmake/modules/dftracer-utils.cmake', 'src/**', 'include/**') }}
+          restore-keys: |
+            ${{ runner.os }}-dlio-ccache-gcc11-py311-
+            ${{ runner.os }}-dlio-ccache-gcc11-
+
+      - name: Initialize ccache
+        run: |
+          mkdir -p ~/.ccache
+          ccache --max-size=1G
+          ccache --zero-stats
+          ccache --show-config
+
+      - name: Install dlio_benchmark and current dftracer
+        run: |
+          python -m venv venv
+          echo "VENV_PATH=$PWD/venv" >> "$GITHUB_ENV"
+          source venv/bin/activate
+          python -m pip install --upgrade pip setuptools wheel
+          pip install pybind11 ninja "cmake>=3.12" "setuptools>=64" "setuptools-scm>=8"
+          pip install "pytest>=6.0" "numpy>=1.24.3" "pandas>=2.0.3"
+          pip install -r scripts/requirements-valgrind-runners.txt
+
+          CLANG_MAJOR="$(clang --version | sed -n 's/.* version \([0-9][0-9]*\)\..*/\1/p' | head -n 1)"
+          if [ -z "$CLANG_MAJOR" ]; then
+            echo "Failed to detect system clang major version"
+            exit 1
+          fi
+
+          if ! pip install "clang==${CLANG_MAJOR}.*"; then
+            pip install clang
+          fi
+
+          CLANG_PY_VERSION="$(python -m pip show clang | awk '/^Version:/{print $2}' | head -n 1)"
+          if [ -z "$CLANG_PY_VERSION" ]; then
+            echo "Failed to determine installed Python clang version"
+            exit 1
+          fi
+          CLANG_PY_MAJOR="${CLANG_PY_VERSION%%.*}"
+          CONSTRAINT_FILE="$PWD/pip-constraints.txt"
+          echo "clang==${CLANG_PY_MAJOR}.*" > "$CONSTRAINT_FILE"
+          echo "PIP_CONSTRAINT=$CONSTRAINT_FILE" >> "$GITHUB_ENV"
+
+          LLVM_CMAKE_DIR=""
+          CLANG_CMAKE_DIR=""
+          for LLVM_ROOT in "/usr/lib/llvm-${CLANG_MAJOR}" /usr/lib/llvm-*; do
+            [ -d "$LLVM_ROOT" ] || continue
+            if [ -f "$LLVM_ROOT/lib/libclangBasic.a" ] && \
+               [ -f "$LLVM_ROOT/lib/cmake/llvm/LLVMConfig.cmake" ] && \
+               [ -f "$LLVM_ROOT/lib/cmake/clang/ClangConfig.cmake" ]; then
+              LLVM_CMAKE_DIR="$LLVM_ROOT/lib/cmake/llvm"
+              CLANG_CMAKE_DIR="$LLVM_ROOT/lib/cmake/clang"
+              break
+            fi
+          done
+
+          if [ -z "$LLVM_CMAKE_DIR" ] || [ -z "$CLANG_CMAKE_DIR" ]; then
+            if command -v "llvm-config-${CLANG_MAJOR}" >/dev/null 2>&1; then
+              LLVM_CMAKE_DIR="$(llvm-config-${CLANG_MAJOR} --cmakedir)"
+            elif command -v llvm-config >/dev/null 2>&1; then
+              LLVM_CMAKE_DIR="$(llvm-config --cmakedir)"
+            fi
+            if [ -n "$LLVM_CMAKE_DIR" ]; then
+              CLANG_CMAKE_DIR="$(dirname "$LLVM_CMAKE_DIR")/clang"
+            fi
+          fi
+
+          if [ -z "$LLVM_CMAKE_DIR" ] || [ -z "$CLANG_CMAKE_DIR" ] || [ ! -f "$CLANG_CMAKE_DIR/ClangConfig.cmake" ]; then
+            echo "Failed to locate a complete LLVM/Clang CMake package"
+            exit 1
+          fi
+
+          export CFLAGS="${CFLAGS:-} -g3 -fno-omit-frame-pointer"
+          export CXXFLAGS="${CXXFLAGS:-} -g3 -fno-omit-frame-pointer"
+          export DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DDFTRACER_TEST_LOG_LEVEL=INFO;-DClang_DIR=${CLANG_CMAKE_DIR};-DLLVM_DIR=${LLVM_CMAKE_DIR}"
+          export DFTRACER_PIP_NO_BUILD_ISOLATION=1
+
+          python -m pip install "git+https://github.com/argonne-lcf/dlio_benchmark.git@main"
+          ./autobuild.sh --enable-mpi --enable-hdf5
+
+          python - <<'PY'
+          import dftracer
+          import dftracer.dftracer as native_dftracer
+          import importlib.util
+
+          spec = importlib.util.find_spec("dlio_benchmark")
+          package_dir = next(iter(spec.submodule_search_locations), None)
+          print(f"Installed dlio_benchmark from: {package_dir}")
+          print(f"Current dftracer from: {dftracer.__file__}")
+          print(f"Current dftracer version: {dftracer.__version__}")
+          print(f"Current dftracer native module from: {native_dftracer.__file__}")
+          PY
+
+      - name: Verify MPI runtime for Python
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+          python - <<'PY'
+          import ctypes
+          import ctypes.util
+
+          lib = ctypes.util.find_library("mpi")
+          print(f"ctypes found MPI library: {lib}")
+          if not lib:
+              raise SystemExit("MPI runtime library not found")
+          ctypes.CDLL(lib)
+          print("MPI runtime load check passed")
+          PY
+
+      - name: Generate DLIO data once (non-llama workloads)
+        id: generate_dlio_data
+        if: matrix.generate_data
+        env:
+          DLIO_LOG_LEVEL: info
+          DFTRACER_ENABLE: "0"
+          DFTRACER_INC_METADATA: "0"
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+
+          python3 scripts/dlio_non_valgrind_runner.py \
+            --workload "${{ matrix.workload }}" \
+            --phase generate \
+            --dftracer-enable 0 \
+            --log-dir "$RUNNER_TEMP/dftracer-dlio-generate/${{ matrix.workload }}/logs" \
+            --run-root "$RUNNER_TEMP/dftracer-dlio-shared/${{ matrix.workload }}/run" \
+            --summary-json "$RUNNER_TEMP/dftracer-dlio-generate/${{ matrix.workload }}/logs/summary.json" \
+            --log-level INFO \
+            --gdb-log-level DEBUG
+
+      - name: Run DLIO phase under valgrind
+        id: valgrind_dlio
+        if: ${{ !matrix.generate_data || steps.generate_dlio_data.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          DLIO_LOG_LEVEL: info
+          DFTRACER_ENABLE: "1"
+          DFTRACER_INC_METADATA: "1"
+          VALGRIND_DLIO_TIMEOUT: 3600
+          RDMAV_FORK_SAFE: "1"
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+          python3 scripts/valgrind_dlio_runner.py \
+            --workload "${{ matrix.workload }}" \
+            --phase "${{ matrix.phase }}" \
+            --no-clean-run-root \
+            --timeout "${VALGRIND_DLIO_TIMEOUT}" \
+            --log-dir "$RUNNER_TEMP/dftracer-dlio-valgrind/${{ matrix.workload }}/logs" \
+            --run-root "$RUNNER_TEMP/dftracer-dlio-shared/${{ matrix.workload }}/run" \
+            --summary-json "$RUNNER_TEMP/dftracer-dlio-valgrind/${{ matrix.workload }}/logs/summary.json" \
+            --suppression "$PWD/test/valgrind/test_cpp_known_syscall.supp" \
+            --focus-dftracer-leaks-only \
+            --valgrind-track-origins no \
+            --valgrind-num-callers 20 \
+            --log-level INFO \
+            --gdb-log-level DEBUG
+
+      - name: Run DLIO phase without valgrind
+        id: non_valgrind_dlio
+        if: steps.valgrind_dlio.outcome == 'success'
+        env:
+          DLIO_LOG_LEVEL: info
+          DFTRACER_ENABLE: "1"
+          DFTRACER_INC_METADATA: "1"
+          RDMAV_FORK_SAFE: "1"
+        run: |
+          source ${VENV_PATH:-venv}/bin/activate
+
+          python3 scripts/dlio_non_valgrind_runner.py \
+            --workload "${{ matrix.workload }}" \
+            --phase "${{ matrix.phase }}" \
+            --no-clean-run-root \
+            --log-dir "$RUNNER_TEMP/dftracer-dlio-non-valgrind/${{ matrix.workload }}/logs" \
+            --run-root "$RUNNER_TEMP/dftracer-dlio-shared/${{ matrix.workload }}/run" \
+            --summary-json "$RUNNER_TEMP/dftracer-dlio-non-valgrind/${{ matrix.workload }}/logs/summary.json" \
+            --log-level INFO \
+            --gdb-log-level DEBUG
+
+      - name: Publish DLIO valgrind summary
+        if: always()
+        run: |
+          SUMMARY_JSON="$RUNNER_TEMP/dftracer-dlio-valgrind/${{ matrix.workload }}/logs/summary.json"
+          echo "## DLIO Valgrind Summary: ${{ matrix.workload }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f "$SUMMARY_JSON" ]; then
+            echo "No DLIO valgrind summary file was generated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          python3 - "$SUMMARY_JSON" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+
+          summary_json = sys.argv[1]
+          step_summary = sys.argv[2]
+
+          with open(summary_json, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+          with open(step_summary, "a", encoding="utf-8") as out:
+            out.write(f"- Selected workload phases: {data.get('selected_tests', 0)}\\n")
+            out.write(f"- Executed under valgrind: {data.get('valgrind_executed', 0)}\\n")
+            out.write(f"- Skipped phases: {data.get('skipped', 0)}\\n")
+            out.write(f"- Failures: {data.get('failures', 0)}\\n")
+            failed = data.get("failed_tests", [])
+            if failed:
+              out.write("\\n### Failing DLIO phases\\n")
+              for item in failed:
+                out.write(f"- {item.get('name')}: {item.get('error_summary')}\\n")
+                out.write(f"  - {item.get('leak_line')}\\n")
+                out.write(f"  - command log: `{item.get('command_log')}`\\n")
+                out.write(f"  - valgrind log: `{item.get('valgrind_log')}`\\n")
+          PY
+
+      - name: Publish DLIO non-valgrind summary
+        if: always()
+        run: |
+          SUMMARY_JSON="$RUNNER_TEMP/dftracer-dlio-non-valgrind/${{ matrix.workload }}/logs/summary.json"
+          echo "## DLIO Non-Valgrind Summary: ${{ matrix.workload }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f "$SUMMARY_JSON" ]; then
+            if [ "${{ steps.valgrind_dlio.outcome }}" != "success" ]; then
+              echo "Skipped because valgrind step did not succeed." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "No DLIO non-valgrind summary file was generated." >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
+          fi
+
+          python3 - "$SUMMARY_JSON" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+
+          summary_json = sys.argv[1]
+          step_summary = sys.argv[2]
+
+          with open(summary_json, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+          with open(step_summary, "a", encoding="utf-8") as out:
+            out.write(f"- Selected workload phases: {data.get('selected_tests', 0)}\\n")
+            out.write(f"- Executed without valgrind: {data.get('executed', 0)}\\n")
+            out.write(f"- Skipped phases: {data.get('skipped', 0)}\\n")
+            out.write(f"- Failures: {data.get('failures', 0)}\\n")
+            failed = data.get("failed_tests", [])
+            if failed:
+              out.write("\\n### Failing DLIO phases (non-valgrind)\\n")
+              for item in failed:
+                out.write(f"- {item.get('name')}: rc={item.get('returncode')}\\n")
+                out.write(f"  - command log: `{item.get('command_log')}`\\n")
+                if item.get('gdb_log'):
+                  out.write(f"  - gdb log: `{item.get('gdb_log')}`\\n")
+          PY
+
+      - name: Enforce DLIO valgrind result
+        if: always()
+        run: |
+          if [ "${{ steps.valgrind_dlio.outcome }}" = "failure" ]; then
+            echo "DLIO valgrind detected command failures or dftracer leak issues"
+            exit 1
+          fi
+
+      - name: Show ccache stats
+        if: always()
+        run: |
+          ccache --show-stats
