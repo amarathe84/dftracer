@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/dftracer-logo-light.png" alt="DFTracer logo" width="320">
+</p>
+
 # DFTracer
 
 **Version:** `$(cat PACKAGE_VERSION 2>/dev/null || echo "2.0.2")`
