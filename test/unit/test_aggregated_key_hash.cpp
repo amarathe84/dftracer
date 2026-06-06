@@ -147,7 +147,7 @@ int main() {
     std::cout << "\n✓✓✓ All AggregatedKey hash tests passed! ✓✓✓\n"
               << std::endl;
     return 0;
-  } catch (const std::exception &e) {
+  } catch (const std::exception& e) {
     std::cerr << "✗ Test failed with exception: " << e.what() << std::endl;
     return 1;
   }

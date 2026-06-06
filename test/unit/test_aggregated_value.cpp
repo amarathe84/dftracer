@@ -47,8 +47,8 @@ void test_base_pointer_cast() {
   NumberAggregationValue<int> val1(10);
   NumberAggregationValue<int> val2(20);
 
-  BaseAggregatedValue *base1 = &val1;
-  BaseAggregatedValue *base2 = &val2;
+  BaseAggregatedValue* base1 = &val1;
+  BaseAggregatedValue* base2 = &val2;
 
   std::cout << "base1 ptr: " << base1 << std::endl;
   std::cout << "base2 ptr: " << base2 << std::endl;
@@ -56,8 +56,8 @@ void test_base_pointer_cast() {
   std::cout << "base2._id: " << base2->_id.name() << std::endl;
 
   // Try dynamic_cast back to derived type
-  auto *derived1 = dynamic_cast<NumberAggregationValue<int> *>(base1);
-  auto *derived2 = dynamic_cast<NumberAggregationValue<int> *>(base2);
+  auto* derived1 = dynamic_cast<NumberAggregationValue<int>*>(base1);
+  auto* derived2 = dynamic_cast<NumberAggregationValue<int>*>(base2);
 
   std::cout << "derived1 ptr: " << derived1 << std::endl;
   std::cout << "derived2 ptr: " << derived2 << std::endl;
@@ -107,8 +107,8 @@ void test_base_update() {
   NumberAggregationValue<int> val1(10);
   NumberAggregationValue<int> val2(20);
 
-  BaseAggregatedValue *base1 = &val1;
-  BaseAggregatedValue *base2 = &val2;
+  BaseAggregatedValue* base1 = &val1;
+  BaseAggregatedValue* base2 = &val2;
 
   std::cout << "Before update:" << std::endl;
   std::cout << "  val1: min=" << val1.min << " max=" << val1.max
@@ -139,10 +139,10 @@ void test_multiple_types() {
   NumberAggregationValue<double> double_val1(10.5);
   NumberAggregationValue<double> double_val2(20.5);
 
-  BaseAggregatedValue *base_int1 = &int_val1;
-  BaseAggregatedValue *base_int2 = &int_val2;
-  BaseAggregatedValue *base_double1 = &double_val1;
-  BaseAggregatedValue *base_double2 = &double_val2;
+  BaseAggregatedValue* base_int1 = &int_val1;
+  BaseAggregatedValue* base_int2 = &int_val2;
+  BaseAggregatedValue* base_double1 = &double_val1;
+  BaseAggregatedValue* base_double2 = &double_val2;
 
   // Int update
   base_int1->update(base_int2);
@@ -173,7 +173,7 @@ int main() {
 
     std::cout << "\n✓✓✓ All AggregatedValue tests passed! ✓✓✓\n" << std::endl;
     return 0;
-  } catch (const std::exception &e) {
+  } catch (const std::exception& e) {
     std::cerr << "✗ Test failed with exception: " << e.what() << std::endl;
     return 1;
   } catch (...) {

@@ -7,8 +7,8 @@
 
 #include <thread>
 
-int df_open(const char *pathname, int flags, ...) {
-  DFTRACER_LOG_DEBUG("df_open", "");
+int df_open(const char* pathname, int flags, ...) {
+  DFTRACER_LOG_DEBUG("df_open");
   mode_t mode;
   va_list args;
   long result;
@@ -30,13 +30,13 @@ int df_open(const char *pathname, int flags, ...) {
   return -1;  // GCOV_EXCL_LINE
 }
 
-ssize_t df_write(int fd, const void *buf, size_t count) {
+ssize_t df_write(int fd, const void* buf, size_t count) {
   DFTRACER_LOG_DEBUG("df_write %d %d", fd, count);
   return syscall(SYS_write, fd, buf, count);
 }
 
-off_t df_read(int fd, void *buf, size_t count) {
-  DFTRACER_LOG_DEBUG("df_read", "");
+off_t df_read(int fd, void* buf, size_t count) {
+  DFTRACER_LOG_DEBUG("df_read");
   return syscall(SYS_read, fd, buf, count);
 }
 
@@ -45,8 +45,8 @@ int df_close(int fd) {
   return syscall(SYS_close, fd);
 }
 
-int df_unlink(const char *filename) {
-  DFTRACER_LOG_DEBUG("df_unlink", "");
+int df_unlink(const char* filename) {
+  DFTRACER_LOG_DEBUG("df_unlink");
 #if defined(SYS_unlink)
   return syscall(SYS_unlink, filename);
 #else
@@ -55,12 +55,12 @@ int df_unlink(const char *filename) {
 }
 
 int df_fsync(int fd) {  // GCOV_EXCL_START
-  DFTRACER_LOG_DEBUG("df_fsync", "");
+  DFTRACER_LOG_DEBUG("df_fsync");
   return syscall(SYS_fsync, fd);
 }  // GCOV_EXCL_STOP
 
-ssize_t df_readlink(const char *path, char *buf, size_t bufsize) {
-  DFTRACER_LOG_DEBUG("df_readlink", "");
+ssize_t df_readlink(const char* path, char* buf, size_t bufsize) {
+  DFTRACER_LOG_DEBUG("df_readlink");
 #ifdef SYS_readlink
   return syscall(SYS_readlink, path, buf, bufsize);
 #else
@@ -69,11 +69,11 @@ ssize_t df_readlink(const char *path, char *buf, size_t bufsize) {
 }
 
 ThreadID df_gettid() {
-  DFTRACER_LOG_DEBUG("df_gettid", "");
+  DFTRACER_LOG_DEBUG("df_gettid");
   return syscall(SYS_gettid);
 }
 
 ProcessID df_getpid() {
-  DFTRACER_LOG_DEBUG("df_getpid", "");
+  DFTRACER_LOG_DEBUG("df_getpid");
   return syscall(SYS_getpid);
 }

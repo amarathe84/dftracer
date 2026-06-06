@@ -23,7 +23,7 @@ class GenericFunction {
  public:
   std::shared_ptr<DFTLogger> logger;
   GenericFunction() {
-    DFTRACER_LOG_DEBUG("GenericFunction class intercepted", "");
+    DFTRACER_LOG_DEBUG("GenericFunction class intercepted");
     logger = DFT_LOGGER_INIT();
   }
 

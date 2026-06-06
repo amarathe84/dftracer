@@ -223,19 +223,19 @@ void test_logger_level() {
   // Test DEBUG level
   setenv("DFTRACER_LOG_LEVEL", "DEBUG", 1);
   auto config1 = std::make_shared<ConfigurationManager>();
-  assert(config1->logger_level == cpplogger::LoggerType::LOG_DEBUG);
+  assert(config1->logger_level == cpplogger::LoggerType::CPP_LOGGER_DEBUG);
   unsetenv("DFTRACER_LOG_LEVEL");
 
   // Test INFO level
   setenv("DFTRACER_LOG_LEVEL", "INFO", 1);
   auto config2 = std::make_shared<ConfigurationManager>();
-  assert(config2->logger_level == cpplogger::LoggerType::LOG_INFO);
+  assert(config2->logger_level == cpplogger::LoggerType::CPP_LOGGER_INFO);
   unsetenv("DFTRACER_LOG_LEVEL");
 
   // Test ERROR level
   setenv("DFTRACER_LOG_LEVEL", "ERROR", 1);
   auto config3 = std::make_shared<ConfigurationManager>();
-  assert(config3->logger_level == cpplogger::LoggerType::LOG_ERROR);
+  assert(config3->logger_level == cpplogger::LoggerType::CPP_LOGGER_ERROR);
   unsetenv("DFTRACER_LOG_LEVEL");
 
   std::cout << "✓ Logger level configuration tests passed" << std::endl;

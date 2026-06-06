@@ -1,0 +1,101 @@
+{
+   test_cpp_utime_buf_uninitialized
+   Memcheck:Param
+   utime(buf)
+   fun:utime
+   fun:_ZN6brahma13POSIXDFTracer5utimeEPKcPK7utimbuf
+   fun:_Z13utime_wrapperPKcPK7utimbuf
+   fun:main
+}
+
+{
+   test_cpp_fcntl_getown_ex_unaddressable
+   Memcheck:Param
+   fcntl(F_GETOWN_EX)
+   fun:__fcntl64_nocancel_adjusted
+   fun:fcntl
+   fun:fcntl@GLIBC_2.2.5
+   fun:_ZN6brahma13POSIXDFTracer5fcntlEiiz
+   fun:_Z13fcntl_wrapperiiz
+   fun:main
+}
+
+{
+   test_cpp_pwrite_buf_uninitialized
+   Memcheck:Param
+   pwrite64(buf)
+   fun:pwrite
+   fun:_ZN6brahma13POSIXDFTracer6pwriteEiPKvml
+   fun:_Z14pwrite_wrapperiPKvml
+   fun:main
+}
+
+{
+   test_cpp_pwrite64_buf_uninitialized
+   Memcheck:Param
+   pwrite64(buf)
+   fun:pwrite
+   fun:_ZN6brahma13POSIXDFTracer8pwrite64EiPKvml
+   fun:_Z16pwrite64_wrapperiPKvml
+   fun:main
+}
+
+# Generic fallbacks for the same known syscall-param warnings when
+# symbolization differs across compiler/optimization variants.
+{
+   known_utime_buf_uninitialized_generic
+   Memcheck:Param
+   utime(buf)
+   fun:utime
+   ...
+   fun:main
+}
+
+{
+   known_utimensat_times_uninitialized_generic
+   Memcheck:Param
+   utimensat(times[0].tv_sec)
+   fun:__utimensat64_helper
+   ...
+   fun:main
+}
+
+{
+   known_fcntl_getown_ex_unaddressable_generic
+   Memcheck:Param
+   fcntl(F_GETOWN_EX)
+   fun:__fcntl64_nocancel_adjusted
+   ...
+   fun:main
+}
+
+{
+   known_pwrite_buf_uninitialized_generic
+   Memcheck:Param
+   pwrite64(buf)
+   fun:pwrite
+   ...
+   fun:main
+}
+
+# Known logger vararg issue in DFTRACER_ENABLE=0 startup path on some glibc builds.
+{
+   known_dftracer_disable_startup_log_conditional
+   Memcheck:Cond
+   fun:vfprintf
+   fun:vsnprintf
+   fun:snprintf
+   ...
+   fun:main
+}
+
+{
+   known_dftracer_disable_startup_log_value8
+   Memcheck:Value8
+   fun:_itoa_word
+   fun:vfprintf
+   fun:vsnprintf
+   fun:snprintf
+   ...
+   fun:main
+}

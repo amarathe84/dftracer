@@ -70,8 +70,15 @@ endif ()
 
 set(DFTRACER_INCLUDE_MPI @DFTRACER_ENABLE_MPI@)
 if (DFTRACER_INCLUDE_MPI)
-  find_package(MPI COMPONENTS CXX QUIET)
-  if (NOT MPI_FOUND)
+  # Brahma can export a transitive dependency on MPI::MPI_C.
+  # Some MPI packages expose only MPI::MPI_CXX to CMake in CXX-only
+  # toolchains; create a compatibility MPI::MPI_C target in that case.
+  find_package(MPI COMPONENTS C CXX QUIET)
+  if (TARGET MPI::MPI_CXX AND NOT TARGET MPI::MPI_C)
+    add_library(MPI::MPI_C INTERFACE IMPORTED)
+    set_property(TARGET MPI::MPI_C PROPERTY INTERFACE_LINK_LIBRARIES MPI::MPI_CXX)
+  endif()
+  if (NOT TARGET MPI::MPI_C AND NOT TARGET MPI::MPI_CXX)
     message(FATAL_ERROR "[DFTRACER] MPI is required but not found. Please ensure MPI is installed.")
   endif ()
 endif()

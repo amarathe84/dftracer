@@ -21,7 +21,7 @@ namespace conf {
 extern "C" rocprofiler_tool_configure_result_t* roc_conf(
     uint32_t version, const char* runtime_version, uint32_t priority,
     rocprofiler_client_id_t* id) {
-  DFTRACER_LOG_DEBUG("HIPFunction configured", "");
+  DFTRACER_LOG_DEBUG("HIPFunction configured");
   void* client_tool_data = nullptr;
   rocprofiler_at_internal_thread_create(
       dftracer::HIPFunction::thread_precreate,
@@ -79,7 +79,7 @@ TimeResolution HIPFunction::transform_timestamp(
 void HIPFunction::tool_code_object_callback(
     rocprofiler_callback_tracing_record_t record,
     rocprofiler_user_data_t* user_data, void* callback_data) {
-  DFTRACER_LOG_DEBUG("HIPFunction::tool_code_object_callback", "");
+  DFTRACER_LOG_DEBUG("HIPFunction::tool_code_object_callback");
   auto function = dftracer::Singleton<dftracer::HIPFunction>::get_instance();
   if (record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
       record.operation == ROCPROFILER_CODE_OBJECT_LOAD) {
@@ -117,7 +117,7 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
                                         rocprofiler_record_header_t** headers,
                                         size_t num_headers, void* user_data,
                                         uint64_t drop_count) {
-  DFTRACER_LOG_DEBUG("HIPFunction::tool_tracing_callback", "");
+  DFTRACER_LOG_DEBUG("HIPFunction::tool_tracing_callback");
   auto function = dftracer::Singleton<dftracer::HIPFunction>::get_instance();
   auto client_name_info = function->client_name_info;
   assert(user_data != nullptr);
@@ -400,7 +400,7 @@ void HIPFunction::thread_postcreate(rocprofiler_runtime_library_t lib,
 // TODO: Enable/Disable specific APIs using ENV variables
 int HIPFunction::tool_init(rocprofiler_client_finalize_t fini_func,
                            void* tool_data) {
-  DFTRACER_LOG_DEBUG("HIP Intercept class initialized", "");
+  DFTRACER_LOG_DEBUG("HIP Intercept class initialized");
   auto function = dftracer::Singleton<dftracer::HIPFunction>::get_instance();
   function->client_ctx = {0};
   function->client_name_info = rocprofiler::sdk::get_buffer_tracing_names();
@@ -476,7 +476,7 @@ int HIPFunction::tool_init(rocprofiler_client_finalize_t fini_func,
     // and all the contexts, buffers, etc. created
     // should be ignored
     //   throw std::runtime_error("HIP Intercept initialization failed");
-    DFTRACER_LOG_DEBUG("HIP Intercept initialization failed", "");
+    DFTRACER_LOG_DEBUG("HIP Intercept initialization failed");
     return -1;
   }
 
@@ -490,7 +490,7 @@ int HIPFunction::tool_init(rocprofiler_client_finalize_t fini_func,
 }
 
 void HIPFunction::tool_fini(void* tool_data) {
-  DFTRACER_LOG_DEBUG("HIP Intercept class finalized", "");
+  DFTRACER_LOG_DEBUG("HIP Intercept class finalized");
   return;
 }
 

@@ -44,27 +44,27 @@ class DFTracerCore {
   bool bind;
   std::string log_file_suffix;
   std::shared_ptr<DFTLogger> logger;
-  void initialize(bool _bind, const char *_log_file = nullptr,
-                  const char *_data_dirs = nullptr,
-                  const int *_process_id = nullptr);
+  void initialize(bool _bind, const char* _log_file = nullptr,
+                  const char* _data_dirs = nullptr,
+                  const int* _process_id = nullptr);
 
  public:
   bool include_metadata;
   DFTracerCore(ProfilerStage stage, ProfileType type,
-               const char *log_file = nullptr, const char *data_dirs = nullptr,
-               const int *process_id = nullptr);
+               const char* log_file = nullptr, const char* data_dirs = nullptr,
+               const int* process_id = nullptr);
 
   void reinitialize();
   inline bool is_active() {
-    DFTRACER_LOG_DEBUG("DFTracerCore.is_active", "");
+    DFTRACER_LOG_DEBUG("DFTracerCore.is_active");
     return conf->enable;
   }
 
   TimeResolution get_time();
 
-  void log(ConstEventNameType event_name, ConstEventNameType category,
+  bool log(ConstEventNameType event_name, ConstEventNameType category,
            TimeResolution start_time, TimeResolution duration,
-           dftracer::Metadata *metadata);
+           dftracer::Metadata* metadata);
 
   void log_metadata(ConstEventNameType key, ConstEventNameType value);
 
@@ -75,7 +75,7 @@ class DFTracerCore {
   bool finalize();
 
   void initialize() {}
-  ~DFTracerCore() { DFTRACER_LOG_DEBUG("Destructing DFTracerCore", ""); }
+  ~DFTracerCore() { DFTRACER_LOG_DEBUG("Destructing DFTracerCore"); }
 };
 }  // namespace dftracer
 

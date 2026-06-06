@@ -96,6 +96,7 @@ void test_aggregator_basic() {
   // Get aggregated data
   AggregatedDataType data;
   aggregator->get_previous_aggregations(data, true);
+  Aggregator::release_aggregated_data(data);
 
   std::cout << "✓ Aggregator basic test passed\n" << std::endl;
 
@@ -198,6 +199,7 @@ void test_aggregator_with_metadata() {
 
   assert(data.size() > 0);
   std::cout << "  Aggregated " << data.size() << " time intervals" << std::endl;
+  Aggregator::release_aggregated_data(data);
 
   std::cout << "✓ Aggregator with metadata test passed\n" << std::endl;
 
@@ -287,12 +289,14 @@ void test_aggregator_time_intervals() {
   aggregator->get_previous_aggregations(partial_data, false);
   std::cout << "  Retrieved " << partial_data.size()
             << " previous intervals (excluding current)" << std::endl;
+  Aggregator::release_aggregated_data(partial_data);
 
   // Get all remaining intervals
   AggregatedDataType all_data;
   aggregator->get_previous_aggregations(all_data, true);
   std::cout << "  Retrieved " << all_data.size() << " remaining intervals (all)"
             << std::endl;
+  Aggregator::release_aggregated_data(all_data);
 
   std::cout << "✓ Aggregator time interval test passed\n" << std::endl;
 
@@ -369,6 +373,7 @@ void test_aggregator_multiple_threads() {
   assert(data.size() > 0);
   std::cout << "  Aggregated events from multiple threads across "
             << data.size() << " intervals" << std::endl;
+  Aggregator::release_aggregated_data(data);
 
   std::cout << "✓ Aggregator multiple threads test passed\n" << std::endl;
 

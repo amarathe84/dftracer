@@ -10,57 +10,112 @@
 #include <dftracer/core/utils/posix_internal.h>
 #include <execinfo.h>
 #include <limits.h>
+#include <unistd.h>
 
 #include <any>
 #include <cstring>
+#include <exception>
 #include <iostream>
 #include <optional>
 #include <regex>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 void dft_finalize(bool force = false);
 
+// Shared helper: dump backtrace to stderr and flush.  Safe to call from
+// both signal handlers (uses async-signal-safe backtrace_symbols_fd) and
+// from C++ terminate handlers.
+inline void dftracer_dump_stack() {  // GCOVR_EXCL_START
+  const int STACK_SIZE = 40;
+  void* buffer[STACK_SIZE];
+  int nptrs = backtrace(buffer, STACK_SIZE);
+  const char hdr[] = "=== DFTRACER STACK TRACE ===\n";
+  (void)write(STDERR_FILENO, hdr, sizeof(hdr) - 1);
+  backtrace_symbols_fd(buffer, nptrs, STDERR_FILENO);
+  const char ftr[] = "=== END STACK TRACE ===\n";
+  (void)write(STDERR_FILENO, ftr, sizeof(ftr) - 1);
+  // fsync so the FD buffer is flushed to the OS before we die
+  (void)fsync(STDERR_FILENO);
+}  // GCOVR_EXCL_STOP
+
+// C++ terminate handler: catches any unhandled exception, prints its
+// message (if available) and a stack trace, then exits.
+inline void dftracer_terminate_handler() {  // GCOVR_EXCL_START
+  const char msg[] = "[DFTRACER] unhandled exception — dumping stack trace\n";
+  (void)write(STDERR_FILENO, msg, sizeof(msg) - 1);
+  // Try to extract the exception message
+  try {
+    auto eptr = std::current_exception();
+    if (eptr) std::rethrow_exception(eptr);
+  } catch (const std::exception& e) {
+    const char* what = e.what();
+    const char pfx[] = "[DFTRACER] exception: ";
+    (void)write(STDERR_FILENO, pfx, sizeof(pfx) - 1);
+    (void)write(STDERR_FILENO, what, strlen(what));
+    (void)write(STDERR_FILENO, "\n", 1);
+  } catch (...) {
+    const char unk[] = "[DFTRACER] exception: (unknown type)\n";
+    (void)write(STDERR_FILENO, unk, sizeof(unk) - 1);
+  }
+  dftracer_dump_stack();
+  dft_finalize();
+  fflush(stderr);
+  _Exit(1);
+}  // GCOVR_EXCL_STOP
+
+inline void set_terminate_handler() {  // GCOVR_EXCL_START
+  std::set_terminate(dftracer_terminate_handler);
+}  // GCOVR_EXCL_STOP
+
+// Re-raise sig with default disposition so the process exits with the
+// correct signal status (visible to waitpid/shell $?).
+inline void dftracer_reraise(int sig) {  // GCOVR_EXCL_START
+  struct sigaction sa_dfl;
+  sa_dfl.sa_handler = SIG_DFL;
+  sigemptyset(&sa_dfl.sa_mask);
+  sa_dfl.sa_flags = 0;
+  sigaction(sig, &sa_dfl, nullptr);
+  fflush(stderr);
+  raise(sig);
+  // If raise somehow returns, fall back to _Exit so we always die.
+  _Exit(128 + sig);
+}  // GCOVR_EXCL_STOP
+
 inline void signal_handler(int sig) {  // GCOVR_EXCL_START
-  DFTRACER_LOG_DEBUG("signal_handler", "");
+  DFTRACER_LOG_DEBUG("signal_handler");
   switch (sig) {
     case SIGINT:
     case SIGTERM: {
       DFTRACER_LOG_ERROR("signal caught %d", sig);
       dft_finalize();
-      exit(0);
+      dftracer_reraise(sig);
       break;
     }
     default: {
       DFTRACER_LOG_ERROR("signal caught %d", sig);
+      // Capture and emit stack trace BEFORE finalize: if the heap is
+      // corrupted (e.g. SIGABRT from free/malloc), dft_finalize() may
+      // re-abort and we would never reach backtrace() otherwise.
+      dftracer_dump_stack();
       dft_finalize();
-      int j, nptrs;
-      const int STACK_SIZE = 40;
-      void* buffer[STACK_SIZE];
-      char** strings;
-      nptrs = backtrace(buffer, STACK_SIZE);
-      strings = backtrace_symbols(buffer, nptrs);
-      if (strings != NULL) {
-        for (j = 0; j < nptrs; j++) {
-          DFTRACER_LOG_ERROR("%s", strings[j]);
-        }
-        free(strings);
-      }
-      exit(0);
+      dftracer_reraise(sig);
     }
   }
 }  // GCOVR_EXCL_STOP
 
 inline void signal_handler_simple(int sig) {  // GCOVR_EXCL_START
-  DFTRACER_LOG_DEBUG("signal_handler", "");
+  DFTRACER_LOG_DEBUG("signal_handler");
   DFTRACER_LOG_INFO("signal caught %d", sig);
   dft_finalize();
-  exit(sig);
+  dftracer_reraise(sig);
 }
 
 inline void set_signal(bool debug_symbols = true) {
-  DFTRACER_LOG_DEBUG("set_signal", "");
+  DFTRACER_LOG_DEBUG("set_signal");
+  set_terminate_handler();
   struct sigaction sa;
   if (debug_symbols)
     sa.sa_handler = signal_handler;
@@ -84,7 +139,7 @@ class Trie {
     bool end;
     TrieNode* child[MAX_INDEX];
     TrieNode() {
-      DFTRACER_LOG_DEBUG("TrieNode.TrieNode", "");
+      DFTRACER_LOG_DEBUG("TrieNode.TrieNode");
       end = false;
       for (int i = 0; i < MAX_INDEX; i++) {
         child[i] = nullptr;
@@ -111,7 +166,7 @@ class Trie {
   }
   bool startsWith(TrieNode* root, const char* prefix, unsigned long n,
                   bool reverse = false) {
-    DFTRACER_LOG_DEBUG("Trie.startsWith", "");
+    DFTRACER_LOG_DEBUG("Trie.startsWith");
     TrieNode* curr = root;
     if (curr == nullptr || curr->end) return false;
     unsigned long start = 0, end = n, inc = 1;
@@ -132,46 +187,48 @@ class Trie {
   }
 
   inline int get_id(char c) {
-    DFTRACER_LOG_DEBUG("Trie.get_id for %d", c);
-    return c % MAX_INDEX;
+    const auto uc = static_cast<unsigned char>(c);
+    DFTRACER_LOG_DEBUG("Trie.get_id for %u", static_cast<unsigned int>(uc));
+    return static_cast<int>(uc);
   }
 
   void include(const char* word, unsigned long n) {
-    DFTRACER_LOG_DEBUG("Trie.include", "");
+    DFTRACER_LOG_DEBUG("Trie.include");
     if (inclusion_prefix == nullptr) return;
     insert(inclusion_prefix, word, n, false);
   }
   void exclude(const char* word, unsigned long n) {
-    DFTRACER_LOG_DEBUG("Trie.exclude", "");
+    DFTRACER_LOG_DEBUG("Trie.exclude");
     if (exclusion_prefix == nullptr) return;
     insert(exclusion_prefix, word, n, false);
   }
   void include_reverse(const char* word, unsigned long n) {
-    DFTRACER_LOG_DEBUG("Trie.include_reverse", "");
+    DFTRACER_LOG_DEBUG("Trie.include_reverse");
     if (inclusion_prefix == nullptr) return;
     insert(inclusion_prefix, word, n, true);
   }
   void exclude_reverse(const char* word, unsigned long n) {
-    DFTRACER_LOG_DEBUG("Trie.exclude_reverse", "");
+    DFTRACER_LOG_DEBUG("Trie.exclude_reverse");
     if (exclusion_prefix == nullptr) return;
     insert(exclusion_prefix, word, n, true);
   }
   bool is_included(const char* word, unsigned long n, bool reverse = false) {
-    DFTRACER_LOG_DEBUG("Trie.is_included", "");
+    DFTRACER_LOG_DEBUG("Trie.is_included");
     if (inclusion_prefix == nullptr) return false;
     return startsWith(inclusion_prefix, word, n, reverse);
   }
   bool is_excluded(const char* word, unsigned long n, bool reverse = false) {
-    DFTRACER_LOG_DEBUG("Trie.is_excluded", "");
+    DFTRACER_LOG_DEBUG("Trie.is_excluded");
     if (exclusion_prefix == nullptr) return false;
     return startsWith(exclusion_prefix, word, n, reverse);
   }
   void finalize_root(TrieNode* node) {
-    DFTRACER_LOG_DEBUG("Trie.finalize_root", "");
+    DFTRACER_LOG_DEBUG("Trie.finalize_root");
     if (node != nullptr) {
-      if (!node->end) {
-        for (unsigned long i = 0; i < MAX_INDEX; i++) {
-          if (node->child[i] != NULL) finalize_root(node->child[i]);
+      for (unsigned long i = 0; i < MAX_INDEX; i++) {
+        if (node->child[i] != nullptr) {
+          finalize_root(node->child[i]);
+          node->child[i] = nullptr;
         }
       }
       delete (node);
@@ -179,7 +236,7 @@ class Trie {
   }
 
   void finalize() {
-    DFTRACER_LOG_DEBUG("Finalizing Trie", "");
+    DFTRACER_LOG_DEBUG("Finalizing Trie");
     if (inclusion_prefix != nullptr) {
       finalize_root(inclusion_prefix);
       inclusion_prefix = nullptr;
@@ -195,7 +252,7 @@ const int MAX_PREFIX = 128;
 const int MAX_EXT = 4;
 
 inline std::vector<std::string> split(std::string str, char delimiter) {
-  DFTRACER_LOG_DEBUG("split", "");
+  DFTRACER_LOG_DEBUG("split");
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
     res.push_back(str);
@@ -212,7 +269,7 @@ inline std::vector<std::string> split(std::string str, char delimiter) {
 }
 
 inline std::string get_filename(int fd) {
-  DFTRACER_LOG_DEBUG("get_filename", "");
+  DFTRACER_LOG_DEBUG("get_filename");
   char proclnk[PATH_MAX];
   char filename[PATH_MAX];
   snprintf(proclnk, PATH_MAX, "/proc/self/fd/%d", fd);
@@ -222,7 +279,7 @@ inline std::string get_filename(int fd) {
 }
 
 inline const char* is_traced_common(const char* filename, const char* func) {
-  DFTRACER_LOG_DEBUG("is_traced_common", "");
+  DFTRACER_LOG_DEBUG("is_traced_common");
   auto tri_ptr = dftracer::Singleton<Trie>::get_instance();
   if (tri_ptr == nullptr) return nullptr;
   auto file_len = strlen(filename);

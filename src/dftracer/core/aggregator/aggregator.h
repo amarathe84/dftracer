@@ -18,11 +18,19 @@
 #include <unordered_map>
 
 namespace dftracer {
-typedef std::unordered_map<AggregatedKey, AggregatedValues *>
-    AggregatedDataPair;
+typedef std::unordered_map<AggregatedKey, AggregatedValues*> AggregatedDataPair;
 typedef std::map<TimeResolution, AggregatedDataPair> AggregatedDataType;
 class Aggregator {
  private:
+  static void cleanup_aggregated_values(AggregatedDataPair& event_map) {
+    for (auto& pair : event_map) {
+      for (auto& val_pair : pair.second->values) {
+        delete val_pair.second;
+      }
+      delete pair.second;
+    }
+  }
+
   AggregatedDataType aggregated_data_;
   std::shared_ptr<dftracer::ConfigurationManager> config;
   TimeResolution last_interval;
@@ -33,9 +41,9 @@ class Aggregator {
   Rules exclusion_rules;
   bool always_aggregate;
   template <typename T>
-  inline void insert_number_value(TimeResolution &time_interval,
-                                  AggregatedKey &aggregated_key,
-                                  const std::string &key, T value) {
+  inline void insert_number_value(TimeResolution& time_interval,
+                                  AggregatedKey& aggregated_key,
+                                  const std::string& key, T value) {
     auto iter = aggregated_data_[time_interval].find(aggregated_key);
     auto num_value = new NumberAggregationValue<T>(value);
     if (iter != aggregated_data_[time_interval].end()) {
@@ -43,16 +51,18 @@ class Aggregator {
     } else {
       auto value = new AggregatedValues();
       value->update(key, typeid(TimeResolution), num_value);
-      aggregated_data_[time_interval].insert_or_assign(aggregated_key, value);
+      AggregatedKey owned_key(aggregated_key);
+      owned_key.additional_keys = nullptr;
+      aggregated_data_[time_interval].insert_or_assign(owned_key, value);
       DFTRACER_LOG_INFO("Events in %llu are %d", time_interval,
                         aggregated_data_[time_interval].size());
     }
   }
 
   template <typename T>
-  inline void insert_general_value(TimeResolution &time_interval,
-                                   AggregatedKey &aggregated_key,
-                                   const std::string &key, T value) {
+  inline void insert_general_value(TimeResolution& time_interval,
+                                   AggregatedKey& aggregated_key,
+                                   const std::string& key, T value) {
     auto iter = aggregated_data_[time_interval].find(aggregated_key);
     auto num_value = new AggregatedValue<T>(value);
     if (iter != aggregated_data_[time_interval].end()) {
@@ -60,20 +70,29 @@ class Aggregator {
     } else {
       auto value = new AggregatedValues();
       value->update(key, typeid(TimeResolution), num_value);
-      aggregated_data_[time_interval].insert_or_assign(aggregated_key, value);
+      AggregatedKey owned_key(aggregated_key);
+      owned_key.additional_keys = nullptr;
+      aggregated_data_[time_interval].insert_or_assign(owned_key, value);
       DFTRACER_LOG_INFO("Events in %llu are %d", time_interval,
                         aggregated_data_[time_interval].size());
     }
   }
 
  public:
+  static void release_aggregated_data(AggregatedDataType& data) {
+    for (auto& interval_map : data) {
+      cleanup_aggregated_values(interval_map.second);
+    }
+    data.clear();
+  }
+
   Aggregator() {
     config =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
-    for (const auto &rule : config->aggregation_inclusion_rules) {
+    for (const auto& rule : config->aggregation_inclusion_rules) {
       inclusion_rules.addRule(rule);
     }
-    for (const auto &rule : config->aggregation_exclusion_rules) {
+    for (const auto& rule : config->aggregation_exclusion_rules) {
       exclusion_rules.addRule(rule);
     }
     always_aggregate = true;
@@ -86,7 +105,7 @@ class Aggregator {
     cached_interval_us =
         config->trace_interval_ms * 1000;  // Cache to avoid per-event division
   }
-  bool should_aggregate(const AggregatedKey *key) {
+  bool should_aggregate(const AggregatedKey* key) {
     if (always_aggregate) return true;
     if (inclusion_rules.satisfies(key) && !exclusion_rules.satisfies(key))
       return true;
@@ -95,17 +114,13 @@ class Aggregator {
   ~Aggregator() {}
   void finalize() {
     std::unique_lock<std::shared_mutex> lock(mtx);
-    for (auto &interval_map : aggregated_data_) {
-      for (auto &pair : interval_map.second) {
-        for (auto &val_pair : pair.second->values) {
-          delete val_pair.second;
-        }
-        delete pair.second;
-      }
+    for (auto& interval_map : aggregated_data_) {
+      cleanup_aggregated_values(interval_map.second);
     }
+    aggregated_data_.clear();
   }
-  bool aggregate(AggregatedKey &aggregated_key);
-  int get_previous_aggregations(AggregatedDataType &data, bool all = false);
+  bool aggregate(AggregatedKey& aggregated_key);
+  int get_previous_aggregations(AggregatedDataType& data, bool all = false);
 };
 }  // namespace dftracer
 #endif  // DFTRACER_AGGREGATOR_H

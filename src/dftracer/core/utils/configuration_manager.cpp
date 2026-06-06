@@ -61,7 +61,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
       metadata(false),
       core_affinity(false),
       gotcha_priority(1),
-      logger_level(cpplogger::LOG_ERROR),
+      logger_level(cpplogger::CPP_LOGGER_ERROR),
       io(true),
       posix(true),
       stdio(true),
@@ -77,7 +77,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
       aggregation_type(AggregationType::AGGREGATION_TYPE_FULL),
       aggregation_inclusion_rules(),
       aggregation_exclusion_rules() {
-  const char *env_conf = getenv(DFTRACER_CONFIGURATION);
+  const char* env_conf = getenv(DFTRACER_CONFIGURATION);
   YAML::Node config;
   if (env_conf != nullptr) {
     config = YAML::LoadFile(env_conf);
@@ -89,7 +89,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
       }
     }
   }
-  const char *env_log_level = getenv(DFTRACER_LOG_LEVEL);
+  const char* env_log_level = getenv(DFTRACER_LOG_LEVEL);
   if (env_log_level != nullptr) {
     convert(env_log_level, this->logger_level);
   }
@@ -242,8 +242,8 @@ dftracer::ConfigurationManager::ConfigurationManager()
                          this->aggregation_enable);
       DFTRACER_LOG_DEBUG("YAML ConfigurationManager.aggregation_type %d",
                          this->aggregation_type);
-      DFTRACER_LOG_DEBUG("YAML ConfigurationManager.aggregation_enable %d",
-                         this->aggregation_file);
+      DFTRACER_LOG_DEBUG("YAML ConfigurationManager.aggregation_file %s",
+                         this->aggregation_file.c_str());
     }
     if (config[DFT_YAML_INTERNAL]) {
       if (config[DFT_YAML_INTERNAL][DFT_YAML_INTERNAL_SIGNALS]) {
@@ -267,19 +267,19 @@ dftracer::ConfigurationManager::ConfigurationManager()
                          this->write_buffer_size);
     }
   }
-  const char *env_enable = getenv(DFTRACER_ENABLE);
+  const char* env_enable = getenv(DFTRACER_ENABLE);
   if (env_enable != nullptr && strcmp(env_enable, "1") == 0) {
     this->enable = true;
   }
   DFTRACER_LOG_DEBUG("ENV ConfigurationManager.enable %d", this->enable);
   if (this->enable) {
-    const char *env_trace_interval = getenv(DFTRACER_TRACE_INTERVAL_MS);
+    const char* env_trace_interval = getenv(DFTRACER_TRACE_INTERVAL_MS);
     if (env_trace_interval != nullptr) {
       this->trace_interval_ms = atoi(env_trace_interval);
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.trace_interval_ms %d",
                        this->trace_interval_ms);
-    const char *env_libuv_threads = getenv(DFTRACER_LIBUV_THREADS);
+    const char* env_libuv_threads = getenv(DFTRACER_LIBUV_THREADS);
     if (env_libuv_threads != nullptr) {
       this->libuv_thread_count = atoi(env_libuv_threads);
     }
@@ -288,44 +288,44 @@ dftracer::ConfigurationManager::ConfigurationManager()
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.libuv_thread_count %zu",
                        this->libuv_thread_count);
-    const char *env_init_type = getenv(DFTRACER_INIT);
+    const char* env_init_type = getenv(DFTRACER_INIT);
     if (env_init_type != nullptr) {
       convert(env_init_type, this->init_type);
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.init_type %d",
                        this->init_type);
-    const char *env_bind_signals = getenv(DFTRACER_BIND_SIGNALS);
+    const char* env_bind_signals = getenv(DFTRACER_BIND_SIGNALS);
     if (env_bind_signals != nullptr && strcmp(env_bind_signals, "1") == 0) {
       bind_signals = true;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.bind_signals %d",
                        this->bind_signals);
-    const char *env_meta = getenv(DFTRACER_INC_METADATA);
+    const char* env_meta = getenv(DFTRACER_INC_METADATA);
     if (env_meta != nullptr && strcmp(env_meta, "1") == 0) {
       metadata = true;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.metadata %d", this->metadata);
 
-    const char *env_core = getenv(DFTRACER_SET_CORE_AFFINITY);
+    const char* env_core = getenv(DFTRACER_SET_CORE_AFFINITY);
     if (env_core != nullptr && strcmp(env_core, "1") == 0) {
       core_affinity = true;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.core_affinity %d",
                        this->core_affinity);
 
-    const char *env_gotcha_priority = getenv(DFTRACER_GOTCHA_PRIORITY);
+    const char* env_gotcha_priority = getenv(DFTRACER_GOTCHA_PRIORITY);
     if (env_gotcha_priority != nullptr) {
       this->gotcha_priority = atoi(env_gotcha_priority);  // GCOV_EXCL_LINE
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.gotcha_priority %d",
                        this->gotcha_priority);
-    const char *env_log_file = getenv(DFTRACER_LOG_FILE);
+    const char* env_log_file = getenv(DFTRACER_LOG_FILE);
     if (env_log_file != nullptr) {
       this->log_file = env_log_file;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.log_file %s",
                        this->log_file.c_str());
-    const char *env_data_dirs = getenv(DFTRACER_DATA_DIR);
+    const char* env_data_dirs = getenv(DFTRACER_DATA_DIR);
     if (env_data_dirs != nullptr) {
       if (strcmp(env_data_dirs, DFTRACER_ALL_FILES) == 0) {
         this->trace_all_files = true;
@@ -337,41 +337,41 @@ dftracer::ConfigurationManager::ConfigurationManager()
                        this->data_dirs.c_str());
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.trace_all_files %d",
                        this->trace_all_files);
-    const char *disable_io = getenv(DFTRACER_DISABLE_IO);
+    const char* disable_io = getenv(DFTRACER_DISABLE_IO);
     if (disable_io != nullptr && strcmp(disable_io, "1") == 0) {
       this->io = false;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.io %d", this->io);
     if (this->io) {
-      const char *disable_posix = getenv(DFTRACER_DISABLE_POSIX);
+      const char* disable_posix = getenv(DFTRACER_DISABLE_POSIX);
       if (disable_posix != nullptr && strcmp(disable_posix, "1") == 0) {
         this->posix = false;
       }
       DFTRACER_LOG_DEBUG("ENV ConfigurationManager.posix %d", this->posix);
-      const char *disable_stdio = getenv(DFTRACER_DISABLE_STDIO);
+      const char* disable_stdio = getenv(DFTRACER_DISABLE_STDIO);
       if (disable_stdio != nullptr && strcmp(disable_stdio, "1") == 0) {
         this->stdio = false;
       }
       DFTRACER_LOG_DEBUG("ENV ConfigurationManager.stdio %d", this->stdio);
     }
-    const char *env_tid = getenv(DFTRACER_DISABLE_TIDS);
+    const char* env_tid = getenv(DFTRACER_DISABLE_TIDS);
     if (env_tid != nullptr && strcmp(env_tid, "0") == 0) {
       this->tids = false;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.tids %d", this->tids);
-    const char *env_enable_aggregation = getenv(DFTRACER_ENABLE_AGGREGATION);
+    const char* env_enable_aggregation = getenv(DFTRACER_ENABLE_AGGREGATION);
     if (env_enable_aggregation != nullptr &&
         strcmp(env_enable_aggregation, "1") == 0) {
       this->aggregation_enable = true;
       if (this->aggregation_enable) {
         this->aggregation_type = AggregationType::AGGREGATION_TYPE_FULL;
-        const char *env_aggregation_type = getenv(DFTRACER_AGGREGATION_TYPE);
+        const char* env_aggregation_type = getenv(DFTRACER_AGGREGATION_TYPE);
         if (env_aggregation_type != nullptr) {
           convert(env_aggregation_type, this->aggregation_type);
         }
         if (this->aggregation_type ==
             AggregationType::AGGREGATION_TYPE_SELECTIVE) {
-          const char *env_aggregation_file = getenv(DFTRACER_AGGREGATION_FILE);
+          const char* env_aggregation_file = getenv(DFTRACER_AGGREGATION_FILE);
           if (env_aggregation_file != nullptr) {
             this->aggregation_file = env_aggregation_file;
           }
@@ -384,13 +384,13 @@ dftracer::ConfigurationManager::ConfigurationManager()
                        to_string(this->aggregation_type).c_str());
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.aggregation_file %s",
                        this->aggregation_file.c_str());
-    const char *env_throw_error = getenv(DFTRACER_ERROR);
+    const char* env_throw_error = getenv(DFTRACER_ERROR);
     if (env_throw_error != nullptr && strcmp(env_throw_error, "1") == 0) {
       this->throw_error = true;  // GCOVR_EXCL_LINE
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.throw_error %d",
                        this->throw_error);
-    const char *env_compression = getenv(DFTRACER_TRACE_COMPRESSION);
+    const char* env_compression = getenv(DFTRACER_TRACE_COMPRESSION);
     if (env_compression != nullptr) {
       if (strcmp(env_compression, "1") == 0)
         this->compression = true;
@@ -399,7 +399,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.compression %d",
                        this->compression);
-    const char *env_write_buf_size = getenv(DFTRACER_WRITE_BUFFER_SIZE);
+    const char* env_write_buf_size = getenv(DFTRACER_WRITE_BUFFER_SIZE);
     if (env_write_buf_size != nullptr) {
       this->write_buffer_size = atoi(env_write_buf_size);
     }
@@ -407,7 +407,7 @@ dftracer::ConfigurationManager::ConfigurationManager()
                        this->write_buffer_size);
   }
   derive_configurations();
-  DFTRACER_LOG_DEBUG("ENV ConfigurationManager finished", "");
+  DFTRACER_LOG_DEBUG("ENV ConfigurationManager finished");
 }
 
 void dftracer::ConfigurationManager::derive_configurations() {
@@ -418,30 +418,30 @@ void dftracer::ConfigurationManager::derive_configurations() {
       // Load aggregation rules from the specified file
       YAML::Node agg_config = YAML::LoadFile(this->aggregation_file);
       if (agg_config[DFT_YAML_FEATURES_AGGREGATION_INCLUSION_FILTERS]) {
-        const auto &inclusion =
+        const auto& inclusion =
             agg_config[DFT_YAML_FEATURES_AGGREGATION_INCLUSION_FILTERS];
         if (inclusion.IsSequence()) {
-          for (const auto &item : inclusion) {
+          for (const auto& item : inclusion) {
             this->aggregation_inclusion_rules.push_back(item.as<std::string>());
           }
         }
       }
       if (agg_config[DFT_YAML_FEATURES_AGGREGATION_EXCLUSION_FILTERS]) {
-        const auto &exclusion =
+        const auto& exclusion =
             agg_config[DFT_YAML_FEATURES_AGGREGATION_EXCLUSION_FILTERS];
         if (exclusion.IsSequence()) {
-          for (const auto &item : exclusion) {
+          for (const auto& item : exclusion) {
             this->aggregation_exclusion_rules.push_back(item.as<std::string>());
           }
         }
       }
-      DFTRACER_LOG_DEBUG("Aggregation inclusion rules", "");
-      for (const auto &rule : this->aggregation_inclusion_rules) {
+      DFTRACER_LOG_DEBUG("Aggregation inclusion rules");
+      for (const auto& rule : this->aggregation_inclusion_rules) {
         (void)rule;
         DFTRACER_LOG_DEBUG(" - %s", rule.c_str());
       }
-      DFTRACER_LOG_DEBUG("Aggregation exclusion rules", "");
-      for (const auto &rule : this->aggregation_exclusion_rules) {
+      DFTRACER_LOG_DEBUG("Aggregation exclusion rules");
+      for (const auto& rule : this->aggregation_exclusion_rules) {
         (void)rule;
         DFTRACER_LOG_DEBUG(" - %s", rule.c_str());
       }

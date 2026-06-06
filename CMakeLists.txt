@@ -267,7 +267,7 @@ else()
         set(DEPENDENCY_LIB ${CMAKE_EXE_LINKER_FLAGS} $ENV{LDFLAGS} -lpthread)
         set(DEPENDENCY_LIBRARY_DIRS "")
 
-        find_package(cpp-logger 1.0.0 REQUIRED)
+        find_package(cpp-logger 2.0.0 REQUIRED)
 
         if(${cpp-logger_FOUND})
                 include_directories(${CPP_LOGGER_INCLUDE_DIRS})
@@ -295,7 +295,16 @@ else()
                 find_package(HDF5 QUIET COMPONENTS C)
         endif()
 
-        find_package(brahma 4.0.0 REQUIRED)
+        # Brahma can export an interface dependency on MPI::MPI_C.
+        # Preload MPI targets before loading brahma package config.
+        # Policy: DFTRACER_ENABLE_MPI=ON requires MPI for dftracer,
+        # but brahma MPI can be disabled separately by dependency logic.
+        find_package(MPI QUIET COMPONENTS C)
+        if(DFTRACER_ENABLE_MPI AND NOT (MPI_FOUND OR TARGET MPI::MPI_C))
+                message(FATAL_ERROR "[${PROJECT_NAME}] DFTRACER_ENABLE_MPI=ON but MPI was not found")
+        endif()
+
+        find_package(brahma 4.0.1 REQUIRED)
 
         if(${brahma_FOUND})
                 message(STATUS "[BRAHMA] found brahma at ${BRAHMA_INCLUDE_DIRS}")
@@ -436,6 +445,9 @@ else()
                         list(APPEND DEPENDENCY_LIBRARY_DIRS ${MPI_CXX_LIBRARY_DIRS})
                 endif()
         else()
+                if(DFTRACER_ENABLE_MPI)
+                        message(FATAL_ERROR "[${PROJECT_NAME}] DFTRACER_ENABLE_MPI=ON but MPI CXX was not found")
+                endif()
                 message(STATUS "[${PROJECT_NAME}] MPI not found.")
                 set(DFTRACER_MPI_ENABLE 0)
         endif()

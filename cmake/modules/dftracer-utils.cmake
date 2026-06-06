@@ -155,8 +155,8 @@ function(dftracer_install_external_project name version var_name url tag install
       "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
       "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
       ${configure_args}
-      BUILD_COMMAND make -j
-      INSTALL_COMMAND make install -j
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --parallel
+      INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target install --parallel
       LOG_DOWNLOAD ON
     )
     include_directories(${install_prefix}/include)

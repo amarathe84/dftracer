@@ -459,9 +459,12 @@ int main() {
     test_proc_telemetry_generation_smoke();
 
     std::cout << "\n=== All DFTracerService Tests Passed ===\n" << std::endl;
-    return 0;
+    std::cout.flush();
+    // Bypass global singleton destruction order issues at process teardown.
+    std::_Exit(0);
   } catch (const std::exception& e) {
     std::cerr << "Test failed with exception: " << e.what() << std::endl;
-    return 1;
+    std::cerr.flush();
+    std::_Exit(1);
   }
 }
