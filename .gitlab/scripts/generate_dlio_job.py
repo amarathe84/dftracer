@@ -40,14 +40,15 @@ def find_workload_configs(config_dir):
     logging.info(f"Searching for workload configuration files in {config_dir}")
     config_files = [os.path.splitext(f.name)[0] for f in config_dir.glob("*.yaml")]
     logging.info(f"Found {len(config_files)} configuration files.")
-    if os.getenv("DEBUG", "0") == "1":
-        config_files = [config_files[-1]]
     # Parse inclusion list from environment variable
     inclusion_list = os.getenv("INCLUSION_LIST", "")
     if inclusion_list:
         included_configs = set(inclusion_list.split(";"))
         config_files = [config for config in config_files if config in included_configs]
         logging.info(f"Inclusion list applied. Remaining configs: {config_files}")
+    
+    if os.getenv("DEBUG", "0") == "1":
+        config_files = [config_files[-1]]
     return config_files
 
 

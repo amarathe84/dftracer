@@ -9,36 +9,61 @@ variables:
   CUSTOM_CI_BUILDS_DIR: "/usr/workspace/iopp/gitlab-runner-builds"
   CUSTOM_CI_ENV_DIR: "/usr/workspace/iopp/gitlab-runner-envs"
   # Repository information
-  DLIO_BENCHMARK_REPO: https://github.com/rayandrew/dlio_benchmark.git
-  DLIO_BENCHMARK_TAG: feat/ai-logging
+  DLIO_BENCHMARK_REPO: https://github.com/argonne-lcf/dlio_benchmark.git
+  DLIO_BENCHMARK_TAG: main
   DFTRACER_REPO: https://github.com/LLNL/dftracer.git
   # test variable
-  ENV_NAME: dlio_env_2
+  ENV_NAME: dlio_env
   # test variables
   MIN_NODES: 1
   MAX_NODES: 8
   EXCLUSION_LIST: llama_70b_zero3-0;llama_70b-4
 
 stages:
-- build
-- generate
-- test
+  - build
+  - generate
+  - test
 
 dft_tuo_build:
-  extends: .tuo 
-  stage: build 
-  script: 
+  extends: .tuolumne
+  stage: build
+  script:
     - source .gitlab/scripts/variables.sh
     - source .gitlab/scripts/pre.sh
-    - if [[ "$DEBUG" != "1" ]]; then source .gitlab/scripts/build_dft.sh; else echo "Not building from scratch as running in Debug mode."; fi
+    - if [[ "$DEBUG" != "1" ]]; then source .gitlab/scripts/build.sh; else echo "Not building from scratch as running in Debug mode."; fi
 
-dft_tuo_test: 
-  extends: .tuo 
-  stage: test 
-  script: 
+# dft_tuo_test:
+#   extends: .tuolumne
+#   stage: test
+#   script:
+#     - source .gitlab/scripts/variables.sh
+#     - source .gitlab/scripts/pre.sh
+#     - bash .gitlab/scripts/run_dft_hip_test.sh
+
+dlio_tuo_generate:
+  extends: .tuolumne
+  stage: generate
+  script:
     - source .gitlab/scripts/variables.sh
     - source .gitlab/scripts/pre.sh
-    - bash .gitlab/scripts/run_dft_hip_test.sh
+    - if [ -f .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml ]; then rm .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml; fi
+    - python .gitlab/scripts/generate_dlio_job.py --output .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml --log-level INFO
+    - if [ ! -f .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml ]; then echo 'File not generated!'; exit 1; fi
+    - cat .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml
+  artifacts:
+    paths:
+      - .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml
+
+dlio_tuo_test:
+  stage: test
+  trigger:
+    include:
+      - artifact: .gitlab/scripts/run_dlio_workload_test_tuo_ci.yaml
+        job: dlio_tuo_generate
+    strategy: depend
+    forward:
+      pipeline_variables: true
+
 
 dlio_corona_build:
   extends: .corona
@@ -51,28 +76,28 @@ dlio_corona_build:
 dlio_corona_generate:
   extends: .corona
   stage: generate
-  script: 
+  script:
     - source .gitlab/scripts/variables.sh
     - source .gitlab/scripts/pre.sh
-    - if [ -f .gitlab/scripts/run_dlio_workload_test_ci.yaml ]; then rm .gitlab/scripts/run_dlio_workload_test_ci.yaml; fi
-    - python .gitlab/scripts/generate_dlio_job.py --output .gitlab/scripts/run_dlio_workload_test_ci.yaml --log-level INFO
-    - if [ ! -f .gitlab/scripts/run_dlio_workload_test_ci.yaml ]; then echo 'File not generated!'; exit 1; fi
-    - cat .gitlab/scripts/run_dlio_workload_test_ci.yaml
+    - if [ -f .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml ]; then rm .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml; fi
+    - python .gitlab/scripts/generate_dlio_job.py --output .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml --log-level INFO
+    - if [ ! -f .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml ]; then echo 'File not generated!'; exit 1; fi
+    - cat .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml
   artifacts:
     paths:
-      - .gitlab/scripts/run_dlio_workload_test_ci.yaml
+      - .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml
 
 dlio_corona_test:
   stage: test
   trigger:
     include:
-      - artifact: .gitlab/scripts/run_dlio_workload_test_ci.yaml
+      - artifact: .gitlab/scripts/run_dlio_workload_test_corona_ci.yaml
         job: dlio_corona_generate
     strategy: depend
     forward:
       pipeline_variables: true
 
 include:
-  - project: 'lc-templates/id_tokens'
-    file: 'id_tokens.yml'
-  - local: '.gitlab/scripts/common.yml'
+  - project: "lc-templates/id_tokens"
+    file: "id_tokens.yml"
+  - local: ".gitlab/scripts/common.yml"

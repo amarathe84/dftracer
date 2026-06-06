@@ -3,9 +3,9 @@
 # Enable debugging to echo commands being run
 set -x
 
+
 # Print the hostname where the script is being executed
 echo "Running pre.sh on $(hostname) by $USER on $PWD"
-
 # Load the required modules for Python, MPI, and GCC
 echo "Loading modules: Python ($PYTHON_MODULE), MPI ($MPI_MODULE), and GCC ($GCC_MODULE) and ROCM ($ROCM_MODULE)"
 module load $PYTHON_MODULE $MPI_MODULE $GCC_MODULE $ROCM_MODULE
@@ -20,13 +20,13 @@ echo "MPI_MODULE: $MPI_MODULE"
 echo "GCC_MODULE: $GCC_MODULE"
 
 # Check the values of the environment variables
-echo "CUSTOM_CI_ENV_DIR: $CUSTOM_CI_ENV_DIR"
+echo "CUSTOM_CI_ENV_DIR: ${CUSTOM_CI_ENV_DIR}"
 echo "ENV_NAME: $ENV_NAME"
 
 # Create a new Python virtual environment (if not exist) in the specified directory
-if [[ ! -d $CUSTOM_CI_ENV_DIR/$ENV_NAME ]]; then
-    echo "Creating a new Python virtual environment at $CUSTOM_CI_ENV_DIR/$ENV_NAME"
-    python -m venv $CUSTOM_CI_ENV_DIR/$ENV_NAME
+if [[ ! -d ${CUSTOM_CI_ENV_DIR}/$ENV_NAME ]]; then
+    echo "Creating a new Python virtual environment at ${CUSTOM_CI_ENV_DIR}/$ENV_NAME"
+    python -m venv ${CUSTOM_CI_ENV_DIR}/$ENV_NAME
     if [ $? -ne 0 ]; then
         echo "Error: Failed to create Python virtual environment."
         exit 1
@@ -34,8 +34,8 @@ if [[ ! -d $CUSTOM_CI_ENV_DIR/$ENV_NAME ]]; then
 fi
 
 # Activating environment
-echo "Activating env at $CUSTOM_CI_ENV_DIR/$ENV_NAME"
-. $CUSTOM_CI_ENV_DIR/$ENV_NAME/bin/activate
+echo "Activating env at ${CUSTOM_CI_ENV_DIR}/$ENV_NAME"
+. ${CUSTOM_CI_ENV_DIR}/$ENV_NAME/bin/activate
 if [ $? -ne 0 ]; then
     echo "Error: Failed to activate Python virtual environment."
     exit 1
@@ -56,10 +56,24 @@ scheduler() {
         *"corona"*)
             echo "Setting SCHEDULER_CMD for hostname containing 'corona'..."
             SCHEDULER_CMD=(flux submit -N $1 --tasks-per-node=$2 -q $QUEUE -t $WALLTIME --exclusive)
+            # Check if torch isn't installed
+            if ! python -c "import torch" &> /dev/null; then
+                echo "Torch is not installed. Installing..."
+                echo "Python source"
+                which python
+                pip install -r .gitlab/scripts/hip_corona_requirements.txt
+            fi
             ;;
         *"tuo"*)
             echo "Setting SCHEDULER_CMD for hostname containing 'tuo'..."
             SCHEDULER_CMD=(flux submit -N $1 --ntasks-per-node=$2 -p $QUEUE -t $WALLTIME --exclusive)
+            # Check if torch isn't installed
+            if ! python -c "import torch" &> /dev/null; then
+                echo "Torch is not installed. Installing..."
+                echo "Python source"
+                which python
+                pip install -r .gitlab/scripts/hip_tuo_requirements.txt
+            fi
             ;;
         *)
             echo "Unknown hostname: $hostname"
@@ -68,15 +82,9 @@ scheduler() {
     esac
 }
 
-# Check if torch isn't installed
-if ! python -c "import torch" &> /dev/null; then
-    echo "Torch is not installed. Installing..."
-    echo "Python source"
-    which python
-    pip install -r .gitlab/scripts/hip_requirements.txt
-fi
 
-export LD_LIBRARY_PATH=$CUSTOM_CI_ENV_DIR/$ENV_NAME/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
+
+export LD_LIBRARY_PATH=${CUSTOM_CI_ENV_DIR}/$ENV_NAME/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
 
 # Disable debugging
 set +x

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export DFTRACER_ENABLE=1
+
 cd $CUSTOM_CI_BUILDS_DIR
 
 # Clone if it doesn't exist
@@ -15,6 +16,6 @@ git checkout $CI_COMMIT_REF_NAME
 export QUEUE=pdebug
 export WALLTIME=1h
 
-source $CUSTOM_CI_ENV_DIR/$ENV_NAME/bin/activate
+source ${CUSTOM_CI_ENV_DIR}/$ENV_NAME/bin/activate
 
 flux run -N1 -q $QUEUE -t $WALLTIME --exclusive python3 test/py/hip_test.py

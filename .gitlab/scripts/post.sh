@@ -3,6 +3,7 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 set -x  # Print each command before executing it
 
+
 echo "Running post.sh on $(hostname)"
 
 if [ "x$DFTRACER_VERSION" == "x" ]; then

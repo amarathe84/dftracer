@@ -9,9 +9,10 @@
     - shell
     - corona
   variables:
-    PYTHON_MODULE: python/3.9.12
-    MPI_MODULE: openmpi/4.1.2 # OpenMPI is a popular open-source MPI implementation
-    GCC_MODULE: gcc/10.3.1
+    PYTHON_MODULE: python/3.13.2
+    MPI_MODULE: mvapich2/2.3.7
+    GCC_MODULE: gcc/11.2.1
+    ROCM_MODULE: rocm/6.4.3
     DATA_PATH: "/p/lustre3/iopp/gitlab-runner-data/"
     LOG_STORE_DIR: "/p/lustre3/iopp/dftracer-traces-lfs" # 'iopp' refers to a specific directory structure
     CUSTOM_CI_OUTPUT_DIR: "/p/lustre3/iopp/gitlab-runner-outputs"
@@ -25,16 +26,16 @@
     MAX_NODES_SMALL_QUEUE: 8
     SYSTEM_NAME: corona
 
-.tuo:
-  extends: .lc 
-  tags: 
-    - shell 
+.tuolumne:
+  extends: .lc
+  tags:
+    - shell
     - tuolumne
-  variables: 
-    PYTHON_MODULE: cray-python/3.11.7
-    MPI_MODULE: cray-mpich/8.1.25 # OpenMPI is a popular open-source MPI implementation
-    GCC_MODULE: gcc/12.2.0
-    ROCM_MODULE: rocm/6.3.1
+  variables:
+    PYTHON_MODULE: python/3.13.2
+    MPI_MODULE: cray-mpich/9.0.1 # OpenMPI is a popular open-source MPI implementation
+    GCC_MODULE: cce/20.0.0
+    ROCM_MODULE: rocm/6.4.3
     DATA_PATH: "/p/lustre5/iopp/gitlab-runner-data/"
     LOG_STORE_DIR: "/p/lustre5/iopp/dftracer-traces-lfs" # 'iopp' refers to a specific directory structure
     CUSTOM_CI_OUTPUT_DIR: "/p/lustre5/iopp/gitlab-runner-outputs"
@@ -43,4 +44,3 @@
     SMALL_QUEUE: pdebug # 'pdebug' is a queue name for debugging jobs
     MAX_NODES_SMALL_QUEUE: 8
     SYSTEM_NAME: tuolumne
-

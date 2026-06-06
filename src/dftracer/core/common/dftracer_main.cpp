@@ -177,39 +177,34 @@ bool dftracer::DFTracerCore::finalize() {
 void dftracer::DFTracerCore::reinitialize() {
   DFTRACER_LOG_DEBUG("DFTracerCore::reinitialize");
   is_initialized = false;
-  std::string log_file_path = this->log_file;
-  size_t last_slash = log_file_path.find_last_of("/\\");
-  std::string folder = (last_slash != std::string::npos)
-                           ? log_file_path.substr(0, last_slash)
-                           : "";
-  std::string base_filename = (last_slash != std::string::npos)
-                                  ? log_file_path.substr(last_slash + 1)
-                                  : log_file_path;
-  size_t first_dash = base_filename.find('-');
-  std::string prefix = (first_dash != std::string::npos)
-                           ? base_filename.substr(0, first_dash)
-                           : base_filename;
-
-  std::string new_log_file;
-  if (!folder.empty()) {
-    new_log_file = folder + "/" + prefix;
-  } else {
-    new_log_file = prefix;
+  if (this->log_file_prefix.empty()) {
+    const char* log_file_env = getenv("DFTRACER_LOG_FILE");
+    if (log_file_env != nullptr) {
+      this->log_file_prefix = std::string(log_file_env);
+    } else {
+      DFTRACER_LOG_ERROR(DFTRACER_UNDEFINED_LOG_FILE_MSG);
+      throw std::runtime_error(DFTRACER_UNDEFINED_LOG_FILE_CODE);
+    }
   }
-  conf->log_file = new_log_file;
+  conf->log_file = this->log_file_prefix;
+  setenv("DFTRACER_LOG_FILE", this->log_file_prefix.c_str(), 1);
   this->process_id = df_getpid();
   DFTRACER_LOG_INFO(
       "Reinitializing DFTracer with log_file %s data_dirs %s and process %d",
-      new_log_file.c_str(), this->data_dirs.c_str(), this->process_id);
+      this->log_file_prefix.c_str(), this->data_dirs.c_str(), this->process_id);
   logger = dftracer::Singleton<DFTLogger>::get_instance();
   logger->reinitialize();
-  initialize(false, nullptr, this->data_dirs.c_str(), nullptr);
+  initialize(false, this->log_file_prefix.c_str(), this->data_dirs.c_str(),
+             nullptr);
 }
 
 void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
                                         const char* _data_dirs,
                                         const int* _process_id) {
-  DFTRACER_LOG_DEBUG("DFTracerCore::initialize");
+  DFTRACER_LOG_INFO(
+      "DFTracerCore::initialize _bind:%d _log_file:%s _data_dirs:%s "
+      "_process_id:%p\n",
+      _bind, _log_file, _data_dirs, _process_id);
   if (conf->bind_signals) set_signal();
   if (!is_initialized) {
     this->bind = _bind;
@@ -257,24 +252,24 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
         DFTRACER_LOG_DEBUG("Exec command line %s", exec_cmd);
       }
       DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
+      char log_filename_str[DFT_PATH_MAX];
+      char hostname[256] = "unknown";
+      gethostname(hostname, sizeof(hostname));
+      hostname[sizeof(hostname) - 1] = '\0';
+      snprintf(log_filename_str, sizeof(log_filename_str), "%s-%s-%d",
+               exec_name, hostname, this->process_id);
+      char* log_file_hash = logger->get_hash(log_filename_str);
       if (_log_file == nullptr) {
         if (!conf->log_file.empty()) {
-          char log_filename_str[DFT_PATH_MAX];
-          char hostname[256] = "unknown";
-          gethostname(hostname, sizeof(hostname));
-          hostname[sizeof(hostname) - 1] = '\0';
-          snprintf(log_filename_str, sizeof(log_filename_str), "%s-%s-%d",
-                   exec_name, hostname, this->process_id);
-          char* log_file_hash = logger->get_hash(log_filename_str);
           DFTRACER_LOG_DEBUG("Conf has log file %s", conf->log_file.c_str());
           std::string extension = ".pfw";
           if (conf->compression) {
             extension += ".gz";
           }
+          this->log_file_prefix = std::string(conf->log_file);
           this->log_file = std::string(conf->log_file) + "-" +
                            std::string(log_file_hash) + "-" + log_file_suffix +
                            extension;
-          free(log_file_hash);
         } else {  // GCOV_EXCL_START
           DFTRACER_LOG_ERROR(DFTRACER_UNDEFINED_LOG_FILE_MSG);
           throw std::runtime_error(DFTRACER_UNDEFINED_LOG_FILE_CODE);
@@ -291,8 +286,11 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
           this->log_file = this->log_file.substr(0, ext_pos);
           this->log_file = this->log_file.substr(0, ext_pos);
         }
-        this->log_file += extension;
+        this->log_file_prefix = this->log_file;
+        this->log_file += "-" + std::string(log_file_hash) + "-" +
+                          log_file_suffix + extension;
       }
+      free(log_file_hash);
       DFTRACER_LOG_DEBUG("Setting log file to %s", this->log_file.c_str());
       logger->update_log_file(this->log_file, exec_name, exec_cmd,
                               this->process_id);
@@ -385,6 +383,13 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
       }
 #endif
     }
+    setenv("DFTRACER_LOG_FILE", this->log_file_prefix.c_str(), 1);
+    setenv("DFTRACER_DATA_DIR", this->data_dirs.c_str(), 1);
+    DFTRACER_LOG_PRINT(
+        "DFTracerCore::initialize _bind:%d _log_file:%s _data_dirs:%s "
+        "_process_id:%d\n",
+        this->bind, this->log_file.c_str(), this->data_dirs.c_str(),
+        this->process_id);
     is_initialized = true;
   }
 }
