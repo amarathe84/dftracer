@@ -44,15 +44,8 @@ VALGRIND_DLIO_TIMEOUT="${VALGRIND_DLIO_TIMEOUT:-3600}"
 SKIP_BUILD_RUN_TESTS="${SKIP_BUILD_RUN_TESTS:-0}"
 RUN_VALGRIND_DLIO="${RUN_VALGRIND_DLIO:-auto}"
 RUN_PR_CI_LOCAL="${RUN_PR_CI_LOCAL:-0}"
-PR_CI_START_STAGE="${PR_CI_START_STAGE:-1}"
-PR_CI_REUSE_EXISTING_ENV="${PR_CI_REUSE_EXISTING_ENV:-0}"
-PR_CI_FORCE_CLEAN_BUILD="${PR_CI_FORCE_CLEAN_BUILD:-0}"
 PR_CI_VENV_DIR="${PR_CI_VENV_DIR:-${SCRIPT_DIR}/.pr-ci-venv}"
 PR_CI_MASTER_LOG="${PR_CI_MASTER_LOG:-${BUILD_DIR}/ci-local.log}"
-IOR_BIN="${IOR_BIN:-}"
-IOR_GIT_URL="${IOR_GIT_URL:-https://github.com/hpc/ior.git}"
-IOR_GIT_REF="${IOR_GIT_REF:-main}"
-IOR_INSTALL_PREFIX="${IOR_INSTALL_PREFIX:-${SCRIPT_DIR}/.local/ior}"
 
 # Print usage
 usage() {
@@ -79,7 +72,7 @@ OPTIONS:
     --enable-hwloc          Enable HWLOC (default: disabled)
     --enable-dlio-tests     Enable DLIO benchmark tests
     --enable-paper-tests    Enable paper tests
-    --jobs N                Number of parallel jobs for build, CTest, Valgrind CTests, and DLIO runs (default: auto-detected)
+    --jobs N                Number of parallel jobs (default: auto-detected)
     --clean                 Clean build directory before building
     --clean-install         Remove all DFTracer installations from system/venv (site-packages, bin, lib, lib64)
     --with-dfanalyzer       Install dfanalyzer dependencies (for analysis tools)
@@ -95,8 +88,6 @@ OPTIONS:
     --skip-valgrind-dlio    Skip the optional DLIO benchmark valgrind gate
     --skip-build-run-tests  Skip build/install and run tests from an existing build tree
     --run-pr-ci-local       Run local pre-push CI suite: clean build + format check + CTest + valgrind gates + install dlio_benchmark + benchmark
-    --pr-ci-start-stage N   Start --run-pr-ci-local from stage N (1-7)
-    --pr-ci-force-clean-build  When starting from a later stage, keep the clean build/install path instead of reusing the existing env
 
 ENVIRONMENT VARIABLES (same as setup.py):
     DFTRACER_BUILD_TYPE                     Build type (Release/Debug)
@@ -121,15 +112,8 @@ ENVIRONMENT VARIABLES (same as setup.py):
     SKIP_BUILD_RUN_TESTS                    Skip build/install and run existing tests (1/0)
     RUN_VALGRIND_DLIO                       Run DLIO valgrind gate (auto/1/0)
     RUN_PR_CI_LOCAL                         Run full local PR-CI-equivalent checks (1/0, quiet stage progress and failure-only logs)
-    PR_CI_START_STAGE                       Start stage index for --run-pr-ci-local (1-7)
-    PR_CI_REUSE_EXISTING_ENV                Reuse current env/build when skipping to a later PR-CI stage (1/0)
-    PR_CI_FORCE_CLEAN_BUILD                 Force a clean build/install even when skipping to a later PR-CI stage (1/0)
     PR_CI_VENV_DIR                          Project-local dedicated virtualenv for --run-pr-ci-local
     PR_CI_MASTER_LOG                        Master log file for --run-pr-ci-local output
-    IOR_BIN                                 Path to preinstalled ior binary (userspace override)
-    IOR_GIT_URL                             IOR Git repository URL for userspace source install
-    IOR_GIT_REF                             IOR branch/tag/ref for userspace source install
-    IOR_INSTALL_PREFIX                      Userspace install prefix for IOR source install
 
 EXAMPLES:
     # Basic build with pip installation (recommended)
@@ -185,15 +169,6 @@ EXAMPLES:
 
     # Clean build and run local pre-push CI-equivalent checks
     $0 --python python3 --run-pr-ci-local
-
-    # Resume local pre-push CI-equivalent checks from stage 5
-    $0 --python python3 --run-pr-ci-local --pr-ci-start-stage 5
-
-    # Reuse the current environment when the working tree is clean
-    $0 --python python3 --run-pr-ci-local --pr-ci-reuse-existing-env 1
-
-    # Skip to stage 5 but still do a clean build/install first
-    $0 --python python3 --run-pr-ci-local --pr-ci-start-stage 5 --pr-ci-force-clean-build 1
 
 COVERAGE ANALYSIS WORKFLOW:
     # 1. Build with coverage support
@@ -375,18 +350,6 @@ while [[ $# -gt 0 ]]; do
             export DFTRACER_ENABLE_HDF5="ON"
             shift
             ;;
-        --pr-ci-start-stage)
-            PR_CI_START_STAGE="$2"
-            shift 2
-            ;;
-        --pr-ci-reuse-existing-env)
-            PR_CI_REUSE_EXISTING_ENV="$2"
-            shift 2
-            ;;
-        --pr-ci-force-clean-build)
-            PR_CI_FORCE_CLEAN_BUILD="$2"
-            shift 2
-            ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
             usage
@@ -394,26 +357,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-if ! [[ "${PR_CI_START_STAGE}" =~ ^[0-9]+$ ]]; then
-    echo -e "${RED}Error: --pr-ci-start-stage must be an integer between 1 and 7${NC}"
-    exit 1
-fi
-
-if ! [[ "${PR_CI_REUSE_EXISTING_ENV}" =~ ^[01]$ ]]; then
-    echo -e "${RED}Error: --pr-ci-reuse-existing-env must be 0 or 1${NC}"
-    exit 1
-fi
-
-if ! [[ "${PR_CI_FORCE_CLEAN_BUILD}" =~ ^[01]$ ]]; then
-    echo -e "${RED}Error: --pr-ci-force-clean-build must be 0 or 1${NC}"
-    exit 1
-fi
-
-if [ "${RUN_PR_CI_LOCAL}" = "1" ] && { [ "${PR_CI_START_STAGE}" -lt 1 ] || [ "${PR_CI_START_STAGE}" -gt 7 ]; }; then
-    echo -e "${RED}Error: --pr-ci-start-stage must be between 1 and 7 for --run-pr-ci-local${NC}"
-    exit 1
-fi
 
 # Helper function for executing commands
 execute_cmd() {
@@ -557,16 +500,13 @@ ci_extract_progress_from_log() {
     fi
 
     if [[ "${stage_name}" == *"Valgrind CTests"* ]]; then
-        local completed_count=""
-        completed_count="$(grep -E '^\[(valgrind-ctest|valgrind-python-ctest)\][[:space:]]+[^[:space:]]+[[:space:]]+rc=[0-9]+$' "${stage_log}" | awk '{print $2}' | sort -u | wc -l | tr -d '[:space:]')"
-        if [[ "${completed_count}" =~ ^[0-9]+$ ]] && [ "${completed_count}" -gt 0 ]; then
+        local run_count=""
+        run_count="$(grep -Ec '\[valgrind-ctest\][[:space:]]+RUN[[:space:]]|\[valgrind-python-ctest\][[:space:]]+RUN[[:space:]]' "${stage_log}")"
+        if [[ "${run_count}" =~ ^[0-9]+$ ]] && [ "${run_count}" -gt 0 ]; then
             if [[ "${expected_total}" =~ ^[0-9]+$ ]] && [ "${expected_total}" -gt 0 ]; then
-                if [ "${completed_count}" -gt "${expected_total}" ]; then
-                    completed_count="${expected_total}"
-                fi
-                echo "progress ${completed_count}/${expected_total}"
+                echo "progress ${run_count}/${expected_total}"
             else
-                echo "progress ${completed_count}"
+                echo "progress ${run_count}"
             fi
             return 0
         fi
@@ -706,7 +646,6 @@ run_valgrind_ctest_tests() {
         --build-dir "${ctest_build_dir}"
         --log-dir "${common_log_dir}"
         --summary-json "${common_log_dir}/summary.json"
-        --jobs "${JOBS}"
         --log-level INFO
         --debug-rerun-on-failure
         --debug-log-level DEBUG
@@ -730,7 +669,6 @@ run_valgrind_ctest_tests() {
             --build-dir "${ctest_build_dir}"
             --log-dir "${python_log_dir}"
             --summary-json "${python_log_dir}/summary.json"
-            --jobs "${JOBS}"
             --log-level INFO
             --timeout "${VALGRIND_CTEST_TIMEOUT}"
             --fail-on-project-leaks-only
@@ -785,8 +723,6 @@ with python_summary.open("r", encoding="utf-8") as f:
 common_selected = int(common.get("selected_tests", 0))
 common_executed = int(common.get("valgrind_executed", 0))
 common_skipped = int(common.get("wrapper_skipped", 0))
-common_skipped_python = int(common.get("wrapper_skipped_python", common_skipped))
-common_skipped_other = int(common.get("wrapper_skipped_other", max(0, common_skipped - common_skipped_python)))
 py_selected = int(py.get("selected_tests", 0))
 py_executed = int(py.get("valgrind_executed", 0))
 
@@ -795,18 +731,18 @@ if common_selected != ctest_total:
     errors.append(
         f"non-python runner selected {common_selected}, expected full ctest total {ctest_total}"
     )
-if common_skipped_python != py_selected:
+if common_skipped != py_selected:
     errors.append(
-        f"non-python python-skipped={common_skipped_python} does not match python selected_tests={py_selected}"
+        f"non-python valgrind_skipped={common_skipped} does not match python selected_tests={py_selected}"
     )
 if py_selected != py_executed:
     errors.append(
         f"python runner selected_tests={py_selected} but valgrind_executed={py_executed}"
     )
-if common_executed + py_executed + common_skipped_other != ctest_total:
+if common_executed + py_executed != ctest_total:
     errors.append(
         "combined valgrind executed tests "
-        f"({common_executed} non-python + {py_executed} python + {common_skipped_other} non-python skipped-other) "
+        f"({common_executed} non-python + {py_executed} python) "
         f"!= ctest total ({ctest_total})"
     )
 
@@ -815,9 +751,7 @@ if errors:
     print(f"[valgrind-coverage] ctest_total={ctest_total}")
     print(
         "[valgrind-coverage] non_python: "
-        f"selected={common_selected} executed={common_executed} "
-        f"skipped_total={common_skipped} skipped_python={common_skipped_python} "
-        f"skipped_other={common_skipped_other}"
+        f"selected={common_selected} executed={common_executed} skipped={common_skipped}"
     )
     print(
         "[valgrind-coverage] python: "
@@ -829,8 +763,7 @@ if errors:
 
 print(
     "[valgrind-coverage] PASS: all CTests executed under valgrind "
-    f"(total={ctest_total}, non-python={common_executed}, python={py_executed}, "
-    f"skipped-other={common_skipped_other})"
+    f"(total={ctest_total}, non-python={common_executed}, python={py_executed})"
 )
 PY
         then
@@ -876,10 +809,6 @@ run_valgrind_dlio_tests() {
         return 0
     fi
 
-    if ! ensure_mpi_runtime_for_dlio "${python_runner}"; then
-        return 1
-    fi
-
     local ctest_build_dir
     if ! ctest_build_dir="$(find_ctest_build_dir)"; then
         echo -e "${RED}Error: Could not find CTest build directory under ${BUILD_DIR}${NC}"
@@ -888,23 +817,14 @@ run_valgrind_dlio_tests() {
     fi
 
     local suppression_file="${SCRIPT_DIR}/test/valgrind/test_cpp_known_syscall.supp"
-    local dlio_log_dir="${ctest_build_dir}/valgrind-dlio-train-autobuild"
-    local dlio_run_root="${ctest_build_dir}/dlio-shared-run"
+    local dlio_log_dir="${ctest_build_dir}/valgrind-dlio-autobuild"
+    local dlio_run_root="${ctest_build_dir}/dlio-valgrind-run"
     local dlio_cmd=(
         "${python_runner}" "${SCRIPT_DIR}/scripts/valgrind_dlio_runner.py"
         --log-dir "${dlio_log_dir}"
         --run-root "${dlio_run_root}"
-        --phase train
-        --no-clean-run-root
         --summary-json "${dlio_log_dir}/summary.json"
-        --jobs "${JOBS}"
         --timeout "${VALGRIND_DLIO_TIMEOUT}"
-        --workload bert_v100
-        --workload cosmoflow_h100
-        --workload dlrm
-        --workload resnet50_h100
-        --workload resnet50_tf
-        --workload unet3d_h100
         --exclude-workload unet3d_a100_s3
         --exclude-workload unet3d_h100_s3
         --exclude-workload unet3d_v100_s3
@@ -926,297 +846,6 @@ run_valgrind_dlio_tests() {
     fi
 
     echo "DLIO Valgrind summary:"
-    echo "  ${dlio_log_dir}/summary.json"
-    return 0
-}
-
-prepend_ld_library_path_if_needed() {
-    local dir="$1"
-
-    [ -d "${dir}" ] || return 0
-
-    case ":${LD_LIBRARY_PATH:-}:" in
-        *":${dir}:"*)
-            return 0
-            ;;
-    esac
-
-    if [ -n "${LD_LIBRARY_PATH:-}" ]; then
-        export LD_LIBRARY_PATH="${dir}:${LD_LIBRARY_PATH}"
-    else
-        export LD_LIBRARY_PATH="${dir}"
-    fi
-}
-
-ensure_mpi_runtime_for_dlio() {
-    local python_runner="$1"
-
-    local -a candidates=()
-    local -a expanded_candidates=()
-    local mpi_launcher=""
-    local launcher_dir=""
-    local launcher_root=""
-    local mpicc_show=""
-    local token=""
-    local cray_dir=""
-
-    if command -v mpicc >/dev/null 2>&1; then
-        mpi_launcher="$(command -v mpicc)"
-    elif command -v mpirun >/dev/null 2>&1; then
-        mpi_launcher="$(command -v mpirun)"
-    elif command -v mpiexec >/dev/null 2>&1; then
-        mpi_launcher="$(command -v mpiexec)"
-    fi
-
-    if [ -n "${mpi_launcher}" ]; then
-        launcher_dir="$(dirname "${mpi_launcher}")"
-        launcher_root="${launcher_dir%/bin}"
-        candidates+=("${launcher_dir}/../lib" "${launcher_dir}/../lib64")
-
-        # Cray MPI wrappers may live under .../bin while runtime libs are in parent trees.
-        local launcher_base="${launcher_dir%/bin}"
-        if [ "${launcher_base}" != "${launcher_dir}" ]; then
-            candidates+=(
-                "${launcher_base}/lib"
-                "${launcher_base}/lib64"
-                "${launcher_base%/*}/lib"
-                "${launcher_base%/*}/lib64"
-                "${launcher_base%/*/*}/lib"
-                "${launcher_base%/*/*}/lib64"
-            )
-        fi
-    fi
-
-    if command -v mpicc >/dev/null 2>&1; then
-        mpicc_show="$(mpicc -show 2>/dev/null || true)"
-        for token in ${mpicc_show}; do
-            if [[ "${token}" == -L* ]]; then
-                candidates+=("${token#-L}")
-            fi
-        done
-    fi
-
-    candidates+=(
-        "/usr/lib/x86_64-linux-gnu/openmpi/lib"
-        "/usr/lib64/openmpi/lib"
-        "/usr/lib/openmpi/lib"
-        "/usr/lib/x86_64-linux-gnu"
-        "/usr/lib64"
-        "/usr/lib"
-    )
-
-    # Cray systems often expose runtime library search paths via CRAY_LD_LIBRARY_PATH.
-    if [ -n "${CRAY_LD_LIBRARY_PATH:-}" ]; then
-        IFS=':' read -r -a _cray_paths <<< "${CRAY_LD_LIBRARY_PATH}"
-        for cray_dir in "${_cray_paths[@]}"; do
-            [ -n "${cray_dir}" ] && candidates+=("${cray_dir}")
-        done
-        unset _cray_paths
-    fi
-
-    # Some Cray installs place libmpi.so under a nested libmpi/ directory.
-    local dir
-    for dir in "${candidates[@]}"; do
-        expanded_candidates+=("${dir}" "${dir}/libmpi")
-    done
-
-    for dir in "${expanded_candidates[@]}"; do
-        if ls "${dir}"/libmpi.so* >/dev/null 2>&1 || ls "${dir}"/libmpi_cray.so* >/dev/null 2>&1; then
-            prepend_ld_library_path_if_needed "${dir}"
-        fi
-    done
-
-    # Last-resort probe around mpicc install root for nested MPI runtime libraries.
-    if [ -n "${launcher_root}" ] && [ -d "${launcher_root}" ]; then
-        while IFS= read -r dir; do
-            prepend_ld_library_path_if_needed "${dir}"
-        done < <(find "${launcher_root}" -maxdepth 5 -type f \( -name 'libmpi.so' -o -name 'libmpi.so.*' -o -name 'libmpi_cray.so' -o -name 'libmpi_cray.so.*' \) -printf '%h\n' 2>/dev/null | sort -u)
-    fi
-
-    if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] MPI runtime check would use LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-<empty>}${NC}"
-        return 0
-    fi
-
-    if ! "${python_runner}" -c "from mpi4py import MPI" >/dev/null 2>&1; then
-        # Wheels can fail on vendor MPI stacks (e.g., Cray) even with valid launchers.
-        if command -v mpicc >/dev/null 2>&1; then
-            local mpicc_path
-            local mpicxx_path
-            mpicc_path="$(which mpicc 2>/dev/null || true)"
-            mpicxx_path="$(which mpic++ 2>/dev/null || true)"
-            if [ -z "${mpicxx_path}" ]; then
-                mpicxx_path="${mpicc_path}"
-            fi
-            echo -e "${YELLOW}mpi4py import failed; rebuilding mpi4py from source against ${mpicc_path}${NC}"
-            if ! CC="${mpicc_path}" CXX="${mpicxx_path}" MPICC="${mpicc_path}" MPICXX="${mpicxx_path}" CRAYPE_LINK_TYPE=dynamic "${python_runner}" -m pip install --no-binary=mpi4py --force-reinstall --no-cache-dir mpi4py; then
-                echo -e "${RED}Error: failed to rebuild mpi4py from source with MPICC=${mpicc_path}${NC}"
-            fi
-        fi
-
-        if ! "${python_runner}" -c "from mpi4py import MPI" >/dev/null 2>&1; then
-            echo -e "${RED}Error: mpi4py cannot load MPI runtime libraries (libmpi.so*)${NC}"
-            echo "Hint: ensure your MPI runtime libraries are installed and visible in LD_LIBRARY_PATH."
-            echo "Current LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-<empty>}"
-            if [ -n "${mpi_launcher}" ]; then
-                echo "Detected MPI launcher: ${mpi_launcher}"
-            fi
-            return 1
-        fi
-    fi
-
-    return 0
-}
-
-run_non_valgrind_dlio_generate_once() {
-    if [ "${RUN_VALGRIND_DLIO}" = "0" ]; then
-        return 0
-    fi
-
-    if [ "${RUN_VALGRIND_CTEST}" != "1" ] && [ "${RUN_VALGRIND_DLIO}" != "1" ]; then
-        return 0
-    fi
-
-    if [ ! -f "${SCRIPT_DIR}/scripts/dlio_non_valgrind_runner.py" ]; then
-        echo -e "${YELLOW}Warning: DLIO non-valgrind runner not found; skipping DLIO generate stage${NC}"
-        return 0
-    fi
-
-    if ! command -v gdb &> /dev/null; then
-        echo -e "${RED}Error: gdb not found in PATH${NC}"
-        return 1
-    fi
-
-    local python_runner="${PYTHON_EXE:-python3}"
-    if ! "${python_runner}" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('dlio_benchmark') else 1)" 2>/dev/null; then
-        if [ "${RUN_VALGRIND_DLIO}" = "1" ]; then
-            echo -e "${RED}Error: dlio_benchmark is not installed in ${python_runner}${NC}"
-            echo "Install dlio_benchmark first, or use --skip-valgrind-dlio."
-            return 1
-        fi
-        echo -e "${YELLOW}Skipping DLIO generate stage: dlio_benchmark not installed in ${python_runner}${NC}"
-        return 0
-    fi
-
-    if ! ensure_mpi_runtime_for_dlio "${python_runner}"; then
-        return 1
-    fi
-
-    local ctest_build_dir
-    if ! ctest_build_dir="$(find_ctest_build_dir)"; then
-        echo -e "${RED}Error: Could not find CTest build directory under ${BUILD_DIR}${NC}"
-        echo "Expected a directory named dftracer.dftracer."
-        return 1
-    fi
-
-    local dlio_log_dir="${ctest_build_dir}/non-valgrind-dlio-generate-autobuild"
-    local dlio_run_root="${ctest_build_dir}/dlio-shared-run"
-    local dlio_cmd=(
-        "${python_runner}" "${SCRIPT_DIR}/scripts/dlio_non_valgrind_runner.py"
-        --log-dir "${dlio_log_dir}"
-        --run-root "${dlio_run_root}"
-        --phase generate
-        --summary-json "${dlio_log_dir}/summary.json"
-        --timeout "${VALGRIND_DLIO_TIMEOUT}"
-        --workload bert_v100
-        --workload cosmoflow_h100
-        --workload dlrm
-        --workload resnet50_h100
-        --workload resnet50_tf
-        --workload unet3d_h100
-        --exclude-workload unet3d_a100_s3
-        --exclude-workload unet3d_h100_s3
-        --exclude-workload unet3d_v100_s3
-    )
-
-    echo -e "${BLUE}Generating DLIO benchmark data once (non-valgrind)...${NC}"
-    if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${dlio_cmd[*]}${NC}"
-        return 0
-    fi
-
-    if ! "${dlio_cmd[@]}"; then
-        return 1
-    fi
-
-    echo "DLIO generate summary:"
-    echo "  ${dlio_log_dir}/summary.json"
-    return 0
-}
-
-run_non_valgrind_dlio_tests() {
-    if [ "${RUN_VALGRIND_DLIO}" = "0" ]; then
-        return 0
-    fi
-
-    if [ "${RUN_VALGRIND_CTEST}" != "1" ] && [ "${RUN_VALGRIND_DLIO}" != "1" ]; then
-        return 0
-    fi
-
-    if [ ! -f "${SCRIPT_DIR}/scripts/dlio_non_valgrind_runner.py" ]; then
-        echo -e "${YELLOW}Warning: DLIO non-valgrind runner not found; skipping DLIO non-valgrind gate${NC}"
-        return 0
-    fi
-
-    if ! command -v gdb &> /dev/null; then
-        echo -e "${RED}Error: gdb not found in PATH${NC}"
-        return 1
-    fi
-
-    local python_runner="${PYTHON_EXE:-python3}"
-    if ! "${python_runner}" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('dlio_benchmark') else 1)" 2>/dev/null; then
-        if [ "${RUN_VALGRIND_DLIO}" = "1" ]; then
-            echo -e "${RED}Error: dlio_benchmark is not installed in ${python_runner}${NC}"
-            echo "Install dlio_benchmark first, or use --skip-valgrind-dlio."
-            return 1
-        fi
-        echo -e "${YELLOW}Skipping DLIO benchmark non-valgrind gate: dlio_benchmark not installed in ${python_runner}${NC}"
-        return 0
-    fi
-
-    if ! ensure_mpi_runtime_for_dlio "${python_runner}"; then
-        return 1
-    fi
-
-    local ctest_build_dir
-    if ! ctest_build_dir="$(find_ctest_build_dir)"; then
-        echo -e "${RED}Error: Could not find CTest build directory under ${BUILD_DIR}${NC}"
-        echo "Expected a directory named dftracer.dftracer."
-        return 1
-    fi
-
-    local dlio_log_dir="${ctest_build_dir}/non-valgrind-dlio-train-autobuild"
-    local dlio_run_root="${ctest_build_dir}/dlio-shared-run"
-    local dlio_cmd=(
-        "${python_runner}" "${SCRIPT_DIR}/scripts/dlio_non_valgrind_runner.py"
-        --log-dir "${dlio_log_dir}"
-        --run-root "${dlio_run_root}"
-        --phase train
-        --no-clean-run-root
-        --summary-json "${dlio_log_dir}/summary.json"
-        --timeout "${VALGRIND_DLIO_TIMEOUT}"
-        --workload bert_v100
-        --workload cosmoflow_h100
-        --workload dlrm
-        --workload resnet50_h100
-        --workload resnet50_tf
-        --workload unet3d_h100
-        --exclude-workload unet3d_a100_s3
-        --exclude-workload unet3d_h100_s3
-        --exclude-workload unet3d_v100_s3
-    )
-
-    echo -e "${BLUE}Running DLIO benchmark workloads without valgrind...${NC}"
-    if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${dlio_cmd[*]}${NC}"
-        return 0
-    fi
-
-    if ! "${dlio_cmd[@]}"; then
-        return 1
-    fi
-
-    echo "DLIO non-valgrind summary:"
     echo "  ${dlio_log_dir}/summary.json"
     return 0
 }
@@ -1249,7 +878,6 @@ run_existing_ctest_tests() {
     local ctest_cmd=(
         ctest
         --test-dir "${ctest_build_dir}"
-        --parallel "${JOBS}"
         --output-on-failure
     )
 
@@ -1306,13 +934,43 @@ run_non_valgrind_ctest_tests() {
         return 1
     fi
 
+    if [ "${USE_PYTHON}" = "yes" ] && [ -f "${SCRIPT_DIR}/test/py/requirements.txt" ]; then
+        local python_runner="${PYTHON_EXE:-python3}"
+        echo -e "${BLUE}Ensuring Python test requirements are installed for CTest...${NC}"
+        if ! "${python_runner}" -m pip install -r "${SCRIPT_DIR}/test/py/requirements.txt"; then
+            echo -e "${RED}Error: failed to install Python test requirements${NC}"
+            return 1
+        fi
+        if [ "${RUN_PR_CI_LOCAL}" = "1" ]; then
+            echo -e "${BLUE}Pinning local PR-CI numpy/h5py to a stable ABI-compatible pair...${NC}"
+            if ! "${python_runner}" -m pip install --force-reinstall --no-cache-dir "numpy==1.26.4" "h5py==3.9.0"; then
+                echo -e "${RED}Error: failed to install compatible numpy/h5py for local PR-CI${NC}"
+                return 1
+            fi
+        fi
+        if ! "${python_runner}" -c "import numpy" >/dev/null 2>&1; then
+            echo -e "${RED}Error: numpy import failed after installing test requirements${NC}"
+            return 1
+        fi
+        if ! "${python_runner}" -c "import h5py" >/dev/null 2>&1; then
+            echo -e "${RED}Error: h5py import failed after test requirements setup${NC}"
+            return 1
+        fi
+        if [ "${RUN_PR_CI_LOCAL}" = "1" ]; then
+            echo -e "${BLUE}Refreshing CMake test metadata after Python dependency updates...${NC}"
+            if ! cmake -S "${SCRIPT_DIR}" -B "${ctest_build_dir}"; then
+                echo -e "${RED}Error: failed to refresh CMake metadata for local PR-CI CTests${NC}"
+                return 1
+            fi
+        fi
+    fi
+
     # Mirror CI shell-level default; per-test env still applies and can override as needed.
     export DFTRACER_BIND_SIGNALS=1
 
     local ctest_cmd=(
         ctest
         --test-dir "${ctest_build_dir}"
-        --parallel "${JOBS}"
         --output-on-failure
     )
 
@@ -1324,204 +982,45 @@ run_non_valgrind_ctest_tests() {
     "${ctest_cmd[@]}"
 }
 
-prepare_non_valgrind_ctest_environment() {
-    if [ "${USE_PYTHON}" != "yes" ] || [ ! -f "${SCRIPT_DIR}/test/py/requirements.txt" ]; then
-        return 0
-    fi
-
-    local ctest_build_dir
-    if ! ctest_build_dir="$(find_ctest_build_dir)"; then
-        echo -e "${RED}Error: Could not find CTest build directory under ${BUILD_DIR}${NC}"
-        return 1
-    fi
-
-    local python_runner="${PYTHON_EXE:-python3}"
-    echo -e "${BLUE}Ensuring Python test requirements are installed for CTest...${NC}"
-
-    if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install -r ${SCRIPT_DIR}/test/py/requirements.txt${NC}"
-    else
-        if ! "${python_runner}" -m pip install -r "${SCRIPT_DIR}/test/py/requirements.txt"; then
-            echo -e "${RED}Error: failed to install Python test requirements${NC}"
-            return 1
-        fi
-    fi
-
-    if [ "${RUN_PR_CI_LOCAL}" = "1" ]; then
-        echo -e "${BLUE}Pinning local PR-CI numpy/h5py to a stable ABI-compatible pair...${NC}"
-        if [ "${DRY_RUN}" = "1" ]; then
-            echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install --force-reinstall --no-cache-dir numpy==1.26.4 h5py==3.9.0${NC}"
-        else
-            if ! "${python_runner}" -m pip install --force-reinstall --no-cache-dir "numpy==1.26.4" "h5py==3.9.0"; then
-                echo -e "${RED}Error: failed to install compatible numpy/h5py for local PR-CI${NC}"
-                return 1
-            fi
-        fi
-    fi
-
-    if [ "${DRY_RUN}" != "1" ]; then
-        if ! "${python_runner}" -c "import numpy" >/dev/null 2>&1; then
-            echo -e "${RED}Error: numpy import failed after installing test requirements${NC}"
-            return 1
-        fi
-        if ! "${python_runner}" -c "import h5py" >/dev/null 2>&1; then
-            echo -e "${RED}Error: h5py import failed after test requirements setup${NC}"
-            return 1
-        fi
-    fi
-
-    if [ "${RUN_PR_CI_LOCAL}" = "1" ]; then
-        echo -e "${BLUE}Refreshing CMake test metadata after Python dependency updates...${NC}"
-        if [ "${DRY_RUN}" = "1" ]; then
-            echo -e "${YELLOW}[DRY-RUN] Would execute: cmake -S ${SCRIPT_DIR} -B ${ctest_build_dir}${NC}"
-        else
-            if ! cmake -S "${SCRIPT_DIR}" -B "${ctest_build_dir}"; then
-                echo -e "${RED}Error: failed to refresh CMake metadata for local PR-CI CTests${NC}"
-                return 1
-            fi
-        fi
-    fi
-
-    return 0
-}
-
-run_ci_stage_init_hook() {
-    local stage_name="$1"
-
-    case "${stage_name}" in
-        "CTest (non-valgrind)")
-            prepare_non_valgrind_ctest_environment
-            ;;
-        "Install dlio_benchmark + DLIO generate once")
-            install_dlio_benchmark_for_ci
-            ;;
-        *)
-            return 0
-            ;;
-    esac
-}
-
 install_ior_if_missing() {
-    if [ -n "${IOR_BIN}" ] && [ -x "${IOR_BIN}" ]; then
-        return 0
-    fi
-
     if command -v ior &> /dev/null; then
-        IOR_BIN="$(command -v ior)"
         return 0
     fi
 
-    local userspace_ior_candidates=(
-        "${HOME}/.local/bin/ior"
-        "${SCRIPT_DIR}/.local/bin/ior"
-    )
-    local ior_path
-    for ior_path in "${userspace_ior_candidates[@]}"; do
-        if [ -x "${ior_path}" ]; then
-            IOR_BIN="${ior_path}"
-            return 0
-        fi
-    done
-
-    if [ -n "${IOR_BIN}" ] && [ ! -x "${IOR_BIN}" ]; then
-        echo -e "${RED}Error: IOR_BIN is set but not executable: ${IOR_BIN}${NC}"
-        return 1
-    fi
-
-    echo -e "${YELLOW}Warning: ior executable not found in PATH/userspace locations.${NC}"
-    echo "Userspace-only mode is enabled; installing IOR from GitHub using ReadTheDocs build steps."
+    echo -e "${YELLOW}Warning: ior executable not found in PATH. Attempting install...${NC}"
 
     if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would run: git clone ${IOR_GIT_URL} && ./bootstrap && ./configure --prefix=${IOR_INSTALL_PREFIX} && make -j${JOBS} && make install${NC}"
+        echo -e "${YELLOW}[DRY-RUN] Would attempt to install ior via package manager${NC}"
         return 0
     fi
 
-    if ! command -v git >/dev/null 2>&1; then
-        echo -e "${RED}Error: git is required to install IOR from ${IOR_GIT_URL}${NC}"
-        return 1
-    fi
-
-    local ior_src_dir="${BUILD_DIR}/ci-ior-src"
-    local ior_prefix="${IOR_INSTALL_PREFIX}"
-    local ior_ref="${IOR_GIT_REF}"
-    local ior_url="${IOR_GIT_URL}"
-    local cc_for_ior=""
-
-    mkdir -p "${BUILD_DIR}" "${ior_prefix}"
-
-    if [ ! -d "${ior_src_dir}/.git" ]; then
-        if ! git clone --depth 1 --branch "${ior_ref}" "${ior_url}" "${ior_src_dir}"; then
-            echo -e "${RED}Error: failed to clone IOR repository: ${ior_url}${NC}"
-            return 1
-        fi
+    if command -v apt-get &> /dev/null; then
+        echo "Detected apt-get, installing ior..."
+        sudo apt-get update && sudo apt-get install -y ior || true
+    elif command -v dnf &> /dev/null; then
+        echo "Detected dnf, installing ior..."
+        sudo dnf install -y ior || true
+    elif command -v yum &> /dev/null; then
+        echo "Detected yum, installing ior..."
+        sudo yum install -y ior || true
+    elif command -v zypper &> /dev/null; then
+        echo "Detected zypper, installing ior..."
+        sudo zypper --non-interactive install ior || true
+    elif command -v brew &> /dev/null; then
+        echo "Detected brew, installing ior..."
+        brew install ior || true
     else
-        if ! git -C "${ior_src_dir}" fetch --depth 1 origin "${ior_ref}"; then
-            echo -e "${RED}Error: failed to fetch IOR ref '${ior_ref}' from ${ior_url}${NC}"
-            return 1
-        fi
-        if ! git -C "${ior_src_dir}" checkout -f FETCH_HEAD; then
-            echo -e "${RED}Error: failed to checkout fetched IOR ref '${ior_ref}'${NC}"
-            return 1
-        fi
+        echo -e "${RED}Error: Could not detect a supported package manager for ior installation${NC}"
     fi
 
-    if command -v mpicc >/dev/null 2>&1; then
-        cc_for_ior="$(command -v mpicc)"
-    fi
-
-    pushd "${ior_src_dir}" >/dev/null || return 1
-
-    # ReadTheDocs install flow for source checkouts: bootstrap -> configure -> make -> make install.
-    if [ ! -x "./configure" ]; then
-        if [ ! -x "./bootstrap" ]; then
-            echo -e "${RED}Error: IOR source tree is missing bootstrap/configure scripts${NC}"
-            popd >/dev/null || true
-            return 1
-        fi
-        if ! ./bootstrap; then
-            echo -e "${RED}Error: IOR bootstrap failed${NC}"
-            popd >/dev/null || true
-            return 1
-        fi
-    fi
-
-    if [ -n "${cc_for_ior}" ]; then
-        if ! CC="${cc_for_ior}" ./configure --prefix="${ior_prefix}"; then
-            echo -e "${RED}Error: IOR configure failed${NC}"
-            popd >/dev/null || true
-            return 1
-        fi
-    else
-        if ! ./configure --prefix="${ior_prefix}"; then
-            echo -e "${RED}Error: IOR configure failed${NC}"
-            popd >/dev/null || true
-            return 1
-        fi
-    fi
-
-    if ! make -j"${JOBS}"; then
-        echo -e "${RED}Error: IOR build failed${NC}"
-        popd >/dev/null || true
+    if ! command -v ior &> /dev/null; then
+        echo -e "${RED}Error: ior is still not available in PATH after install attempt${NC}"
+        echo "Install manually, then re-run PR-CI local suite."
         return 1
     fi
 
-    if ! make install; then
-        echo -e "${RED}Error: IOR install failed (prefix: ${ior_prefix})${NC}"
-        popd >/dev/null || true
-        return 1
-    fi
-
-    popd >/dev/null || true
-
-    if [ -x "${ior_prefix}/bin/ior" ]; then
-        IOR_BIN="${ior_prefix}/bin/ior"
-        export PATH="${ior_prefix}/bin:${PATH}"
-        echo -e "${GREEN}✓ Installed IOR in userspace: ${IOR_BIN}${NC}"
-        return 0
-    fi
-
-    echo -e "${RED}Error: IOR install completed but binary not found at ${ior_prefix}/bin/ior${NC}"
-    return 1
+    echo -e "${GREEN}✓ ior is available: $(command -v ior)${NC}"
+    return 0
 }
 
 run_ior_benchmark_tests() {
@@ -1601,7 +1100,7 @@ run_ior_benchmark_tests() {
 
             local summary_file="case-${mode}-${ts}.csv"
             local ior_cmd=(
-                "${IOR_BIN}"
+                ior
                 -w
                 -r
                 -i 5
@@ -1647,24 +1146,6 @@ run_ior_benchmark_tests() {
     return 0
 }
 
-emit_ci_phase_marker() {
-    local index="$1"
-    local total="$2"
-    local stage_slug="$3"
-    local phase="$4"
-    local event="$5"
-    local elapsed_s="${6:-0}"
-    local status="${7:-na}"
-    local stage_log="${8:-na}"
-
-    local iso_ts
-    iso_ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    local epoch_ts
-    epoch_ts="$(date +%s)"
-
-    echo "[CI_PHASE] stage_index=${index} stage_total=${total} stage_slug=${stage_slug} phase=${phase} event=${event} ts=${iso_ts} epoch=${epoch_ts} elapsed_s=${elapsed_s} status=${status} log=${stage_log}"
-}
-
 run_ci_stage() {
     local index="$1"
     local total="$2"
@@ -1672,67 +1153,35 @@ run_ci_stage() {
     shift 3
 
     local ci_log_dir="${BUILD_DIR}/ci-local-logs"
+    mkdir -p "${ci_log_dir}"
     local safe_name
     safe_name="$(echo "${stage_name}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/_/g')"
     local stage_log="${ci_log_dir}/${index}-${safe_name}.log"
-    local stage_slug="${safe_name}"
 
     local stage_start_ts
     stage_start_ts="$(date +%s)"
-
-    local init_start_ts
-    local init_elapsed
-    local run_start_ts
-    local run_elapsed
-    local finalize_start_ts
-    local finalize_elapsed
-    local stage_elapsed
-    local stage_rc=0
-
-    init_start_ts="$(date +%s)"
-    emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "INIT" "START" "0" "running" "${stage_log}"
-    mkdir -p "${ci_log_dir}"
-    : > "${stage_log}"
     echo -e "${BLUE}[CI ${index}/${total}] ${stage_name}...${NC}"
     echo -e "${BLUE}[CI ${index}/${total}] log: ${stage_log}${NC}"
 
-    if ! run_ci_stage_init_hook "${stage_name}" >>"${stage_log}" 2>&1; then
-        init_elapsed="$(( $(date +%s) - init_start_ts ))"
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "INIT" "END" "${init_elapsed}" "fail" "${stage_log}"
-
-        finalize_start_ts="$(date +%s)"
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "FINALIZE" "START" "0" "running" "${stage_log}"
-        stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
-        echo -e "${RED}[CI ${index}/${total}] FAIL: ${stage_name} (init failed) (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
-        echo -e "${YELLOW}--- stage log: ${stage_log} ---${NC}"
-        cat "${stage_log}"
-        echo -e "${YELLOW}--- end stage log ---${NC}"
-        finalize_elapsed="$(( $(date +%s) - finalize_start_ts ))"
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "FINALIZE" "END" "${finalize_elapsed}" "fail" "${stage_log}"
-        echo "[CI_STAGE_SUMMARY] stage_index=${index} stage_total=${total} stage_slug=${stage_slug} init_s=${init_elapsed} run_s=0 finalize_s=${finalize_elapsed} total_s=${stage_elapsed} status=fail log=${stage_log}"
+    if [ "${DRY_RUN}" = "1" ]; then
+        if "$@"; then
+            local stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
+            echo -e "${GREEN}[CI ${index}/${total}] OK (dry-run): ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
+            return 0
+        fi
+        local stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
+        echo -e "${RED}[CI ${index}/${total}] FAIL (dry-run): ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
         return 1
     fi
 
-    init_elapsed="$(( $(date +%s) - init_start_ts ))"
-    emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "INIT" "END" "${init_elapsed}" "ok" "${stage_log}"
-
-    run_start_ts="$(date +%s)"
-    emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "RUN" "START" "0" "running" "${stage_log}"
-
-    if [ "${DRY_RUN}" = "1" ]; then
-        if "$@"; then
-            stage_rc=0
-        else
-            stage_rc=1
-        fi
-    elif [ "${RUN_PR_CI_LOCAL}" = "1" ] && ci_stage_needs_progress_tracker "${stage_name}"; then
-        "$@" >>"${stage_log}" 2>&1 &
+    if [ "${RUN_PR_CI_LOCAL}" = "1" ] && ci_stage_needs_progress_tracker "${stage_name}"; then
+        "$@" >"${stage_log}" 2>&1 &
         local stage_pid="$!"
         local last_progress=""
-        local last_heartbeat_ts="${run_start_ts}"
+        local last_heartbeat_ts="${stage_start_ts}"
         local expected_ctest_total=""
 
-        if [[ "${stage_name}" == *"CTest"* ]] || [[ "${stage_name}" == *"Valgrind CTests"* ]]; then
+        if [[ "${stage_name}" == *"CTest"* ]] || [[ "${stage_name}" == *"Valgrind"* ]]; then
             expected_ctest_total="$(ci_get_expected_ctest_total || true)"
             if [[ "${expected_ctest_total}" =~ ^[0-9]+$ ]] && [ "${expected_ctest_total}" -gt 0 ]; then
                 echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} expected total tests from ctest -N: ${expected_ctest_total}${NC}"
@@ -1747,7 +1196,7 @@ run_ci_stage() {
 
             local now_ts
             now_ts="$(date +%s)"
-            local running_elapsed="$(( now_ts - run_start_ts ))"
+            local stage_elapsed="$(( now_ts - stage_start_ts ))"
             local progress
             progress="$(ci_extract_progress_from_log "${stage_log}" "${stage_name}" "${expected_ctest_total}")"
 
@@ -1757,75 +1206,51 @@ run_ci_stage() {
 
             if [ -n "${progress}" ] && [ "${progress}" != "${last_progress}" ]; then
                 if ci_progress_indicates_complete "${progress}"; then
-                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} progress: ${progress} (test execution complete, finalizing stage) (elapsed $(format_ci_duration "${running_elapsed}"))${NC}"
+                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} progress: ${progress} (test execution complete, finalizing stage) (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
                 else
-                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} progress: ${progress} (elapsed $(format_ci_duration "${running_elapsed}"))${NC}"
+                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} progress: ${progress} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
                 fi
                 last_progress="${progress}"
                 last_heartbeat_ts="${now_ts}"
             elif [ $(( now_ts - last_heartbeat_ts )) -ge 60 ]; then
                 if [ -n "${last_progress}" ]; then
                     if ci_progress_indicates_complete "${last_progress}"; then
-                        echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} finalizing stage artifacts after ${last_progress} (elapsed $(format_ci_duration "${running_elapsed}"))${NC}"
+                        echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} finalizing stage artifacts after ${last_progress} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
                     else
-                        echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} still running (latest progress: ${last_progress}) (elapsed $(format_ci_duration "${running_elapsed}"))${NC}"
+                        echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} still running (latest progress: ${last_progress}) (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
                     fi
                 else
-                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} still running (elapsed $(format_ci_duration "${running_elapsed}"))${NC}"
+                    echo -e "${BLUE}[CI ${index}/${total}] ${stage_name} still running (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
                 fi
                 last_heartbeat_ts="${now_ts}"
             fi
         done
 
+        local stage_rc=0
         if ! wait "${stage_pid}"; then
             stage_rc=$?
         fi
-    else
-        if "$@" >>"${stage_log}" 2>&1; then
-            stage_rc=0
-        else
-            stage_rc=1
-        fi
-    fi
 
-    run_elapsed="$(( $(date +%s) - run_start_ts ))"
-    if [ "${stage_rc}" -eq 0 ]; then
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "RUN" "END" "${run_elapsed}" "ok" "${stage_log}"
-    else
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "RUN" "END" "${run_elapsed}" "fail" "${stage_log}"
-    fi
-
-    finalize_start_ts="$(date +%s)"
-    emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "FINALIZE" "START" "0" "running" "${stage_log}"
-
-    stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
-    if [ "${stage_rc}" -eq 0 ]; then
-        if [ "${DRY_RUN}" = "1" ]; then
-            echo -e "${GREEN}[CI ${index}/${total}] OK (dry-run): ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
-        else
+        local stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
+        if [ "${stage_rc}" -eq 0 ]; then
             echo -e "${GREEN}[CI ${index}/${total}] OK: ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
+            return 0
         fi
+
+        echo -e "${RED}[CI ${index}/${total}] FAIL: ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
+    elif "$@" >"${stage_log}" 2>&1; then
+        local stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
+        echo -e "${GREEN}[CI ${index}/${total}] OK: ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
+        return 0
     else
-        if [ "${DRY_RUN}" = "1" ]; then
-            echo -e "${RED}[CI ${index}/${total}] FAIL (dry-run): ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
-        else
-            echo -e "${RED}[CI ${index}/${total}] FAIL: ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
-            echo -e "${YELLOW}--- stage log: ${stage_log} ---${NC}"
-            cat "${stage_log}"
-            echo -e "${YELLOW}--- end stage log ---${NC}"
-        fi
+        local stage_elapsed="$(( $(date +%s) - stage_start_ts ))"
+        echo -e "${RED}[CI ${index}/${total}] FAIL: ${stage_name} (elapsed $(format_ci_duration "${stage_elapsed}"))${NC}"
     fi
 
-    finalize_elapsed="$(( $(date +%s) - finalize_start_ts ))"
-    if [ "${stage_rc}" -eq 0 ]; then
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "FINALIZE" "END" "${finalize_elapsed}" "ok" "${stage_log}"
-    else
-        emit_ci_phase_marker "${index}" "${total}" "${stage_slug}" "FINALIZE" "END" "${finalize_elapsed}" "fail" "${stage_log}"
-    fi
-
-    echo "[CI_STAGE_SUMMARY] stage_index=${index} stage_total=${total} stage_slug=${stage_slug} init_s=${init_elapsed} run_s=${run_elapsed} finalize_s=${finalize_elapsed} total_s=${stage_elapsed} status=$([ "${stage_rc}" -eq 0 ] && echo ok || echo fail) log=${stage_log}"
-
-    return "${stage_rc}"
+    echo -e "${YELLOW}--- stage log: ${stage_log} ---${NC}"
+    cat "${stage_log}"
+    echo -e "${YELLOW}--- end stage log ---${NC}"
+    return 1
 }
 
 select_local_pr_ci_compilers() {
@@ -1916,37 +1341,8 @@ install_dlio_benchmark_for_ci() {
 
     local python_runner="${PYTHON_EXE:-python3}"
     local dlio_ref="git+https://github.com/argonne-lcf/dlio_benchmark.git@main"
-    local mpicc_path=""
-    local mpicxx_path=""
-
-    if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install ${dlio_ref}${NC}"
-        echo -e "${YELLOW}[DRY-RUN] Would execute: CC=\$(which mpicc) CXX=\$(which mpic++) ${python_runner} -m pip install --no-binary=mpi4py --force-reinstall --no-cache-dir mpi4py${NC}"
-        echo -e "${YELLOW}[DRY-RUN] Would verify dlio_benchmark import and report install location${NC}"
-        echo -e "${YELLOW}[DRY-RUN] Would verify mpi4py import against MPI runtime${NC}"
-        return 0
-    fi
 
     "${python_runner}" -m pip install "${dlio_ref}" || return 1
-
-    if command -v mpicc >/dev/null 2>&1; then
-        mpicc_path="$(which mpicc 2>/dev/null || true)"
-    fi
-    if [ -z "${mpicc_path}" ]; then
-        echo -e "${RED}Error: mpicc not found; cannot compile mpi4py from source for DLIO${NC}"
-        return 1
-    fi
-
-    mpicxx_path="$(which mpic++ 2>/dev/null || true)"
-    if [ -z "${mpicxx_path}" ]; then
-        mpicxx_path="${mpicc_path}"
-    fi
-
-    echo -e "${BLUE}Installing mpi4py from source with CC=${mpicc_path} CXX=${mpicxx_path}${NC}"
-    if ! CC="${mpicc_path}" CXX="${mpicxx_path}" MPICC="${mpicc_path}" MPICXX="${mpicxx_path}" CRAYPE_LINK_TYPE=dynamic "${python_runner}" -m pip install --no-binary=mpi4py --force-reinstall --no-cache-dir mpi4py; then
-        echo -e "${RED}Error: failed to install mpi4py from source for DLIO${NC}"
-        return 1
-    fi
 
     "${python_runner}" - <<'PY'
 import importlib.util
@@ -1961,77 +1357,37 @@ if spec is None or spec.origin is None:
 package_dir = pathlib.Path(spec.origin).resolve().parent
 print(f"Installed dlio_benchmark from: {package_dir}")
 PY
-
-    if ! ensure_mpi_runtime_for_dlio "${python_runner}"; then
-        return 1
-    fi
-
-    echo "mpi4py runtime check passed for DLIO install stage."
 }
 
 run_local_pr_ci_suite() {
     echo -e "${GREEN}=== Running Local PR CI Suite ===${NC}"
-    local total=7
-    local start_stage="${PR_CI_START_STAGE:-1}"
+    local total=6
     local suite_start_ts
     suite_start_ts="$(date +%s)"
-    echo -e "${BLUE}Local PR CI start stage: ${start_stage}/${total}${NC}"
 
-    if [ "${start_stage}" -le 1 ]; then
-        if ! run_ci_stage 1 "${total}" "Format Check" run_format_check; then
-            echo -e "${RED}Stopping local CI at first failure (stage 1, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 1/7: Format Check (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 1 "${total}" "Format Check" run_format_check; then
+        echo -e "${RED}Stopping local CI at first failure (stage 1, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
-    if [ "${start_stage}" -le 2 ]; then
-        if ! run_ci_stage 2 "${total}" "CTest (non-valgrind)" run_non_valgrind_ctest_tests; then
-            echo -e "${RED}Stopping local CI at first failure (stage 2, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 2/7: CTest (non-valgrind) (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 2 "${total}" "CTest (non-valgrind)" run_non_valgrind_ctest_tests; then
+        echo -e "${RED}Stopping local CI at first failure (stage 2, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
-    if [ "${start_stage}" -le 3 ]; then
-        if ! run_ci_stage 3 "${total}" "Valgrind CTests" run_valgrind_ctest_tests; then
-            echo -e "${RED}Stopping local CI at first failure (stage 3, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 3/7: Valgrind CTests (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 3 "${total}" "Valgrind CTests" run_valgrind_ctest_tests; then
+        echo -e "${RED}Stopping local CI at first failure (stage 3, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
-    if [ "${start_stage}" -le 4 ]; then
-        if ! run_ci_stage 4 "${total}" "Install dlio_benchmark + DLIO generate once" run_non_valgrind_dlio_generate_once; then
-            echo -e "${RED}Stopping local CI at first failure (stage 4, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 4/7: Install dlio_benchmark + DLIO generate once (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 4 "${total}" "Install dlio_benchmark" install_dlio_benchmark_for_ci; then
+        echo -e "${RED}Stopping local CI at first failure (stage 4, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
-    if [ "${start_stage}" -le 5 ]; then
-        if ! run_ci_stage 5 "${total}" "DLIO non-valgrind workloads" run_non_valgrind_dlio_tests; then
-            echo -e "${RED}Stopping local CI at first failure (stage 5, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 5/7: DLIO non-valgrind workloads (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 5 "${total}" "DLIO Valgrind Workloads" run_valgrind_dlio_tests; then
+        echo -e "${RED}Stopping local CI at first failure (stage 5, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
-    if [ "${start_stage}" -le 6 ]; then
-        if ! run_ci_stage 6 "${total}" "DLIO Valgrind Workloads" run_valgrind_dlio_tests; then
-            echo -e "${RED}Stopping local CI at first failure (stage 6, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 6/7: DLIO Valgrind Workloads (start stage ${start_stage})${NC}"
-    fi
-    if [ "${start_stage}" -le 7 ]; then
-        if ! run_ci_stage 7 "${total}" "IOR Benchmark" run_ior_benchmark_tests; then
-            echo -e "${RED}Stopping local CI at first failure (stage 7, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}Skipping stage 7/7: IOR Benchmark (start stage ${start_stage})${NC}"
+    if ! run_ci_stage 6 "${total}" "IOR Benchmark" run_ior_benchmark_tests; then
+        echo -e "${RED}Stopping local CI at first failure (stage 6, total elapsed $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")).${NC}"
+        return 1
     fi
 
     echo -e "${GREEN}Local PR CI total elapsed: $(format_ci_duration "$(( $(date +%s) - suite_start_ts ))")${NC}"
@@ -2369,47 +1725,28 @@ echo ""
 
 if [ "$RUN_PR_CI_LOCAL" = "1" ]; then
     PR_CI_TOTAL_START_TS="$(date +%s)"
-    if [ "${PR_CI_START_STAGE}" -gt 1 ] && [ "${PR_CI_FORCE_CLEAN_BUILD}" != "1" ]; then
-        PR_CI_REUSE_EXISTING_ENV="1"
-        SKIP_BUILD_RUN_TESTS="1"
-        CLEAN_BUILD="0"
-        CLEAN_INSTALL="0"
-        echo -e "${GREEN}PR-CI start stage ${PR_CI_START_STAGE} requested; reusing existing env/build and skipping clean build/install${NC}"
-    elif [ "${PR_CI_START_STAGE}" -gt 1 ] && [ "${PR_CI_FORCE_CLEAN_BUILD}" = "1" ]; then
-        PR_CI_REUSE_EXISTING_ENV="0"
-        echo -e "${GREEN}PR-CI start stage ${PR_CI_START_STAGE} requested with forced clean build; reusing nothing and building from scratch${NC}"
-    else
-        PR_CI_REUSE_EXISTING_ENV="0"
+    if ! clean_local_pr_ci_workspace; then
+        report_pr_ci_total_elapsed "failed"
+        exit 1
     fi
-
     if [ "${DRY_RUN}" != "1" ]; then
         mkdir -p "$(dirname "${PR_CI_MASTER_LOG}")"
         : > "${PR_CI_MASTER_LOG}"
         exec > >(tee -a "${PR_CI_MASTER_LOG}") 2>&1
         echo -e "${GREEN}Master PR-CI log: ${PR_CI_MASTER_LOG}${NC}"
-        if [ "${PR_CI_REUSE_EXISTING_ENV}" = "1" ]; then
-            echo -e "${GREEN}Reusing existing environment; skipping dedicated venv bootstrap and workspace cleanup${NC}"
-        fi
     fi
-
-    if [ "${PR_CI_REUSE_EXISTING_ENV}" != "1" ]; then
-        if ! clean_local_pr_ci_workspace; then
-            report_pr_ci_total_elapsed "failed"
-            exit 1
-        fi
-        if ! run_ci_stage 0 7 "Prepare dedicated venv" prepare_local_pr_ci_venv; then
-            report_pr_ci_total_elapsed "failed"
-            exit 1
-        fi
-        if [ "${DRY_RUN}" != "1" ] && [ -f "${PR_CI_VENV_DIR}/bin/activate" ]; then
-            # Ensure CTest-launched python entrypoints resolve to the dedicated local venv.
-            # shellcheck disable=SC1090
-            source "${PR_CI_VENV_DIR}/bin/activate"
-        fi
-        if ! select_local_pr_ci_compilers; then
-            report_pr_ci_total_elapsed "failed"
-            exit 1
-        fi
+    if ! run_ci_stage 0 7 "Prepare dedicated venv" prepare_local_pr_ci_venv; then
+        report_pr_ci_total_elapsed "failed"
+        exit 1
+    fi
+    if [ "${DRY_RUN}" != "1" ] && [ -f "${PR_CI_VENV_DIR}/bin/activate" ]; then
+        # Ensure CTest-launched python entrypoints resolve to the dedicated local venv.
+        # shellcheck disable=SC1090
+        source "${PR_CI_VENV_DIR}/bin/activate"
+    fi
+    if ! select_local_pr_ci_compilers; then
+        report_pr_ci_total_elapsed "failed"
+        exit 1
     fi
 fi
 
@@ -2907,13 +2244,27 @@ else
         
         # Check for jq (needed for coverage and test analysis)
         if ! command -v jq &> /dev/null; then
-            echo -e "${YELLOW}Warning: jq not found.${NC}"
-            echo "Userspace-only mode is enabled; no package-manager install will be attempted."
+            echo -e "${YELLOW}Warning: jq not found. Attempting to install...${NC}"
             
             if [ "$DRY_RUN" = "1" ]; then
-                echo -e "${YELLOW}[DRY-RUN] Would require jq to be present in PATH${NC}"
+                echo -e "${YELLOW}[DRY-RUN] Would install jq${NC}"
             else
-                echo "Please provide jq in userspace (for example in ~/.local/bin) or preload it in PATH."
+                # Try to detect package manager and install jq
+                if command -v apt-get &> /dev/null; then
+                    echo "Detected apt-get, installing jq..."
+                    sudo apt-get update && sudo apt-get install -y jq || echo -e "${YELLOW}Could not install jq with apt-get${NC}"
+                elif command -v yum &> /dev/null; then
+                    echo "Detected yum, installing jq..."
+                    sudo yum install -y jq || echo -e "${YELLOW}Could not install jq with yum${NC}"
+                elif command -v brew &> /dev/null; then
+                    echo "Detected brew, installing jq..."
+                    brew install jq || echo -e "${YELLOW}Could not install jq with brew${NC}"
+                else
+                    echo -e "${YELLOW}Could not detect package manager. Please install jq manually:${NC}"
+                    echo "  - Ubuntu/Debian: sudo apt-get install jq"
+                    echo "  - RHEL/CentOS: sudo yum install jq"
+                    echo "  - macOS: brew install jq"
+                fi
             fi
         else
             echo -e "${GREEN}✓ jq is already installed${NC}"

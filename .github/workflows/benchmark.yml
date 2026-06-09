@@ -1,6 +1,13 @@
 name: Benchmark PR with IOR
 
 on:
+  push:
+    branches: [develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:

@@ -1,6 +1,13 @@
 name: DLIO Benchmark Integration
 
 on:
+  push:
+    branches: [develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.readthedocs.yaml'
+      - 'LICENSE'
   pull_request:
     branches: [main, develop]
     paths-ignore:

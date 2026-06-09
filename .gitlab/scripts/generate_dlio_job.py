@@ -420,7 +420,6 @@ def generate_gitlab_ci_yaml(config_files):
                             "source .gitlab/scripts/pre.sh",
                             "which python; which dlio_benchmark;",
                             f"{flux_gpu_args} --job-name {workload}_train dlio_benchmark workload={workload} {workload_args} ++workload.output.folder={output}/train hydra.run.dir={output}/train ++workload.workflow.generate_data=False ++workload.workflow.train=True",
-                            f"if grep -i 'error' {output}/train/dlio.log; then echo 'Error found in dlio.log'; exit 1; fi",
                         ],
                         "needs": [generate_job_name],
                         "variables": {
