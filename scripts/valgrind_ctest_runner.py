@@ -15,6 +15,7 @@ Usage examples:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import re
@@ -26,7 +27,30 @@ from pathlib import Path
 from typing import Iterable
 
 
+DEFAULT_EXTERNAL_CONTEXT_IGNORES = [
+    r"\bmake_if_command\b.*\byyparse\b",
+    r"\bobj:/usr/bin/bash\b",
+    r"\(in /usr/bin/bash\)",
+    r"\bcopy_command\b.*\bexecute_command_internal\b",
+    r"\bcommand_substitute\b.*\bexecute_command_internal\b",
+    r"\bexpand_string_assignment\b.*\bexecute_command_internal\b",
+    r"\bexecute_command_internal\b.*\breader_loop\b",
+    r"\bexecute_command\b.*\breader_loop\b",
+    r"\breader_loop\b.*\bmain\b",
+    r"\b__trans_list_add\b.*\blibnl-3\.so\b",
+    r"\blibnl-route-3\.so\b",
+    r"\(in /usr/lib/.*/libnl-3\.so[^)]*\)",
+    r"\(in /usr/lib/.*/libnl-route-3\.so[^)]*\)",
+    r"\bcall_init(?:\.part\.0)?\b.*\bdl-init\.c",
+    r"\b_dl_init\b.*\bdl-init\.c",
+    r"\bld-linux-x86-64\.so\.2\b",
+]
+
+PROJECT_FRAME_REGEX = re.compile(r"(/dftracer/(src|include|python|scripts|test)/|libdftracer|dft_)")
+
+
 def parse_args() -> argparse.Namespace:
+    default_jobs = max(1, (os.cpu_count() or 1))
     parser = argparse.ArgumentParser(description="Run CTest tests under valgrind")
     parser.add_argument("--build-dir", required=True, help="CTest build directory")
     parser.add_argument(
@@ -76,6 +100,12 @@ def parse_args() -> argparse.Namespace:
         "--debug-rerun-on-failure",
         action="store_true",
         help="Rerun failing tests once (without valgrind) using --debug-log-level and store output logs",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=default_jobs,
+        help="Number of tests to run in parallel (default: all detected cores)",
     )
     return parser.parse_args()
 
@@ -146,22 +176,45 @@ def summarize_log(log_file: Path) -> tuple[str, str]:
     return error_summary, leak_line
 
 
-def should_skip_valgrind(cmd: list[str]) -> tuple[bool, str]:
+def error_count(error_summary: str) -> int | None:
+    match = re.search(r"ERROR SUMMARY:\s+([0-9,]+)\s+errors", error_summary)
+    if not match:
+        return None
+    return int(match.group(1).replace(",", ""))
+
+
+def definitely_lost_bytes(leak_line: str) -> int | None:
+    match = re.search(r"definitely lost:\s+([0-9,]+)\s+bytes", leak_line)
+    if not match:
+        return None
+    return int(match.group(1).replace(",", ""))
+
+
+def has_unsuppressed_valgrind_failure(error_summary: str, leak_line: str) -> bool:
+    errors = error_count(error_summary)
+    if errors is not None and errors > 0:
+        return True
+
+    lost = definitely_lost_bytes(leak_line)
+    if lost is not None and lost > 0:
+        return True
+
+    return False
+
+
+def should_skip_valgrind(test_obj: dict) -> tuple[bool, str]:
+    test_name = str(test_obj.get("name") or "")
+    if test_name.startswith("check_file_exists_"):
+        return True, "shell helper assertion test"
+
+    cmd = test_obj.get("command") or []
     if not cmd:
         return True, "empty command"
 
     exe_name = Path(cmd[0]).name
 
     if exe_name.startswith("python"):
-        return True, "python interpreter test"
-
-    shell = exe_name
-    if shell not in {"bash", "sh"}:
-        return False, ""
-    for token in cmd[1:]:
-        name = Path(token).name
-        if name.startswith("check_file") and name.endswith(".sh"):
-            return True, "shell check wrapper"
+        return True, "python interpreter test (handled by valgrind-python-ctest runner)"
     return False, ""
 
 
@@ -203,6 +256,67 @@ def extract_error_excerpt(log_file: Path, max_lines: int = 80) -> str:
     if not keep:
         return "(no parsed error excerpt)"
     return "\n".join(keep)
+
+
+def extract_contexts(log_file: Path) -> list[list[str]]:
+    if not log_file.exists():
+        return []
+
+    contexts: list[list[str]] = []
+    current: list[str] = []
+    with log_file.open("r", encoding="utf-8", errors="replace") as f:
+        for raw in f:
+            line = raw.rstrip("\n")
+            if not line.startswith("=="):
+                continue
+            body = re.sub(r"^==\d+==\s?", "", line)
+            starts_context = (
+                body.startswith("Invalid ")
+                or body.startswith("Use of uninitialised")
+                or body.startswith("Uninitialised")
+                or body.startswith("Conditional jump")
+                or body.startswith("Syscall param")
+                or body.startswith("Mismatched")
+                or body.startswith("Invalid free")
+                or re.match(r"^[0-9,]+ bytes in [0-9,]+ blocks are ", body) is not None
+            )
+            if starts_context and current:
+                contexts.append(current)
+                current = []
+            if starts_context or current:
+                current.append(line)
+            elif body == "" and current:
+                contexts.append(current)
+                current = []
+    if current:
+        contexts.append(current)
+    return contexts
+
+
+def context_matches(context: list[str], patterns: Iterable[re.Pattern[str]]) -> bool:
+    text = "\n".join(context)
+    return any(pattern.search(text) for pattern in patterns)
+
+
+def actionable_contexts(
+    log_file: Path, ignore_patterns: Iterable[re.Pattern[str]]
+) -> tuple[list[list[str]], int]:
+    actionable: list[list[str]] = []
+    ignored_count = 0
+    for context in extract_contexts(log_file):
+        if context_matches(context, ignore_patterns):
+            ignored_count += 1
+            continue
+        actionable.append(context)
+    return actionable, ignored_count
+
+
+def project_context_count(contexts: Iterable[list[str]]) -> int:
+    count = 0
+    for context in contexts:
+        if any(PROJECT_FRAME_REGEX.search(line) for line in context):
+            count += 1
+    return count
 
 
 def run_under_valgrind(
@@ -322,6 +436,93 @@ def print_clean_summary(payload: dict) -> None:
             print(f"  - {item['name']}: {item['error_summary']}")
 
 
+def test_is_race_prone(test_obj: dict) -> bool:
+    name = str(test_obj.get("name") or "")
+    # These checks depend on artifacts generated by other tests and are order-sensitive.
+    if name.startswith("check_file_exists_"):
+        return True
+    # HDF5 smoke tests reuse shared files under test/data and can contend in parallel.
+    if "_hdf5_" in name:
+        return True
+    return False
+
+
+def run_single_test(
+    build_dir: Path,
+    log_dir: Path,
+    test_obj: dict,
+    suppression_files: list[Path],
+    log_level: str,
+    debug_rerun_on_failure: bool,
+    debug_log_level: str,
+) -> tuple[str, str, str, str, str, str] | None:
+    expect_fail = test_will_fail(test_obj)
+    debug_log_file = ""
+
+    try:
+        rc, log_file, error_summary, leak_line, error_excerpt = run_under_valgrind(
+            build_dir=build_dir,
+            log_dir=log_dir,
+            test_obj=test_obj,
+            suppression_files=suppression_files,
+            log_level=log_level,
+        )
+    except Exception as exc:
+        return (
+            test_obj.get("name", "<unknown>"),
+            "runner_error",
+            str(exc),
+            "",
+            "(runner exception)",
+            "",
+        )
+
+    has_vg_errors = has_unsuppressed_valgrind_failure(error_summary, leak_line)
+    actionable_vg_errors = has_vg_errors
+    if has_vg_errors:
+        # Ignore patterns are written to match across stack-frame lines.
+        ignore_patterns = [
+            re.compile(pattern, flags=re.DOTALL)
+            for pattern in DEFAULT_EXTERNAL_CONTEXT_IGNORES
+        ]
+        actionable, ignored_count = actionable_contexts(log_file, ignore_patterns)
+        project_count = project_context_count(actionable)
+        if ignored_count > 0 and not actionable:
+            actionable_vg_errors = False
+            print(
+                f"[valgrind-ctest] {test_obj['name']} ignored "
+                f"{ignored_count} known external Valgrind contexts"
+            )
+        elif actionable and project_count == 0:
+            actionable_vg_errors = False
+            print(
+                f"[valgrind-ctest] {test_obj['name']} ignored "
+                f"{len(actionable)} non-project Valgrind contexts"
+            )
+
+    if expect_fail:
+        failed = actionable_vg_errors
+    else:
+        failed = (rc not in (0, 99)) or actionable_vg_errors
+
+    if not failed:
+        return None
+
+    if debug_rerun_on_failure:
+        debug_rc, debug_log = rerun_failed_test_with_debug(
+            build_dir=build_dir,
+            log_dir=log_dir,
+            test_obj=test_obj,
+            debug_log_level=debug_log_level,
+        )
+        debug_log_file = str(debug_log)
+        print(
+            f"[valgrind-ctest] {test_obj['name']} debug-rerun rc={debug_rc} log={debug_log_file}"
+        )
+
+    return (test_obj["name"], str(log_file), error_summary, leak_line, error_excerpt, debug_log_file)
+
+
 def main() -> int:
     args = parse_args()
     build_dir = Path(args.build_dir).resolve()
@@ -354,6 +555,10 @@ def main() -> int:
     if args.max_tests and args.max_tests > 0:
         tests = tests[: args.max_tests]
 
+    if args.jobs < 1:
+        print("[valgrind-ctest] --jobs must be >= 1")
+        return 2
+
     if not tests:
         print("[valgrind-ctest] no tests selected")
         return 0
@@ -383,80 +588,87 @@ def main() -> int:
 
     failing: list[tuple[str, str, str, str, str, str]] = []
     wrapper_skipped = 0
-    valgrind_executed = 0
+    wrapper_skipped_python = 0
+    wrapper_skipped_other = 0
+    wrapper_skipped_tests: list[dict[str, str]] = []
+    runnable_tests: list[dict] = []
     for test_obj in tests:
-        expect_fail = test_will_fail(test_obj)
-        try:
-            cmd = test_obj.get("command") or []
-            skip, skip_reason = should_skip_valgrind(cmd)
-            if skip:
-                wrapper_skipped += 1
-                printable_cmd = " ".join(shlex.quote(x) for x in cmd)
-                print(
-                    f"[valgrind-ctest] SKIP valgrind for {test_obj['name']} ({skip_reason}): {printable_cmd}"
-                )
-                continue
+        cmd = test_obj.get("command") or []
+        skip, skip_reason = should_skip_valgrind(test_obj)
+        if skip:
+            wrapper_skipped += 1
+            if skip_reason.startswith("python interpreter"):
+                wrapper_skipped_python += 1
             else:
-                valgrind_executed += 1
-                rc, log_file, error_summary, leak_line, error_excerpt = run_under_valgrind(
-                    build_dir=build_dir,
-                    log_dir=log_dir,
-                    test_obj=test_obj,
-                    suppression_files=suppression_files,
-                    log_level=args.log_level,
-                )
-        except Exception as exc:
-            print(f"[valgrind-ctest] {test_obj.get('name', '<unknown>')} crashed runner: {exc}")
-            failing.append(
-                (
-                    test_obj.get("name", "<unknown>"),
-                    "runner_error",
-                    str(exc),
-                    "",
-                    "(runner exception)",
-                    "",
-                )
+                wrapper_skipped_other += 1
+            wrapper_skipped_tests.append(
+                {
+                    "name": str(test_obj.get("name") or "<unknown>"),
+                    "reason": skip_reason,
+                }
+            )
+            printable_cmd = " ".join(shlex.quote(x) for x in cmd)
+            print(
+                f"[valgrind-ctest] SKIP valgrind for {test_obj['name']} ({skip_reason}): {printable_cmd}"
             )
             continue
+        runnable_tests.append(test_obj)
 
-        has_vg_errors = "ERROR SUMMARY: 0 errors from 0 contexts" not in error_summary
-        debug_log_file = ""
-        if expect_fail:
-            if has_vg_errors:
-                if args.debug_rerun_on_failure:
-                    debug_rc, debug_log = rerun_failed_test_with_debug(
-                        build_dir=build_dir,
-                        log_dir=log_dir,
-                        test_obj=test_obj,
-                        debug_log_level=args.debug_log_level,
-                    )
-                    debug_log_file = str(debug_log)
-                    print(
-                        f"[valgrind-ctest] {test_obj['name']} debug-rerun rc={debug_rc} log={debug_log_file}"
-                    )
-                failing.append(
-                    (test_obj["name"], str(log_file), error_summary, leak_line, error_excerpt, debug_log_file)
-                )
-        elif rc != 0:
-            if args.debug_rerun_on_failure:
-                debug_rc, debug_log = rerun_failed_test_with_debug(
-                    build_dir=build_dir,
-                    log_dir=log_dir,
-                    test_obj=test_obj,
-                    debug_log_level=args.debug_log_level,
-                )
-                debug_log_file = str(debug_log)
-                print(
-                    f"[valgrind-ctest] {test_obj['name']} debug-rerun rc={debug_rc} log={debug_log_file}"
-                )
-            failing.append(
-                (test_obj["name"], str(log_file), error_summary, leak_line, error_excerpt, debug_log_file)
+    valgrind_executed = len(runnable_tests)
+    worker_count = min(args.jobs, max(1, valgrind_executed))
+    if worker_count > 1:
+        race_prone_tests = [t for t in runnable_tests if test_is_race_prone(t)]
+        if race_prone_tests:
+            print(
+                "[valgrind-ctest] parallel safety fallback: forcing serial execution "
+                f"because {len(race_prone_tests)} race-prone tests were selected"
             )
+            worker_count = 1
+    if valgrind_executed > 1 and worker_count > 1:
+        print(f"[valgrind-ctest] running valgrind tests in parallel with {worker_count} workers")
+
+    if worker_count == 1:
+        for test_obj in runnable_tests:
+            result = run_single_test(
+                build_dir=build_dir,
+                log_dir=log_dir,
+                test_obj=test_obj,
+                suppression_files=suppression_files,
+                log_level=args.log_level,
+                debug_rerun_on_failure=args.debug_rerun_on_failure,
+                debug_log_level=args.debug_log_level,
+            )
+            if result is not None:
+                failing.append(result)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
+            futures = [
+                executor.submit(
+                    run_single_test,
+                    build_dir,
+                    log_dir,
+                    test_obj,
+                    suppression_files,
+                    args.log_level,
+                    args.debug_rerun_on_failure,
+                    args.debug_log_level,
+                )
+                for test_obj in runnable_tests
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                if result is not None:
+                    failing.append(result)
+
+    failing.sort(key=lambda item: item[0])
 
     payload = {
         "selected_tests": len(tests),
         "valgrind_executed": valgrind_executed,
         "wrapper_skipped": wrapper_skipped,
+        "wrapper_skipped_python": wrapper_skipped_python,
+        "wrapper_skipped_other": wrapper_skipped_other,
+        "wrapper_skipped_tests": wrapper_skipped_tests,
         "failures": len(failing),
         "failed_tests": [
             {

@@ -10,6 +10,7 @@
 #include <dftracer/dftracer.h>
 #include <hdf5.h>
 #include <mpi.h>
+#include <unistd.h>
 
 #include <cstdio>
 #include <cstring>
@@ -96,8 +97,9 @@ int main(int argc, char* argv[]) {
 
   const char* data_dir = (argc > 1) ? argv[1] : "/tmp";
   char filename[1024];
-  std::snprintf(filename, sizeof(filename), "%s/test_hdf5_mpi_cpp_rank_%d.h5",
-                data_dir, rank);
+  std::snprintf(filename, sizeof(filename),
+                "%s/test_hdf5_mpi_cpp_rank_%d_pid_%ld.h5", data_dir, rank,
+                static_cast<long>(getpid()));
 
   DFTRACER_CPP_METADATA(meta, "hdf5_mpi_test", "hdf5_mpi_smoke_cpp");
 

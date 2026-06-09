@@ -8,14 +8,6 @@ on:
       - '**/*.md'
       - '.readthedocs.yaml'
       - 'LICENSE'
-  push:
-    branches:
-      - develop
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.readthedocs.yaml'
-      - 'LICENSE'
 
 jobs:
   benchmark:

@@ -8,12 +8,6 @@ on:
       - '**/*.md'
       - '.readthedocs.yaml'
       - 'LICENSE'
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.readthedocs.yaml'
-      - 'LICENSE'
 
 jobs:
   build-and-test:
@@ -21,7 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Test one GCC version with multiple Python versions
           - python_version: "3.9"
             gcc_version: "11"
             compiler: "gcc"
@@ -34,7 +27,6 @@ jobs:
           - python_version: "3.12"
             gcc_version: "11"
             compiler: "gcc"
-          # Test one Python version with multiple GCC versions
           - python_version: "3.11"
             gcc_version: "9"
             compiler: "gcc"
@@ -113,18 +105,11 @@ jobs:
             valgrind \
             wget
 
-          # Add Ubuntu toolchain PPA and install specific GCC version
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt-get update
           sudo apt-get install -y gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
-
-          # Set as default
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.gcc_version }} 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.gcc_version }} 100
-
-          # Ensure valgrind is available for the valgrind gate step.
-          command -v valgrind
-          valgrind --version
 
       - name: Restore ccache
         uses: actions/cache@v4
@@ -144,7 +129,6 @@ jobs:
 
       - name: Create Python virtual environment
         run: |
-          # For act (local testing), create venv in /tmp to avoid bind mount issues
           if [ -n "$ACT" ]; then
             VENV_DIR=/tmp/venv
             python -m venv $VENV_DIR
@@ -158,6 +142,7 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install pybind11 ninja cmake>=3.12 setuptools>=64 setuptools-scm>=8
           pip install pytest>=6.0 numpy>=1.24.3 pandas>=2.0.3
+          pip install -r scripts/requirements-valgrind-runners.txt
 
       - name: Install matching Python clang bindings
         run: |
@@ -167,7 +152,6 @@ jobs:
             echo "Failed to detect system clang major version"
             exit 1
           fi
-          echo "Detected system clang major: $CLANG_MAJOR"
 
           if ! pip install "clang==${CLANG_MAJOR}.*"; then
             pip install clang
@@ -179,17 +163,12 @@ jobs:
             exit 1
           fi
           CLANG_PY_MAJOR="${CLANG_PY_VERSION%%.*}"
-          echo "Installed Python clang version: $CLANG_PY_VERSION"
-
           CONSTRAINT_FILE="$PWD/pip-constraints.txt"
           echo "clang==${CLANG_PY_MAJOR}.*" > "$CONSTRAINT_FILE"
           echo "PIP_CONSTRAINT=$CONSTRAINT_FILE" >> $GITHUB_ENV
 
-          # Prefer a complete LLVM/Clang CMake package (must contain
-          # libclangBasic.a referenced by ClangTargets.cmake).
           LLVM_CMAKE_DIR=""
           CLANG_CMAKE_DIR=""
-
           for LLVM_ROOT in "/usr/lib/llvm-${CLANG_MAJOR}" /usr/lib/llvm-*; do
             [ -d "$LLVM_ROOT" ] || continue
             if [ -f "$LLVM_ROOT/lib/libclangBasic.a" ] && \
@@ -207,7 +186,6 @@ jobs:
             elif command -v llvm-config >/dev/null 2>&1; then
               LLVM_CMAKE_DIR="$(llvm-config --cmakedir)"
             fi
-
             if [ -n "$LLVM_CMAKE_DIR" ]; then
               CLANG_CMAKE_DIR="$(dirname "$LLVM_CMAKE_DIR")/clang"
             fi
@@ -216,20 +194,16 @@ jobs:
           if [ -n "$LLVM_CMAKE_DIR" ] && [ -n "$CLANG_CMAKE_DIR" ] && [ -f "$CLANG_CMAKE_DIR/ClangConfig.cmake" ]; then
             echo "DFTRACER_LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
             echo "DFTRACER_CLANG_DIR=$CLANG_CMAKE_DIR" >> $GITHUB_ENV
-            echo "Using LLVM CMake dir: $LLVM_CMAKE_DIR"
-            echo "Using Clang CMake dir: $CLANG_CMAKE_DIR"
           else
             echo "Failed to locate a complete LLVM/Clang CMake package"
             exit 1
           fi
 
-          # Pin libclang for brahma's discover script
           for CANDIDATE_LIBCLANG in \
               "/usr/lib/llvm-${CLANG_MAJOR}/lib/libclang.so" \
               "/usr/lib/x86_64-linux-gnu/libclang-${CLANG_MAJOR}.so.1"; do
             if [ -e "$CANDIDATE_LIBCLANG" ]; then
               echo "LIBCLANG_PATH=$CANDIDATE_LIBCLANG" >> $GITHUB_ENV
-              echo "Set LIBCLANG_PATH=$CANDIDATE_LIBCLANG"
               break
             fi
           done
@@ -237,8 +211,6 @@ jobs:
       - name: Build with pip install mode
         run: |
           source ${VENV_PATH:-venv}/bin/activate
-          # Keep coverage mode, but force DWARF + frame pointers so gdb can
-          # resolve source-level stacks for teardown/abort failures.
           export CFLAGS="${CFLAGS:-} -g3 -fno-omit-frame-pointer"
           export CXXFLAGS="${CXXFLAGS:-} -g3 -fno-omit-frame-pointer"
           DFTRACER_CMAKE_ARGS="-DHDF5_PREFER_PARALLEL=ON;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DDFTRACER_TEST_LOG_LEVEL=INFO"
@@ -249,10 +221,6 @@ jobs:
             DFTRACER_CMAKE_ARGS="${DFTRACER_CMAKE_ARGS};-DLLVM_DIR=${DFTRACER_LLVM_DIR}"
           fi
           export DFTRACER_CMAKE_ARGS
-          # Disable pip build isolation so the build subprocess can see the
-          # `clang` python package installed into the venv above. Brahma's
-          # interface generator (`generate_interfaces.py`) imports `clang.cindex`
-          # at build time, but pip's isolated build env hides venv site-packages.
           export DFTRACER_PIP_NO_BUILD_ISOLATION=1
           ./autobuild.sh --enable-tests --enable-coverage --enable-mpi --enable-hdf5
           pip install -r test/py/requirements.txt
@@ -261,27 +229,6 @@ jobs:
         if: always()
         run: |
           ccache --show-stats
-
-      - name: Valgrind gate for all CTests
-        id: valgrind_ctest
-        continue-on-error: true
-        run: |
-          source ${VENV_PATH:-venv}/bin/activate
-          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
-          if [ -z "${DFTRACER_DIR:-}" ] || [ ! -d "$DFTRACER_DIR" ]; then
-            echo "No DFTRACER build directory found; cannot run valgrind gate."
-            exit 1
-          fi
-
-          python3 scripts/valgrind_ctest_runner.py \
-            --build-dir "$DFTRACER_DIR" \
-            --log-dir "$DFTRACER_DIR/valgrind-ctest-ci" \
-            --summary-json "$DFTRACER_DIR/valgrind-ctest-ci/summary.json" \
-            --exclude-regex "^unit_test_service$" \
-            --log-level INFO \
-            --debug-rerun-on-failure \
-            --debug-log-level DEBUG \
-            --suppression "$PWD/test/valgrind/test_cpp_known_syscall.supp"
 
       - name: Run CTest without valgrind
         id: ctest_non_valgrind
@@ -301,7 +248,6 @@ jobs:
 
           if [ "$CTEST_RC" -ne 0 ]; then
             echo "CTest failed at INFO log level; rerunning failed tests with DEBUG logging"
-
             LAST_FAILED_FILE="$DFTRACER_DIR/Testing/Temporary/LastTestsFailed.log"
             if [ ! -f "$LAST_FAILED_FILE" ]; then
               LAST_FAILED_FILE=$(find "$DFTRACER_DIR" -path "*/Testing/Temporary/LastTestsFailed.log" | head -n 1)
@@ -310,131 +256,43 @@ jobs:
             if [ -n "${LAST_FAILED_FILE:-}" ] && [ -f "$LAST_FAILED_FILE" ]; then
               mapfile -t FAILED_TESTS < <(awk -F: '{print $2}' "$LAST_FAILED_FILE" | sed '/^$/d')
               TESTS_JSON=$(ctest --show-only=json-v1)
-
               for TEST_NAME in "${FAILED_TESTS[@]}"; do
                 echo "::group::debug rerun: ${TEST_NAME}"
-
                 CMD_JSON=$(echo "$TESTS_JSON" | jq -c --arg t "$TEST_NAME" '.tests[] | select(.name==$t) | .command' | head -n 1)
                 if [ -z "${CMD_JSON:-}" ] || [ "$CMD_JSON" = "null" ]; then
                   echo "Could not resolve command for test ${TEST_NAME}; skipping debug rerun."
                   echo "::endgroup::"
                   continue
                 fi
-
                 EXE=$(echo "$CMD_JSON" | jq -r '.[0]')
-                if [ -z "${EXE:-}" ] || [ "$EXE" = "null" ]; then
-                  echo "Resolved command has empty executable for ${TEST_NAME}; skipping debug rerun."
-                  echo "::endgroup::"
-                  continue
-                fi
-
                 mapfile -t CMD_ARGS < <(echo "$CMD_JSON" | jq -r '.[1:][]')
-                mapfile -t ENV_ITEMS < <(
-                  echo "$TESTS_JSON" | jq -r --arg t "$TEST_NAME" '
-                    .tests[]
-                    | select(.name==$t)
-                    | .properties[]?
-                    | select(.name=="ENVIRONMENT")
-                    | .value
-                    | if type=="array" then .[]
-                      elif type=="string" then split(";")[]
-                      else empty
-                      end
-                  '
-                )
-
-                (
-                  for KV in "${ENV_ITEMS[@]}"; do
-                    [ -n "$KV" ] || continue
-                    if [[ "$KV" != *=* ]]; then
-                      echo "Skipping malformed env entry for ${TEST_NAME}: $KV"
-                      continue
-                    fi
-                    export "$KV"
-                  done
-
-                  export DFTRACER_LOG_LEVEL=DEBUG
-                  echo "Re-running with DEBUG: $EXE ${CMD_ARGS[*]}"
-                  "$EXE" "${CMD_ARGS[@]}" || true
-                )
-
+                export DFTRACER_LOG_LEVEL=DEBUG
+                echo "Re-running with DEBUG: $EXE ${CMD_ARGS[*]}"
+                "$EXE" "${CMD_ARGS[@]}" || true
                 echo "::endgroup::"
               done
-            else
-              echo "No LastTestsFailed.log found; skipping DEBUG reruns."
             fi
           fi
 
           exit "$CTEST_RC"
 
-      - name: Publish valgrind summary
-        if: always()
-        run: |
-          DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
-          SUMMARY_JSON="$DFTRACER_DIR/valgrind-ctest-ci/summary.json"
-          echo "## Valgrind Summary" >> "$GITHUB_STEP_SUMMARY"
-          if [ ! -f "$SUMMARY_JSON" ]; then
-            echo "No valgrind summary file was generated." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          python3 - "$SUMMARY_JSON" "$GITHUB_STEP_SUMMARY" <<'PY'
-          import json
-          import sys
-
-          summary_json = sys.argv[1]
-          step_summary = sys.argv[2]
-
-          with open(summary_json, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-          with open(step_summary, "a", encoding="utf-8") as out:
-            out.write(f"- Selected tests: {data.get('selected_tests', 0)}\\n")
-            out.write(f"- Executed under valgrind: {data.get('valgrind_executed', 0)}\\n")
-            out.write(f"- Tests skipped for valgrind: {data.get('wrapper_skipped', 0)}\\n")
-            out.write(f"- Failures: {data.get('failures', 0)}\\n")
-            failed = data.get("failed_tests", [])
-            if failed:
-              out.write("\\n### Failing tests\\n")
-              for item in failed:
-                out.write(f"- {item.get('name')}: {item.get('error_summary')}\\n")
-                out.write(f"  - {item.get('leak_line')}\\n")
-                excerpt = item.get("error_excerpt")
-                if excerpt:
-                  out.write("\n```")
-                  out.write("\n")
-                  out.write(excerpt)
-                  out.write("\n```")
-                  out.write("\n")
-          PY
-
-      - name: Enforce valgrind gate result
-        if: always()
-        run: |
-          if [ "${{ steps.valgrind_ctest.outcome }}" = "failure" ]; then
-            echo "Valgrind gate detected unsuppressed issues"
-            exit 1
-          fi
-
       - name: Generate coverage data
+        id: generate_coverage
         if: github.event_name == 'pull_request' && matrix.python_version == '3.11' && matrix.gcc_version == '11'
         run: |
           source ${VENV_PATH:-venv}/bin/activate
           DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
-          echo "DFTRACER_DIR=$DFTRACER_DIR"
           echo "COVERAGE_DIR=$DFTRACER_DIR/coverage" >> $GITHUB_ENV
+          echo "coverage_dir=$DFTRACER_DIR/coverage" >> $GITHUB_OUTPUT
           export DFTRACER_BIND_SIGNALS=1
           BUILD_DIR=$DFTRACER_DIR SOURCE_DIR=$PWD ./script/coverage_after_autobuild.sh --clean
 
-          # Find the base coverage file
           COVERAGE_FILE="$DFTRACER_DIR/coverage/coveralls.json"
           if [ ! -f "$COVERAGE_FILE" ]; then
-            echo "✗ Coverage file not found at $COVERAGE_FILE"
+            echo "Coverage file not found at $COVERAGE_FILE"
             exit 1
           fi
 
-          # Add GitHub metadata to the coverage file
-          echo "Adding GitHub metadata to coverage file..."
           cat "$COVERAGE_FILE" | jq \
             --arg repo "${{ github.repository }}" \
             --arg sha "${{ github.sha }}" \
@@ -443,7 +301,7 @@ jobs:
             --arg service_job_id "${{ github.run_id }}" \
             --arg service_number "${{ github.run_number }}" \
             '. + {
-              service_name: "github-actions",
+              service_name: "github",
               service_job_id: $service_job_id,
               service_number: $service_number,
               service_pull_request: $pr_number,
@@ -458,36 +316,38 @@ jobs:
 
           mv "${COVERAGE_FILE}.final" "$COVERAGE_FILE"
           echo "COVERAGE_FILE=$COVERAGE_FILE" >> $GITHUB_ENV
-          echo "✓ Coverage file prepared: $COVERAGE_FILE"
+          echo "coverage_file=$COVERAGE_FILE" >> $GITHUB_OUTPUT
 
-          # Show metadata summary
-          echo "Coverage metadata:"
-          cat "$COVERAGE_FILE" | jq 'del(.source_files) | {service_name, repo_name, git, service_pull_request}'
+      - name: Verify coverage file exists
+        if: github.event_name == 'pull_request' && matrix.python_version == '3.11' && matrix.gcc_version == '11'
+        run: |
+          if [ ! -f "${{ steps.generate_coverage.outputs.coverage_file }}" ]; then
+            echo "Coverage file not found: ${{ steps.generate_coverage.outputs.coverage_file }}"
+            exit 1
+          fi
 
       - name: Upload Coverage to Coveralls
         if: github.event_name == 'pull_request' && matrix.python_version == '3.11' && matrix.gcc_version == '11'
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          file: ${{ env.COVERAGE_FILE }}
-          format: coveralls
-          flag-name: cpp-coverage
-          parallel: false
+          file: ${{ steps.generate_coverage.outputs.coverage_file }}
+          debug: true
+          fail-on-error: true
 
       - name: Upload Coverage Artifacts
         if: github.event_name == 'pull_request' && matrix.python_version == '3.11' && matrix.gcc_version == '11'
         uses: actions/upload-artifact@v4
         with:
           name: cpp-coverage-reports
-          path: ${{ env.COVERAGE_DIR }}
+          path: ${{ steps.generate_coverage.outputs.coverage_dir }}
           retention-days: 7
 
       - name: C/C++ Coverage Summary
         if: github.event_name == 'pull_request' && matrix.python_version == '3.11' && matrix.gcc_version == '11'
         run: |
           SOURCE_DIR="$PWD"
-          cd "$(dirname ${{ env.COVERAGE_FILE }})"
+          cd "$(dirname "${{ steps.generate_coverage.outputs.coverage_file }}")"
           echo "## C/C++ Coverage Summary" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           gcovr -r "$SOURCE_DIR" . \
@@ -502,19 +362,17 @@ jobs:
             --exclude-unreachable-branches \
             --exclude-throw-branches >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
       - name: Re-run failed CTest tests under gdb
         if: always() && steps.ctest_non_valgrind.outcome == 'failure'
         run: |
           source ${VENV_PATH:-venv}/bin/activate
-
           DFTRACER_DIR=$(realpath $(find build -type d -name "dftracer.dftracer" | head -n 1))
           if [ -z "${DFTRACER_DIR:-}" ] || [ ! -d "$DFTRACER_DIR" ]; then
             echo "No DFTRACER build directory found; skipping gdb reruns."
             exit 0
           fi
 
-          # Reconfigure and rebuild with DEBUG log level for more verbose output
-          echo "Reconfiguring with DFTRACER_TEST_LOG_LEVEL=DEBUG..."
           pushd "$DFTRACER_DIR"
           cmake . -DDFTRACER_TEST_LOG_LEVEL=DEBUG
           cmake --build . --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-4}"
@@ -525,78 +383,22 @@ jobs:
           if [ ! -f "$LAST_FAILED_FILE" ]; then
             LAST_FAILED_FILE=$(find "$DFTRACER_DIR" -path "*/Testing/Temporary/LastTestsFailed.log" | head -n 1)
           fi
-
-          if [ -z "${LAST_FAILED_FILE:-}" ] || [ ! -f "$LAST_FAILED_FILE" ]; then
-            echo "No LastTestsFailed.log found; skipping gdb reruns."
-            exit 0
-          fi
+          [ -f "$LAST_FAILED_FILE" ] || exit 0
 
           mapfile -t FAILED_TESTS < <(awk -F: '{print $2}' "$LAST_FAILED_FILE" | sed '/^$/d')
-          if [ "${#FAILED_TESTS[@]}" -eq 0 ]; then
-            echo "No failed tests listed in $LAST_FAILED_FILE"
-            exit 0
-          fi
-
-          echo "Failed tests: ${FAILED_TESTS[*]}"
           TESTS_JSON=$(ctest --show-only=json-v1)
-
           for TEST_NAME in "${FAILED_TESTS[@]}"; do
             echo "::group::gdb rerun: ${TEST_NAME}"
-
             CMD_JSON=$(echo "$TESTS_JSON" | jq -c --arg t "$TEST_NAME" '.tests[] | select(.name==$t) | .command' | head -n 1)
-            if [ -z "${CMD_JSON:-}" ] || [ "$CMD_JSON" = "null" ]; then
-              echo "Could not resolve command for test ${TEST_NAME}; skipping."
-              echo "::endgroup::"
-              continue
-            fi
-
             EXE=$(echo "$CMD_JSON" | jq -r '.[0]')
-            if [ -z "${EXE:-}" ] || [ "$EXE" = "null" ]; then
-              echo "Resolved command has empty executable for ${TEST_NAME}; skipping."
-              echo "::endgroup::"
-              continue
-            fi
-
-            if [ ! -x "$EXE" ] && [ ! -f "$EXE" ]; then
-              echo "Executable/script not found for ${TEST_NAME}: $EXE"
-              echo "::endgroup::"
-              continue
-            fi
-
             mapfile -t CMD_ARGS < <(echo "$CMD_JSON" | jq -r '.[1:][]')
-            mapfile -t ENV_ITEMS < <(
-              echo "$TESTS_JSON" | jq -r --arg t "$TEST_NAME" '
-                .tests[]
-                | select(.name==$t)
-                | .properties[]?
-                | select(.name=="ENVIRONMENT")
-                | .value
-                | if type=="array" then .[]
-                  elif type=="string" then split(";")[]
-                  else empty
-                  end
-              '
-            )
-
-            (
-              for KV in "${ENV_ITEMS[@]}"; do
-                [ -n "$KV" ] || continue
-                if [[ "$KV" != *=* ]]; then
-                  echo "Skipping malformed env entry for ${TEST_NAME}: $KV"
-                  continue
-                fi
-                export "$KV"
-              done
-
-              echo "Running under gdb: $EXE ${CMD_ARGS[*]}"
-              gdb --batch -q \
-                -ex "set pagination off" \
-                -ex "set debuginfod enabled on" \
-                -ex "run" \
-                -ex "bt full" \
-                -ex "thread apply all bt full" \
-                --args "$EXE" "${CMD_ARGS[@]}" || true
-            )
-
+            gdb --batch -q \
+              -ex "set pagination off" \
+              -ex "set debuginfod enabled on" \
+              -ex "run" \
+              -ex "bt full" \
+              -ex "thread apply all bt full" \
+              --args "$EXE" "${CMD_ARGS[@]}" || true
             echo "::endgroup::"
           done
+

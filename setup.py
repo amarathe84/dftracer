@@ -148,9 +148,13 @@ class CMakeBuild(build_ext):
                 item for item in os.environ["DFTRACER_CMAKE_ARGS"].split() if item
             ]
 
-        # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
-        # across all generators.
-        build_args += ["--", "-j"]
+        # Use CMake's generator-agnostic parallel flag and default to all cores.
+        parallel_jobs = (
+            os.environ.get("JOBS")
+            or os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL")
+            or str(max(1, (os.cpu_count() or 1)))
+        )
+        build_args += ["--parallel", str(parallel_jobs)]
 
         build_temp = Path(self.build_temp) / ext.name
         if not build_temp.exists():
