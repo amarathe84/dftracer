@@ -1,5 +1,6 @@
 import os
 import pathlib
+import shutil
 import site
 import subprocess
 import sys
@@ -67,6 +68,14 @@ class CMakeBuild(build_ext):
         if "DFTRACER_PYTHON_SITE" in os.environ:
             python_site = os.environ["DFTRACER_PYTHON_SITE"]
 
+        dependency_cmake_dir = Path(install_prefix) / "lib64" / "cmake"
+        dependency_package_dirs = {
+            "cpp-logger_DIR": dependency_cmake_dir / "cpp-logger",
+            "brahma_DIR": dependency_cmake_dir / "brahma",
+            "gotcha_DIR": dependency_cmake_dir / "gotcha",
+            "libuv_DIR": dependency_cmake_dir / "libuv",
+        }
+
         # if "DFTRACER_BUILD_DEPENDENCIES" not in os.environ or os.environ['DFTRACER_BUILD_DEPENDENCIES'] == "1":
         #     dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
         #     dependencies = dependency_file.readlines()
@@ -109,6 +118,8 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_PREFIX_PATH={install_prefix}",
             f"-Dpybind11_DIR={py_cmake_dir}",
         ]
+        for package_name, package_dir in dependency_package_dirs.items():
+            cmake_args += [f"-D{package_name}={package_dir}"]
         cmake_args += ["-DPYBIND11_FINDPYTHON=ON"]
         cmake_args += ["-DDFTRACER_BUILD_PYTHON_BINDINGS=ON"]
         # Test related flags
@@ -159,6 +170,16 @@ class CMakeBuild(build_ext):
         build_temp = Path(self.build_temp) / ext.name
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
+        else:
+            # Re-installs reuse the same build directory. Clear the CMake cache so
+            # find_package does not keep resolving dependencies from a previously
+            # installed dftracer tree in site-packages.
+            cmake_cache = build_temp / "CMakeCache.txt"
+            cmake_files = build_temp / "CMakeFiles"
+            if cmake_cache.exists():
+                cmake_cache.unlink()
+            if cmake_files.exists():
+                shutil.rmtree(cmake_files)
         print("cmake", ext.sourcedir, cmake_args)
 
         if (

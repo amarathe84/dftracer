@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
 import importlib.util
 import json
 import os
@@ -84,7 +83,6 @@ def as_text(value: str | bytes | None) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    default_jobs = max(1, (os.cpu_count() or 1))
     parser = argparse.ArgumentParser(description="Run DLIO workloads under valgrind")
     parser.add_argument(
         "--configs-dir",
@@ -235,12 +233,6 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=80,
         help="How many gdb output lines to print inline when a rerun is triggered.",
-    )
-    parser.add_argument(
-        "--jobs",
-        type=int,
-        default=default_jobs,
-        help="Number of workloads to run in parallel (default: all detected cores)",
     )
     return parser.parse_args()
 
@@ -744,176 +736,6 @@ def print_summary(payload: dict) -> None:
                 log(f"    gdb_log: {item['gdb_log']}")
 
 
-def run_workload_phases(
-    workload: str,
-    configs_dir: Path,
-    phases: list[str],
-    data_root: Path,
-    output_root: Path,
-    log_dir: Path,
-    suppression_files: list[Path],
-    env: dict[str, str],
-    gdb_env: dict[str, str],
-    args: argparse.Namespace,
-    focus_dftracer_only: bool,
-    ignore_context_patterns: list[re.Pattern[str]],
-) -> tuple[int, list[dict], list[dict]]:
-    failed: list[dict] = []
-    skipped: list[dict] = []
-    executed = 0
-
-    for phase in phases:
-        name = f"{workload}.{phase}"
-        skip_reason = phase_skip_reason(configs_dir, workload, phase)
-        if skip_reason is not None:
-            log(f"[valgrind-dlio] SKIP {name}: {skip_reason}")
-            skipped.append({"name": name, "reason": skip_reason})
-            continue
-
-        cmd = [
-            sys.executable,
-            "-m",
-            "dlio_benchmark.main",
-            *build_overrides(workload, phase, data_root, output_root),
-        ]
-        executed += 1
-        log(f"[valgrind-dlio] START {name}")
-        test_name = safe_name(name)
-        rc, valgrind_log, command_log = run_valgrind(
-            test_name=test_name,
-            cmd=cmd,
-            log_dir=log_dir,
-            suppression_files=suppression_files,
-            env=env,
-            timeout=args.timeout,
-            track_origins=args.valgrind_track_origins,
-            num_callers=args.valgrind_num_callers,
-        )
-        print_command_log_excerpt(command_log, name, args.inline_command_output_lines)
-        error_summary, leak_line = summarize_log(valgrind_log)
-        error_excerpt = extract_error_excerpt(valgrind_log)
-        has_vg_errors = "ERROR SUMMARY: 0 errors from 0 contexts" not in error_summary
-        actionable, ignored_context_count = actionable_contexts(
-            valgrind_log, ignore_context_patterns, args.project_frame_regex
-        )
-        actionable_context_count, actionable_excerpt = extract_actionable_excerpt(
-            actionable, ignore_context_patterns
-        )
-        project_leak_context_count, project_leak_excerpt = extract_project_leak_excerpt(
-            valgrind_log, args.project_frame_regex, ignore_context_patterns
-        )
-
-        log(f"[valgrind-dlio] {name} rc={rc}")
-        if focus_dftracer_only:
-            if project_leak_context_count:
-                log(f"[valgrind-dlio] {name} dftracer leak contexts={project_leak_context_count}")
-            elif has_vg_errors:
-                log(
-                    f"[valgrind-dlio] {name} dftracer leak contexts=0 "
-                    f"(ignored external Valgrind noise; log: {valgrind_log})"
-                )
-            if ignored_context_count and actionable_context_count == 0:
-                log(
-                    f"[valgrind-dlio] {name} ignored "
-                    f"{ignored_context_count} known external Valgrind contexts"
-                )
-            if args.show_external_leak_summary:
-                log(f"[valgrind-dlio] {name} {error_summary}")
-                log(f"[valgrind-dlio] {name} {leak_line}")
-        else:
-            log(f"[valgrind-dlio] {name} {error_summary}")
-            log(f"[valgrind-dlio] {name} {leak_line}")
-
-        if focus_dftracer_only:
-            failed_test = rc not in (0, 99) or project_leak_context_count > 0
-        else:
-            failed_test = (rc != 0 and rc != 99) or (has_vg_errors and actionable_context_count > 0)
-
-        if failed_test:
-            timed_out = rc == 124
-            signal_crash = rc < 0
-            if signal_crash:
-                import signal as _signal
-
-                try:
-                    sig_name = _signal.Signals(-rc).name
-                except ValueError:
-                    sig_name = f"signal {-rc}"
-                failure_reason = f"signal_crash_{sig_name}"
-                log(f"[valgrind-dlio] {name} SIGNAL CRASH: {sig_name} (rc={rc})")
-            elif timed_out:
-                failure_reason = "timeout"
-            else:
-                failure_reason = "valgrind_or_command_failure"
-            log(
-                f"[valgrind-dlio] {name} actionable_contexts={actionable_context_count} "
-                f"ignored_external_contexts={ignored_context_count}"
-            )
-            log(f"[valgrind-dlio] {name} valgrind_log={valgrind_log}")
-            if timed_out and not signal_crash:
-                log(
-                    f"[valgrind-dlio] {name} timed out after {args.timeout} seconds "
-                    "(this is not a leak signal by itself)"
-                )
-            if actionable_excerpt and actionable_excerpt != "(no actionable contexts)":
-                log("[valgrind-dlio] --- inline actionable context ---")
-                for line in actionable_excerpt.splitlines()[: args.inline_error_context_lines]:
-                    log(f"[valgrind-dlio] {line}")
-            elif (
-                not focus_dftracer_only
-                and error_excerpt
-                and error_excerpt != "(no parsed error excerpt)"
-            ):
-                log("[valgrind-dlio] --- inline parsed excerpt ---")
-                for line in error_excerpt.splitlines()[: args.inline_error_context_lines]:
-                    log(f"[valgrind-dlio] {line}")
-            elif focus_dftracer_only and actionable_context_count == 0 and has_vg_errors:
-                log(
-                    "[valgrind-dlio] inline excerpt suppressed because no actionable "
-                    "dftracer contexts were detected"
-                )
-
-            gdb_rc = None
-            gdb_log = None
-            if signal_crash or (not timed_out) or args.gdb_on_timeout:
-                gdb_rc, gdb_log = run_gdb(
-                    test_name=test_name,
-                    cmd=cmd,
-                    log_dir=log_dir,
-                    env=gdb_env,
-                    timeout=args.timeout,
-                )
-                print_gdb_log_excerpt(gdb_log, name, args.inline_gdb_output_lines)
-            else:
-                log(f"[valgrind-dlio] {name} skipping gdb rerun for timeout failure")
-
-            failure_item = {
-                "name": name,
-                "returncode": rc,
-                "failure_reason": failure_reason,
-                "valgrind_log": str(valgrind_log),
-                "command_log": str(command_log),
-                "error_summary": error_summary,
-                "leak_line": leak_line,
-                "error_excerpt": error_excerpt,
-                "project_leak_context_count": project_leak_context_count,
-                "project_leak_excerpt": project_leak_excerpt,
-                "ignored_external_context_count": ignored_context_count,
-                "actionable_context_count": actionable_context_count,
-                "actionable_error_excerpt": actionable_excerpt,
-            }
-            if gdb_log is not None:
-                failure_item["gdb_returncode"] = gdb_rc
-                failure_item["gdb_log"] = str(gdb_log)
-            failed.append(failure_item)
-
-            if phase == "generate":
-                log(f"[valgrind-dlio] skipping {workload}.train because generate failed")
-                break
-
-    return executed, skipped, failed
-
-
 def main() -> int:
     args = parse_args()
     focus_dftracer_only = args.focus_dftracer_leaks_only or args.fail_on_project_leaks_only
@@ -952,8 +774,6 @@ def main() -> int:
     output_root.mkdir(parents=True, exist_ok=True)
 
     phases = selected_phases(args.phase)
-    if args.jobs < 1:
-        raise SystemExit("--jobs must be >= 1")
     if args.dftracer_enable == "1" and "train" in phases:
         verify_dftracer_available()
 
@@ -991,65 +811,158 @@ def main() -> int:
     failed: list[dict] = []
     skipped: list[dict] = []
     total_tests = len(workloads) * len(phases)
-    valgrind_executed = 0
-    worker_count = min(args.jobs, max(1, len(workloads)))
-    if len(workloads) > 1 and worker_count > 1:
-        log(f"[valgrind-dlio] running workloads in parallel with {worker_count} workers")
-
-    if worker_count == 1:
-        for workload in workloads:
-            executed, skipped_items, failed_items = run_workload_phases(
-                workload=workload,
-                configs_dir=configs_dir,
-                phases=phases,
-                data_root=data_root,
-                output_root=output_root,
+    test_index = 0
+    for workload in workloads:
+        for phase in phases:
+            name = f"{workload}.{phase}"
+            skip_reason = phase_skip_reason(configs_dir, workload, phase)
+            if skip_reason is not None:
+                log(f"[valgrind-dlio] SKIP {name}: {skip_reason}")
+                skipped.append({"name": name, "reason": skip_reason})
+                continue
+            cmd = [sys.executable, "-m", "dlio_benchmark.main", *build_overrides(workload, phase, data_root, output_root)]
+            test_index += 1
+            log(f"[valgrind-dlio] START {test_index}/{total_tests}: {name}")
+            test_name = safe_name(name)
+            rc, valgrind_log, command_log = run_valgrind(
+                test_name=test_name,
+                cmd=cmd,
                 log_dir=log_dir,
                 suppression_files=suppression_files,
                 env=env,
-                gdb_env=gdb_env,
-                args=args,
-                focus_dftracer_only=focus_dftracer_only,
-                ignore_context_patterns=ignore_context_patterns,
+                timeout=args.timeout,
+                track_origins=args.valgrind_track_origins,
+                num_callers=args.valgrind_num_callers,
             )
-            valgrind_executed += executed
-            skipped.extend(skipped_items)
-            failed.extend(failed_items)
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
-            futures = [
-                executor.submit(
-                    run_workload_phases,
-                    workload,
-                    configs_dir,
-                    phases,
-                    data_root,
-                    output_root,
-                    log_dir,
-                    suppression_files,
-                    env,
-                    gdb_env,
-                    args,
-                    focus_dftracer_only,
-                    ignore_context_patterns,
-                )
-                for workload in workloads
-            ]
-            for future in concurrent.futures.as_completed(futures):
-                executed, skipped_items, failed_items = future.result()
-                valgrind_executed += executed
-                skipped.extend(skipped_items)
-                failed.extend(failed_items)
+            print_command_log_excerpt(command_log, name, args.inline_command_output_lines)
+            error_summary, leak_line = summarize_log(valgrind_log)
+            error_excerpt = extract_error_excerpt(valgrind_log)
+            has_vg_errors = "ERROR SUMMARY: 0 errors from 0 contexts" not in error_summary
+            actionable, ignored_context_count = actionable_contexts(
+                valgrind_log, ignore_context_patterns, args.project_frame_regex
+            )
+            actionable_context_count, actionable_excerpt = extract_actionable_excerpt(
+                actionable, ignore_context_patterns
+            )
+            project_leak_context_count, project_leak_excerpt = extract_project_leak_excerpt(
+                valgrind_log, args.project_frame_regex, ignore_context_patterns
+            )
 
-    failed.sort(key=lambda item: item["name"])
-    skipped.sort(key=lambda item: item["name"])
+            log(f"[valgrind-dlio] {name} rc={rc}")
+            if focus_dftracer_only:
+                if project_leak_context_count:
+                    log(f"[valgrind-dlio] {name} dftracer leak contexts={project_leak_context_count}")
+                elif has_vg_errors:
+                    log(
+                        f"[valgrind-dlio] {name} dftracer leak contexts=0 "
+                        f"(ignored external Valgrind noise; log: {valgrind_log})"
+                    )
+                if ignored_context_count and actionable_context_count == 0:
+                    log(
+                        f"[valgrind-dlio] {name} ignored "
+                        f"{ignored_context_count} known external Valgrind contexts"
+                    )
+                if args.show_external_leak_summary:
+                    log(f"[valgrind-dlio] {name} {error_summary}")
+                    log(f"[valgrind-dlio] {name} {leak_line}")
+            else:
+                log(f"[valgrind-dlio] {name} {error_summary}")
+                log(f"[valgrind-dlio] {name} {leak_line}")
+
+            if focus_dftracer_only:
+                failed_test = rc not in (0, 99) or project_leak_context_count > 0
+            else:
+                failed_test = (rc != 0 and rc != 99) or (has_vg_errors and actionable_context_count > 0)
+
+            if failed_test:
+                timed_out = rc == 124
+                signal_crash = rc < 0
+                if signal_crash:
+                    import signal as _signal
+                    try:
+                        sig_name = _signal.Signals(-rc).name
+                    except ValueError:
+                        sig_name = f"signal {-rc}"
+                    failure_reason = f"signal_crash_{sig_name}"
+                    log(f"[valgrind-dlio] {name} SIGNAL CRASH: {sig_name} (rc={rc})")
+                elif timed_out:
+                    failure_reason = "timeout"
+                else:
+                    failure_reason = "valgrind_or_command_failure"
+                log(
+                    f"[valgrind-dlio] {name} actionable_contexts={actionable_context_count} "
+                    f"ignored_external_contexts={ignored_context_count}"
+                )
+                log(f"[valgrind-dlio] {name} valgrind_log={valgrind_log}")
+                if signal_crash:
+                    pass  # signal crash already logged above with signal name
+                elif timed_out:
+                    log(
+                        f"[valgrind-dlio] {name} timed out after {args.timeout} seconds "
+                        "(this is not a leak signal by itself)"
+                    )
+                if actionable_excerpt and actionable_excerpt != "(no actionable contexts)":
+                    log("[valgrind-dlio] --- inline actionable context ---")
+                    for line in actionable_excerpt.splitlines()[: args.inline_error_context_lines]:
+                        log(f"[valgrind-dlio] {line}")
+                elif (
+                    not focus_dftracer_only
+                    and error_excerpt
+                    and error_excerpt != "(no parsed error excerpt)"
+                ):
+                    log("[valgrind-dlio] --- inline parsed excerpt ---")
+                    for line in error_excerpt.splitlines()[: args.inline_error_context_lines]:
+                        log(f"[valgrind-dlio] {line}")
+                elif focus_dftracer_only and actionable_context_count == 0 and has_vg_errors:
+                    log(
+                        "[valgrind-dlio] inline excerpt suppressed because no actionable "
+                        "dftracer contexts were detected"
+                    )
+
+                gdb_rc = None
+                gdb_log = None
+                if signal_crash or (not timed_out) or args.gdb_on_timeout:
+                    gdb_rc, gdb_log = run_gdb(
+                        test_name=test_name,
+                        cmd=cmd,
+                        log_dir=log_dir,
+                        env=gdb_env,
+                        timeout=args.timeout,
+                    )
+                    print_gdb_log_excerpt(gdb_log, name, args.inline_gdb_output_lines)
+                else:
+                    log(f"[valgrind-dlio] {name} skipping gdb rerun for timeout failure")
+
+                failure_item = {
+                    "name": name,
+                    "returncode": rc,
+                    "failure_reason": failure_reason,
+                    "valgrind_log": str(valgrind_log),
+                    "command_log": str(command_log),
+                    "error_summary": error_summary,
+                    "leak_line": leak_line,
+                    "error_excerpt": error_excerpt,
+                    "project_leak_context_count": project_leak_context_count,
+                    "project_leak_excerpt": project_leak_excerpt,
+                    "ignored_external_context_count": ignored_context_count,
+                    "actionable_context_count": actionable_context_count,
+                    "actionable_error_excerpt": actionable_excerpt,
+                }
+                if gdb_log is not None:
+                    failure_item["gdb_returncode"] = gdb_rc
+                    failure_item["gdb_log"] = str(gdb_log)
+                failed.append(failure_item)
+
+                if phase == "generate":
+                    log(f"[valgrind-dlio] skipping {workload}.train because generate failed")
+                    break
 
     payload = {
         "selected_tests": total_tests,
         "selected_workloads": workloads,
         "selected_phases": phases,
         "excluded_workloads": sorted(args.exclude_workload),
-        "valgrind_executed": valgrind_executed,
+        "valgrind_executed": test_index,
         "skipped": len(skipped),
         "skipped_tests": skipped,
         "failures": len(failed),

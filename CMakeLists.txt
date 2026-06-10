@@ -159,7 +159,9 @@ if(DFTRACER_BUILD_PYTHON_BINDINGS)
                 execute_process(COMMAND ${DFTRACER_PYTHON_EXE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE MAIN_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
 
-        include_directories(${PYTHON_SITE_PACKAGES}/dftracer/include)
+        # Discover dependency package configs from the python prefix without
+        # globally injecting its header tree into every target include path.
+        list(APPEND CMAKE_PREFIX_PATH "${PYTHON_SITE_PACKAGES}/dftracer")
         link_directories(${PYTHON_SITE_PACKAGES}/dftracer/lib)
 endif()
 
@@ -484,7 +486,8 @@ else()
 
         if(ZLIB_FOUND)
                 message(STATUS "[DFTRACER] found zlib at ${ZLIB_INCLUDE_DIRS}")
-                include_directories(${ZLIB_INCLUDE_DIRS})
+                # Keep the toolchain zlib headers ahead of dependency include roots.
+                include_directories(BEFORE ${ZLIB_INCLUDE_DIRS})
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${ZLIB_LIBRARIES})
                 get_filename_component(ZLIB_LIBRARY "${ZLIB_LIBRARIES}" DIRECTORY)
                 set(ZLIB_LIBRARY_DIR "${ZLIB_LIBRARY}")
@@ -586,10 +589,12 @@ else()
 
         add_library(${PROJECT_NAME}_core SHARED)
         add_library(dftracer::dftracer_core ALIAS ${PROJECT_NAME}_core)
+        set_target_properties(${PROJECT_NAME}_core PROPERTIES LINKER_LANGUAGE CXX)
         target_compile_definitions(${PROJECT_NAME}_core PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
         target_link_libraries(${PROJECT_NAME}_core ${DEPENDENCY_LIB})
         add_library(${PROJECT_NAME}_core_dbg SHARED)
         add_library(dftracer::dftracer_core_dbg ALIAS ${PROJECT_NAME}_core_dbg)
+        set_target_properties(${PROJECT_NAME}_core_dbg PROPERTIES LINKER_LANGUAGE CXX)
         target_link_libraries(${PROJECT_NAME}_core_dbg ${DEPENDENCY_LIB})
         add_library(${PROJECT_NAME}_preload SHARED)
         add_library(dftracer::dftracer_preload ALIAS ${PROJECT_NAME}_preload)
@@ -630,8 +635,29 @@ else()
 
         add_executable(${PROJECT_NAME}_service ${DFTRACER_SERVICE_SRC})
         add_executable(dftracer::dftracer_service ALIAS ${PROJECT_NAME}_service)
+        set_target_properties(${PROJECT_NAME}_service PROPERTIES LINKER_LANGUAGE CXX)
         target_compile_definitions(${PROJECT_NAME}_service PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
         target_link_libraries(${PROJECT_NAME}_service ${DEPENDENCY_LIB} ${PROJECT_NAME}_core ${PROJECT_NAME}_service_telemetry)
+
+        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+                # Ensure explicit C++ runtime linkage from the active compiler
+                # toolchain in mixed MPI/library environments.
+                execute_process(
+                        COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++.so
+                        OUTPUT_VARIABLE DFTRACER_CXX_STDLIB
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+                if(EXISTS "${DFTRACER_CXX_STDLIB}")
+                        target_link_libraries(${PROJECT_NAME}_core "${DFTRACER_CXX_STDLIB}")
+                        target_link_libraries(${PROJECT_NAME}_core_dbg "${DFTRACER_CXX_STDLIB}")
+                        target_link_libraries(${PROJECT_NAME}_service "${DFTRACER_CXX_STDLIB}")
+                        message(STATUS "[DFTRACER] using C++ stdlib from ${DFTRACER_CXX_STDLIB}")
+                else()
+                        target_link_libraries(${PROJECT_NAME}_core stdc++)
+                        target_link_libraries(${PROJECT_NAME}_core_dbg stdc++)
+                        target_link_libraries(${PROJECT_NAME}_service stdc++)
+                endif()
+        endif()
 
         if(DFTRACER_BUILD_PYTHON_BINDINGS)
                 pybind11_add_module(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/python/dftracer.cpp)

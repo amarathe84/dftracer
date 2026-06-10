@@ -188,6 +188,18 @@ void dftracer::DFTracerCore::reinitialize() {
   }
   conf->log_file = this->log_file_prefix;
   setenv("DFTRACER_LOG_FILE", this->log_file_prefix.c_str(), 1);
+  if (this->data_dirs.empty()) {
+    const char* data_dirs_env = getenv("DFTRACER_DATA_DIR");
+    if (data_dirs_env != nullptr) {
+      this->data_dirs = std::string(data_dirs_env);
+    } else {
+      DFTRACER_LOG_ERROR(DFTRACER_UNDEFINED_DATA_DIR_MSG);
+      throw std::runtime_error(DFTRACER_UNDEFINED_DATA_DIR_CODE);
+    }
+  }
+  conf->data_dirs = this->data_dirs;
+  setenv("DFTRACER_DATA_DIR", this->data_dirs.c_str(), 1);
+
   this->process_id = df_getpid();
   DFTRACER_LOG_INFO(
       "Reinitializing DFTracer with log_file %s data_dirs %s and process %d",
