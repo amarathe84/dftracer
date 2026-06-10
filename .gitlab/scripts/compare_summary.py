@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 import argparse
 import logging
+import os
 from colorama import Fore, Style
 
 # Configure logging
@@ -66,7 +67,16 @@ if __name__ == "__main__":
     logging.info(f"File 1: {file1}")
     logging.info(f"File 2: {file2}")
 
+    if not os.path.exists(file1):
+        logging.warning(f"Baseline file not found: {file1}")
+        logging.info(f"Writing current summary as bootstrap output to: {args.output_file}")
+        current_summary = pd.read_csv(file2)
+        current_summary.to_csv(args.output_file, index=False)
+        logging.info("Bootstrap output written successfully. No comparison performed.")
+        sys.exit(0)
+
     # Compare the files and display the result
+    comparison_result = None
     try:
         # Compare the files
         comparison_result = compare_trace_files(file1, file2)
@@ -84,6 +94,7 @@ if __name__ == "__main__":
         
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+        sys.exit(1)
     
     # Check for rows with percentage differences greater than 10%
     error_rows = comparison_result[
