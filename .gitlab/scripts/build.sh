@@ -7,6 +7,20 @@ LOG_FILE="$PWD/build.log"
 
 echo "Running build.sh on $(hostname)" | tee -a "$LOG_FILE"
 
+# Prefer runtime dynamic detection for optional backends in CI builds.
+: "${DFTRACER_ENABLE_DYNAMIC_DETECTION:=ON}"
+: "${DFTRACER_DISABLE_HWLOC:=OFF}"
+: "${DFTRACER_ENABLE_HIP_TRACING:=OFF}"
+: "${DFTRACER_ENABLE_MPI:=OFF}"
+: "${DFTRACER_ENABLE_HDF5:=OFF}"
+export DFTRACER_ENABLE_DYNAMIC_DETECTION
+export DFTRACER_DISABLE_HWLOC
+export DFTRACER_ENABLE_HIP_TRACING
+export DFTRACER_ENABLE_MPI
+export DFTRACER_ENABLE_HDF5
+echo "DFTRACER_ENABLE_DYNAMIC_DETECTION=$DFTRACER_ENABLE_DYNAMIC_DETECTION" | tee -a "$LOG_FILE"
+echo "DFTRACER_DISABLE_HWLOC=$DFTRACER_DISABLE_HWLOC" | tee -a "$LOG_FILE"
+
 CC=$(which mpicc)
 CXX=$(which mpic++)
 export CC
