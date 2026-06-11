@@ -4,6 +4,7 @@ from pathlib import Path
 import dlio_benchmark
 import argparse
 import uuid
+import subprocess
 import dftracer
 from datetime import datetime
 import time
@@ -40,6 +41,8 @@ def find_workload_configs(config_dir):
     logging.info(f"Searching for workload configuration files in {config_dir}")
     config_files = [os.path.splitext(f.name)[0] for f in config_dir.glob("*.yaml")]
     logging.info(f"Found {len(config_files)} configuration files.")
+    config_files = [config for config in config_files if not config.endswith("_s3")]
+    logging.info(f"Excluded S3 workload configs. Remaining configs: {len(config_files)}")
     # Parse inclusion list from environment variable
     inclusion_list = os.getenv("INCLUSION_LIST", "")
     if inclusion_list:
@@ -64,22 +67,43 @@ def execute_dlio_benchmark_query(workload, args, key, datatype=str):
     Returns:
         The output of the query converted to the specified datatype.
     """
-    query_command = f"dlio_benchmark_query workload={workload} {args} ++workload.workflow.query={key}"
+    query_run_root = Path(os.getenv("DLIO_QUERY_TMP_DIR", "/tmp")) / "dlio_query_runs"
+    query_run_root.mkdir(parents=True, exist_ok=True)
+    query_run_dir = query_run_root / f"{workload}_{uuid.uuid4().hex}"
+    query_command = (
+        f"dlio_benchmark_query workload={workload} {args} "
+        f"++workload.workflow.query={key} "
+        f"hydra.run.dir={query_run_dir} "
+        f"hydra.output_subdir=.hydra"
+    )
     logging.debug(f"Executing command: {query_command}")
-    process = os.popen(query_command + " 2>/dev/null")
-    output = process.read()
-    exit_code = process.close()
-    if exit_code is not None:
-        logging.error(f"Command failed with exit code {exit_code}: {query_command}")
+    result = subprocess.run(
+        query_command,
+        shell=True,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    output = result.stdout
+    if result.returncode != 0:
+        stdout_text = (result.stdout or "").strip().replace("\n", "\\n")
+        stderr_text = (result.stderr or "").strip().replace("\n", "\\n")
+        logging.error(
+            "Command failed with exit code %s: %s",
+            result.returncode,
+            query_command,
+        )
+        logging.error("Command stdout: %s", stdout_text)
+        logging.error("Command stderr: %s", stderr_text)
         raise RuntimeError(
             f"Failed to execute dlio_benchmark_query with command: {query_command}"
         )
 
     logging.debug(f"Command executed successfully. Output: {output.strip()}")
     try:
-        result = datatype(output)
-        logging.debug(f"Converted output to {datatype.__name__}: {result}")
-        return result
+        result_value = datatype(output)
+        logging.debug(f"Converted output to {datatype.__name__}: {result_value}")
+        return result_value
     except ValueError as e:
         logging.error(f"Failed to convert output {workload, args, key} to {datatype.__name__}: {e}")
         raise ValueError(f"Failed to convert output to {datatype}: {e}")
@@ -219,12 +243,13 @@ def generate_gitlab_ci_yaml(config_files):
         return index, workload, d
 
     config_values = [{}] * len(config_files)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+    max_query_workers = int(os.getenv("DLIO_QUERY_MAX_WORKERS", min(16, os.cpu_count() or 1)))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_query_workers) as executor:
         futures = {
             executor.submit(process_workload, idx, workload): idx
             for idx, workload in enumerate(config_files, start=0)
         }
-        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=f"Extracting workload parameters using {os.cpu_count()} workers"):
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=f"Extracting workload parameters using {max_query_workers} workers"):
             idx, workload, d = future.result()
             config_values[idx] = d
     
@@ -311,6 +336,14 @@ def generate_gitlab_ci_yaml(config_files):
             max_nodes = cal_max_nodes
         if max_nodes < min_nodes:
             min_nodes = max_nodes
+
+        steps_at_min_nodes = int(samples_per_file * num_files / batch_size / gpus / max(min_nodes, 1))
+        if total_training_steps is None and steps_at_min_nodes < min_steps:
+            logging.warning(
+                f"Skipping workload:{workload} as maximum steps per epoch at min_nodes={min_nodes} "
+                f"is {steps_at_min_nodes}, below MIN_TRAIN_STEPS={min_steps}."
+            )
+            continue
         
         min_current_steps = int (samples_per_file * num_files / batch_size / gpus / min_nodes)
         if total_training_steps:

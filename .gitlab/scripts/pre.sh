@@ -6,7 +6,7 @@ set -x
 
 # Print the hostname where the script is being executed
 echo "Running pre.sh on $(hostname) by $USER on $PWD"
-# Load the required modules for Python, MPI, and GCC
+# Load the required modules for Python, MPI, GCC, and ROCM before activating the virtual environment.
 echo "Loading modules: Python ($PYTHON_MODULE), MPI ($MPI_MODULE), and GCC ($GCC_MODULE) and ROCM ($ROCM_MODULE)"
 module load $PYTHON_MODULE $MPI_MODULE $GCC_MODULE $ROCM_MODULE
 if [ $? -ne 0 ]; then
@@ -18,6 +18,11 @@ fi
 echo "PYTHON_MODULE: $PYTHON_MODULE"
 echo "MPI_MODULE: $MPI_MODULE"
 echo "GCC_MODULE: $GCC_MODULE"
+
+if [[ "$GCC_MODULE" == cce/* ]]; then
+    export LD_LIBRARY_PATH="/opt/cray/pe/${GCC_MODULE}/cce/x86_64/lib:/opt/cray/pe/${GCC_MODULE}/cce/x86_64/lib/default64:${LD_LIBRARY_PATH}"
+    echo "Updated LD_LIBRARY_PATH for CCE: $LD_LIBRARY_PATH"
+fi
 
 # Check the values of the environment variables
 echo "CUSTOM_CI_ENV_DIR: ${CUSTOM_CI_ENV_DIR}"
