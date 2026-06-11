@@ -159,6 +159,16 @@ if(DFTRACER_BUILD_PYTHON_BINDINGS)
                 execute_process(COMMAND ${DFTRACER_PYTHON_EXE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE MAIN_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
 
+        # If using a virtual environment, also expose runtime binaries in venv/bin.
+        get_filename_component(_dftracer_py_ver_dir "${MAIN_PYTHON_SITE_PACKAGES}" DIRECTORY)
+        get_filename_component(_dftracer_py_lib_dir "${_dftracer_py_ver_dir}" DIRECTORY)
+        get_filename_component(_dftracer_py_prefix_dir "${_dftracer_py_lib_dir}" DIRECTORY)
+        if(EXISTS "${_dftracer_py_prefix_dir}/pyvenv.cfg")
+                set(DFTRACER_VENV_BIN_DIR "${_dftracer_py_prefix_dir}/bin")
+        else()
+                set(DFTRACER_VENV_BIN_DIR "")
+        endif()
+
         # Discover dependency package configs from the python prefix without
         # globally injecting its header tree into every target include path.
         list(APPEND CMAKE_PREFIX_PATH "${PYTHON_SITE_PACKAGES}/dftracer")
@@ -173,6 +183,11 @@ if(NOT DFTRACER_DISABLE_HWLOC)
 endif()
 
 option(DFTRACER_ENABLE_HIP_TRACING "Enable HIP Tracing" OFF)
+
+# rocprofiler-sdk version defaults (used by generated config header)
+set(DFTRACER_ROCPROFILER_VERSION_MAJOR 0)
+set(DFTRACER_ROCPROFILER_VERSION_MINOR 0)
+set(DFTRACER_ROCPROFILER_VERSION_PATCH 0)
 
 if(DFTRACER_ENABLE_HIP_TRACING)
         set(DFTRACER_HIP_TRACING_ENABLE 1)
@@ -192,6 +207,43 @@ endif()
 
 option(DFTRACER_ENABLE_DYNAMIC_DETECTION "Enable Dynamic Detection" OFF)
 option(DFTRACER_GENERATE_INTERFACES "Generate Brahma and DFTracer interfaces from discovered headers" OFF)
+
+function(dftracer_set_rocprofiler_version_from_string version_string)
+        if("${version_string}" MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)")
+                set(DFTRACER_ROCPROFILER_VERSION_MAJOR "${CMAKE_MATCH_1}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_MINOR "${CMAKE_MATCH_2}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_PATCH "${CMAKE_MATCH_3}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_FOUND TRUE PARENT_SCOPE)
+        endif()
+endfunction()
+
+function(dftracer_set_rocprofiler_version_from_header include_dir)
+        if(NOT include_dir)
+                return()
+        endif()
+
+        set(_dftracer_rocprofiler_version_header "${include_dir}/rocprofiler-sdk/version.h")
+        if(NOT EXISTS "${_dftracer_rocprofiler_version_header}")
+                return()
+        endif()
+
+        file(READ "${_dftracer_rocprofiler_version_header}" _dftracer_rocprofiler_version_header_text)
+        string(REGEX MATCH "#define[ \t]+ROCPROFILER_VERSION_MAJOR[ \t]+([0-9]+)" _dftracer_rocprofiler_major_match "${_dftracer_rocprofiler_version_header_text}")
+        set(_dftracer_rocprofiler_major "${CMAKE_MATCH_1}")
+        string(REGEX MATCH "#define[ \t]+ROCPROFILER_VERSION_MINOR[ \t]+([0-9]+)" _dftracer_rocprofiler_minor_match "${_dftracer_rocprofiler_version_header_text}")
+        set(_dftracer_rocprofiler_minor "${CMAKE_MATCH_1}")
+        string(REGEX MATCH "#define[ \t]+ROCPROFILER_VERSION_PATCH[ \t]+([0-9]+)" _dftracer_rocprofiler_patch_match "${_dftracer_rocprofiler_version_header_text}")
+        set(_dftracer_rocprofiler_patch "${CMAKE_MATCH_1}")
+
+        if(_dftracer_rocprofiler_major MATCHES "^[0-9]+$" AND
+           _dftracer_rocprofiler_minor MATCHES "^[0-9]+$" AND
+           _dftracer_rocprofiler_patch MATCHES "^[0-9]+$")
+                set(DFTRACER_ROCPROFILER_VERSION_MAJOR "${_dftracer_rocprofiler_major}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_MINOR "${_dftracer_rocprofiler_minor}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_PATCH "${_dftracer_rocprofiler_patch}" PARENT_SCOPE)
+                set(DFTRACER_ROCPROFILER_VERSION_FOUND TRUE PARENT_SCOPE)
+        endif()
+endfunction()
 
 # install dependency
 option(DFTRACER_INSTALL_DEPENDENCIES "Install DFTracer dependencies" OFF)
@@ -476,6 +528,40 @@ else()
         if(rocprofiler-sdk_FOUND AND(DFTRACER_ENABLE_HIP_TRACING OR DFTRACER_ENABLE_DYNAMIC_DETECTION))
                 set(DFTRACER_HIP_TRACING_ENABLE 1)
                 message(STATUS "[DFTRACER] found rocprofiler-sdk at ${rocprofiler-sdk_INCLUDE_DIR}")
+                set(DFTRACER_ROCPROFILER_VERSION_FOUND FALSE)
+                set(_dftracer_rocprofiler_pkg_version "${rocprofiler-sdk_VERSION}")
+                dftracer_set_rocprofiler_version_from_string("${_dftracer_rocprofiler_pkg_version}")
+
+                if(NOT DFTRACER_ROCPROFILER_VERSION_FOUND)
+                        if(DEFINED rocprofiler-sdk_INCLUDE_DIR AND NOT "${rocprofiler-sdk_INCLUDE_DIR}" STREQUAL "")
+                                dftracer_set_rocprofiler_version_from_header("${rocprofiler-sdk_INCLUDE_DIR}")
+                        endif()
+                endif()
+
+                if(NOT DFTRACER_ROCPROFILER_VERSION_FOUND)
+                        if(DEFINED rocprofiler-sdk_INCLUDE_DIRS)
+                                foreach(_dftracer_rocprofiler_include_dir IN LISTS rocprofiler-sdk_INCLUDE_DIRS)
+                                        dftracer_set_rocprofiler_version_from_header("${_dftracer_rocprofiler_include_dir}")
+                                        if(DFTRACER_ROCPROFILER_VERSION_FOUND)
+                                                break()
+                                        endif()
+                                endforeach()
+                        endif()
+                endif()
+
+                if(NOT DFTRACER_ROCPROFILER_VERSION_FOUND AND TARGET rocprofiler-sdk::rocprofiler-sdk)
+                        get_target_property(_dftracer_rocprofiler_target_include_dirs rocprofiler-sdk::rocprofiler-sdk INTERFACE_INCLUDE_DIRECTORIES)
+                        if(_dftracer_rocprofiler_target_include_dirs)
+                                foreach(_dftracer_rocprofiler_include_dir IN LISTS _dftracer_rocprofiler_target_include_dirs)
+                                        dftracer_set_rocprofiler_version_from_header("${_dftracer_rocprofiler_include_dir}")
+                                        if(DFTRACER_ROCPROFILER_VERSION_FOUND)
+                                                break()
+                                        endif()
+                                endforeach()
+                        endif()
+                endif()
+
+                message(STATUS "[DFTRACER] rocprofiler-sdk version: ${DFTRACER_ROCPROFILER_VERSION_MAJOR}.${DFTRACER_ROCPROFILER_VERSION_MINOR}.${DFTRACER_ROCPROFILER_VERSION_PATCH}")
                 set(HIP_TRACING_LIBRARIES rocprofiler-sdk::rocprofiler-sdk)
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${HIP_TRACING_LIBRARIES})
         else()
@@ -745,6 +831,38 @@ else()
                 ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
                 RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
         )
+        if(DFTRACER_BUILD_PYTHON_BINDINGS)
+                install(CODE "
+                set(_dftracer_python_exe \"${DFTRACER_PYTHON_EXE}\")
+                set(_dftracer_service_src \"${CMAKE_INSTALL_PREFIX}/bin/dftracer_service\")
+
+                if(\"\${_dftracer_python_exe}\" STREQUAL \"\")
+                        message(FATAL_ERROR \"DFTRACER_PYTHON_EXE must be set to create dftracer_service venv/bin symlink\")
+                endif()
+
+                if(NOT EXISTS \"\${_dftracer_python_exe}\")
+                        message(FATAL_ERROR \"DFTRACER_PYTHON_EXE does not exist: \${_dftracer_python_exe}\")
+                endif()
+
+                get_filename_component(_dftracer_venv_bin \"\${_dftracer_python_exe}\" DIRECTORY)
+                if(NOT EXISTS \"\${_dftracer_venv_bin}\")
+                        message(FATAL_ERROR \"Python parent directory does not exist: \${_dftracer_venv_bin}\")
+                endif()
+
+                if(NOT EXISTS \"\${_dftracer_service_src}\")
+                        message(FATAL_ERROR \"dftracer_service source binary not found: \${_dftracer_service_src}\")
+                endif()
+
+                file(MAKE_DIRECTORY \"\${_dftracer_venv_bin}\")
+                message(STATUS \"Installing: symlink \${_dftracer_venv_bin}/dftracer_service from \${_dftracer_service_src}\")
+                execute_process(
+                        COMMAND \"${CMAKE_COMMAND}\" -E create_symlink \"\${_dftracer_service_src}\" \"\${_dftracer_venv_bin}/dftracer_service\"
+                        RESULT_VARIABLE _dftracer_symlink_rc)
+                if(NOT _dftracer_symlink_rc EQUAL 0)
+                        message(FATAL_ERROR \"Failed creating dftracer_service symlink at \${_dftracer_venv_bin}/dftracer_service\")
+                endif()
+                ")
+        endif()
         install(TARGETS ${PROJECT_NAME}_preload
                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

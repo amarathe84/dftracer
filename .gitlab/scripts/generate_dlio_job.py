@@ -138,6 +138,38 @@ def create_flux_execution_command(nodes=None, tasks_per_node=None):
     return command
 
 
+def create_flux_alloc_command(nodes=None):
+    """Create a Flux allocation command used to run a wrapper inside an allocation."""
+    nodes = nodes or int(os.getenv("MIN_NODES", 1))
+    queue = os.getenv("LARGE_QUEUE", "lqueue") if nodes > int(os.getenv("MAX_NODES_SMALL_QUEUE", 1)) else os.getenv("SMALL_QUEUE", "squeue")
+    walltime = get_queue_time_for_nodes_minutes(nodes)
+    command = f"flux alloc -N {nodes} -q {queue} -t {walltime} --exclusive"
+    logging.debug(f"Generated Flux allocation command: {command}")
+    return command
+
+
+def create_flux_submit_command(nodes=None, tasks_per_node=None):
+    """Create a Flux submit command used from within a Flux allocation."""
+    if tasks_per_node is None:
+        raise ValueError("tasks_per_node is required for create_flux_submit_command")
+    nodes = nodes or int(os.getenv("MIN_NODES", 1))
+    cores = nodes * tasks_per_node
+    command = f"flux submit -N {nodes} --tasks-per-node={tasks_per_node} --cores={cores}"
+    logging.debug(f"Generated Flux submit command: {command}")
+    return command
+
+
+def create_flux_run_command(nodes=None, tasks_per_node=None):
+    """Create a Flux run command intended for use inside an active allocation."""
+    if tasks_per_node is None:
+        raise ValueError("tasks_per_node is required for create_flux_run_command")
+    nodes = nodes or int(os.getenv("MIN_NODES", 1))
+    cores = nodes * tasks_per_node
+    command = f"flux run -N {nodes} --tasks-per-node={tasks_per_node} --cores={cores}"
+    logging.debug(f"Generated Flux run command: {command}")
+    return command
+
+
 def generate_gitlab_ci_yaml(config_files):
     """Generate a GitLab CI YAML configuration with updated stages per workload."""
     system_name = os.getenv("SYSTEM_NAME", "system")
@@ -430,6 +462,10 @@ def generate_gitlab_ci_yaml(config_files):
             base_job_name = f"{workload}_{idx}_{nodes}"
             flux_cores_args = create_flux_execution_command(nodes, cores)
             flux_gpu_args = create_flux_execution_command(nodes, gpus)
+            flux_alloc_args = create_flux_alloc_command(nodes)
+            flux_service_submit_args = create_flux_submit_command(nodes, 1)
+            flux_service_run_args = create_flux_run_command(nodes, 1)
+            flux_train_run_args = create_flux_run_command(nodes, gpus)
 
             for sub_step, stage in enumerate(
                 [
@@ -445,6 +481,15 @@ def generate_gitlab_ci_yaml(config_files):
                     f"Sub-step {sub_step}: Adding {stage} stage for workload '{workload}' with nodes {nodes}"
                 )
                 if stage == "train":
+                    train_payload = (
+                        f"DFTRACER_ENABLE=1 DFTRACER_INC_METADATA=1 "
+                        f"DFTRACER_LOG_FILE={output}/train/trace "
+                        f"dlio_benchmark workload={workload} {workload_args} "
+                        f"++workload.output.folder={output}/train "
+                        f"hydra.run.dir={output}/train "
+                        f"++workload.workflow.generate_data=False "
+                        f"++workload.workflow.train=True"
+                    )
                     ci_config[f"{base_job_name}_train"] = {
                         "stage": "train",
                         "extends": f".{system_name}",
@@ -452,13 +497,9 @@ def generate_gitlab_ci_yaml(config_files):
                             "source .gitlab/scripts/variables.sh",
                             "source .gitlab/scripts/pre.sh",
                             "which python; which dlio_benchmark;",
-                            f"{flux_gpu_args} --job-name {workload}_train dlio_benchmark workload={workload} {workload_args} ++workload.output.folder={output}/train hydra.run.dir={output}/train ++workload.workflow.generate_data=False ++workload.workflow.train=True",
+                            f"{flux_alloc_args} bash .gitlab/scripts/run_dlio_training_with_service.sh --trace-dir {output}/train --service-submit-prefix '{flux_service_submit_args}' --service-run-prefix '{flux_service_run_args}' --train-run-prefix '{flux_train_run_args}' --service-start-job-name {workload}_service_start --service-stop-job-name {workload}_service_stop --train-job-name {workload}_train --train-payload \"{train_payload}\"",
                         ],
                         "needs": [generate_job_name],
-                        "variables": {
-                            "DFTRACER_ENABLE": "1",
-                            "DFTRACER_INC_METADATA": "1",
-                        },
                     }
 
                 elif stage == "move":
@@ -472,6 +513,8 @@ def generate_gitlab_ci_yaml(config_files):
                             f"mv {output}/train/*.pfw.gz {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}/RAW/",
                             f"mv {output}/train/.hydra {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}/",
                             f"mv {output}/train/dlio.log {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}/",
+                            f"if [ -f {output}/train/service_training_runner.log ]; then mv {output}/train/service_training_runner.log {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}/; fi",
+                            f"if [ -d {output}/train/service_state ]; then mv {output}/train/service_state {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}/; fi",
                             f"cd {log_dir}/{workload}/nodes-{nodes}/{unique_run_id}",
                             f"tar -czf RAW.tar.gz RAW || true",
                         ],

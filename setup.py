@@ -68,6 +68,10 @@ class CMakeBuild(build_ext):
         if "DFTRACER_PYTHON_SITE" in os.environ:
             python_site = os.environ["DFTRACER_PYTHON_SITE"]
 
+        # Use the active interpreter path as-is so venv shims are preserved.
+        configured_python_exe = os.path.abspath(sys.executable)
+        print(f"Using DFTRACER_PYTHON_EXE={configured_python_exe}")
+
         dependency_cmake_dir = Path(install_prefix) / "lib64" / "cmake"
         dependency_package_dirs = {
             "cpp-logger_DIR": dependency_cmake_dir / "cpp-logger",
@@ -109,7 +113,7 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-DDFTRACER_GENERATE_INTERFACES={generate_interfaces}"]
         disable_hwloc = os.environ.get("DFTRACER_DISABLE_HWLOC", "ON")
         cmake_args += [f"-DDFTRACER_DISABLE_HWLOC={disable_hwloc}"]
-        cmake_args += [f"-DDFTRACER_PYTHON_EXE={sys.executable}"]
+        cmake_args += [f"-DDFTRACER_PYTHON_EXE={configured_python_exe}"]
         cmake_args += [f"-DDFTRACER_PYTHON_SITE={python_site}"]
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
         automatic_detection = os.environ.get("DFTRACER_ENABLE_DYNAMIC_DETECTION", "OFF")
