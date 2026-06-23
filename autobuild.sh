@@ -899,12 +899,12 @@ run_valgrind_dlio_tests() {
         --summary-json "${dlio_log_dir}/summary.json"
         --jobs "${JOBS}"
         --timeout "${VALGRIND_DLIO_TIMEOUT}"
-        --workload bert_v100
-        --workload cosmoflow_h100
         --workload dlrm
-        --workload resnet50_h100
-        --workload resnet50_tf
         --workload unet3d_h100
+        --exclude-workload bert_v100
+        --exclude-workload cosmoflow_h100
+        --exclude-workload resnet50_h100
+        --exclude-workload resnet50_tf
         --exclude-workload unet3d_a100_s3
         --exclude-workload unet3d_h100_s3
         --exclude-workload unet3d_v100_s3
@@ -959,6 +959,11 @@ ensure_mpi_runtime_for_dlio() {
     local mpicc_show=""
     local token=""
     local cray_dir=""
+    local mpi_import_error=""
+
+    prepend_ld_library_path_if_needed "/opt/cray/pe/lib64/cce"
+    prepend_ld_library_path_if_needed "/opt/cray/pe/cce/20.0.0/cce/x86_64/lib"
+    prepend_ld_library_path_if_needed "/opt/cray/pe/cce/20.0.0/cce-clang/x86_64/lib"
 
     if command -v mpicc >/dev/null 2>&1; then
         mpi_launcher="$(command -v mpicc)"
@@ -1021,7 +1026,7 @@ ensure_mpi_runtime_for_dlio() {
     done
 
     for dir in "${expanded_candidates[@]}"; do
-        if ls "${dir}"/libmpi.so* >/dev/null 2>&1 || ls "${dir}"/libmpi_cray.so* >/dev/null 2>&1; then
+        if ls "${dir}"/libmpi.so* >/dev/null 2>&1 || ls "${dir}"/libmpi_cray.so* >/dev/null 2>&1 || ls "${dir}"/libmodules.so* >/dev/null 2>&1; then
             prepend_ld_library_path_if_needed "${dir}"
         fi
     done
@@ -1038,7 +1043,16 @@ ensure_mpi_runtime_for_dlio() {
         return 0
     fi
 
-    if ! "${python_runner}" -c "from mpi4py import MPI" >/dev/null 2>&1; then
+    mpi_import_error="$(${python_runner} - <<'PY' 2>&1 >/dev/null
+try:
+    from mpi4py import MPI
+except Exception as exc:
+    print(f"{type(exc).__name__}: {exc}")
+    raise
+PY
+    )"
+
+    if [ -n "${mpi_import_error}" ]; then
         # Wheels can fail on vendor MPI stacks (e.g., Cray) even with valid launchers.
         if command -v mpicc >/dev/null 2>&1; then
             local mpicc_path
@@ -1054,9 +1068,19 @@ ensure_mpi_runtime_for_dlio() {
             fi
         fi
 
-        if ! "${python_runner}" -c "from mpi4py import MPI" >/dev/null 2>&1; then
-            echo -e "${RED}Error: mpi4py cannot load MPI runtime libraries (libmpi.so*)${NC}"
+        mpi_import_error="$(${python_runner} - <<'PY' 2>&1 >/dev/null
+try:
+    from mpi4py import MPI
+except Exception as exc:
+    print(f"{type(exc).__name__}: {exc}")
+    raise
+PY
+        )"
+
+        if [ -n "${mpi_import_error}" ]; then
+            echo -e "${RED}Error: mpi4py import/runtime check failed${NC}"
             echo "Hint: ensure your MPI runtime libraries are installed and visible in LD_LIBRARY_PATH."
+            echo "Import error: ${mpi_import_error}"
             echo "Current LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-<empty>}"
             if [ -n "${mpi_launcher}" ]; then
                 echo "Detected MPI launcher: ${mpi_launcher}"
@@ -1118,12 +1142,12 @@ run_non_valgrind_dlio_generate_once() {
         --phase generate
         --summary-json "${dlio_log_dir}/summary.json"
         --timeout "${VALGRIND_DLIO_TIMEOUT}"
-        --workload bert_v100
-        --workload cosmoflow_h100
         --workload dlrm
-        --workload resnet50_h100
-        --workload resnet50_tf
         --workload unet3d_h100
+        --exclude-workload bert_v100
+        --exclude-workload cosmoflow_h100
+        --exclude-workload resnet50_h100
+        --exclude-workload resnet50_tf
         --exclude-workload unet3d_a100_s3
         --exclude-workload unet3d_h100_s3
         --exclude-workload unet3d_v100_s3
@@ -1336,23 +1360,52 @@ prepare_non_valgrind_ctest_environment() {
     fi
 
     local python_runner="${PYTHON_EXE:-python3}"
+    if [ "${RUN_PR_CI_LOCAL}" = "1" ] && [ -x "${PR_CI_VENV_DIR}/bin/python" ]; then
+        python_runner="${PR_CI_VENV_DIR}/bin/python"
+        export PYTHON_EXE="${python_runner}"
+        export VENV_PATH="${PR_CI_VENV_DIR}"
+        if [ -x "${PR_CI_VENV_DIR}/bin/pip" ]; then
+            export PATH="${PR_CI_VENV_DIR}/bin:${PATH}"
+        fi
+    fi
     echo -e "${BLUE}Ensuring Python test requirements are installed for CTest...${NC}"
 
+    local requirements_args=(-r "${SCRIPT_DIR}/test/py/requirements.txt")
+    local ctest_requirements_file="${BUILD_DIR}/ctest-python-requirements.txt"
+    if [ "${RUN_PR_CI_LOCAL}" = "1" ] && [ "${ENABLE_HIP_TRACING}" != "ON" ]; then
+        cat > "${ctest_requirements_file}" <<'EOF'
+numpy
+Pillow
+h5py
+opencv-python
+EOF
+        requirements_args=(-r "${ctest_requirements_file}")
+        echo -e "${BLUE}Using lightweight Python test requirements for non-HIP local PR-CI CTest runs...${NC}"
+    fi
+
     if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install -r ${SCRIPT_DIR}/test/py/requirements.txt${NC}"
+        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install ${requirements_args[*]}${NC}"
     else
-        if ! "${python_runner}" -m pip install -r "${SCRIPT_DIR}/test/py/requirements.txt"; then
+        if ! "${python_runner}" -m pip install "${requirements_args[@]}"; then
             echo -e "${RED}Error: failed to install Python test requirements${NC}"
             return 1
         fi
     fi
 
     if [ "${RUN_PR_CI_LOCAL}" = "1" ]; then
+        local numpy_pin="1.26.4"
+        local h5py_pin="3.9.0"
+        local python_version=""
+        python_version="$("${python_runner}" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || true)"
+        if [ "${python_version}" = "3.13" ]; then
+            numpy_pin="2.4.6"
+            h5py_pin="3.16.0"
+        fi
         echo -e "${BLUE}Pinning local PR-CI numpy/h5py to a stable ABI-compatible pair...${NC}"
         if [ "${DRY_RUN}" = "1" ]; then
-            echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install --force-reinstall --no-cache-dir numpy==1.26.4 h5py==3.9.0${NC}"
+            echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install --force-reinstall --no-cache-dir numpy==${numpy_pin} h5py==${h5py_pin}${NC}"
         else
-            if ! "${python_runner}" -m pip install --force-reinstall --no-cache-dir "numpy==1.26.4" "h5py==3.9.0"; then
+            if ! "${python_runner}" -m pip install --force-reinstall --no-cache-dir "numpy==${numpy_pin}" "h5py==${h5py_pin}"; then
                 echo -e "${RED}Error: failed to install compatible numpy/h5py for local PR-CI${NC}"
                 return 1
             fi
@@ -1575,7 +1628,7 @@ run_ior_benchmark_tests() {
     mkdir -p "${benchmark_dir}"
     pushd "${benchmark_dir}" >/dev/null || return 1
 
-    rm -f case-*.csv cases.csv overhead.csv testfile.dftracer*
+    /bin/rm -f case-*.csv cases.csv overhead.csv testfile.dftracer*
 
     for mode in "${modes[@]}"; do
         for ts in "${transfer_sizes[@]}"; do
@@ -1864,12 +1917,49 @@ clean_local_pr_ci_workspace() {
         return 0
     fi
 
-    rm -rf "${BUILD_DIR}" "${INSTALL_PREFIX}" "${PR_CI_VENV_DIR}"
+    /bin/rm -rf "${BUILD_DIR}" "${INSTALL_PREFIX}" "${PR_CI_VENV_DIR}"
     return 0
 }
 
 prepare_local_pr_ci_venv() {
     local bootstrap_python="${PYTHON_EXE:-}"
+    local resolved_python=""
+    if [ -n "${bootstrap_python}" ]; then
+        # -x checks for a file; use command -v for bare command names like "python"
+        local python_is_path=0
+        case "${bootstrap_python}" in
+            */*) python_is_path=1 ;;
+            *) python_is_path=0 ;;
+        esac
+        if [ "${python_is_path}" = "1" ] && [ -x "${bootstrap_python}" ]; then
+            : # bootstrap_python is an executable path, use it as-is
+        elif [ "${python_is_path}" = "0" ]; then
+            # bootstrap_python is a bare command name; check if it's available
+            if command -v "${bootstrap_python}" >/dev/null 2>&1; then
+                bootstrap_python="$(command -v "${bootstrap_python}")"
+            else
+                bootstrap_python=""
+            fi
+        else
+            case "${bootstrap_python}" in
+                python|python3|python3.9|python3.10|python3.11)
+                    for resolved_python in "$(command -v python3.11 2>/dev/null)" "$(command -v python3.10 2>/dev/null)" "$(command -v python3.9 2>/dev/null)" "$(command -v python3 2>/dev/null)" "$(command -v python 2>/dev/null)"; do
+                        if [ -n "${resolved_python}" ]; then
+                            bootstrap_python="${resolved_python}"
+                            break
+                        fi
+                    done
+                    ;;
+                *)
+                    bootstrap_python=""
+                    ;;
+            esac
+            if [ ! -x "${bootstrap_python}" ]; then
+                bootstrap_python=""
+            fi
+        fi
+    fi
+
     if [ -z "${bootstrap_python}" ] || [ ! -x "${bootstrap_python}" ]; then
         local py_candidate
         for py_candidate in python3.11 python3.10 python3.9 python3 python; do
@@ -1890,7 +1980,7 @@ prepare_local_pr_ci_venv() {
         return 0
     fi
 
-    rm -rf "${PR_CI_VENV_DIR}"
+    /bin/rm -rf "${PR_CI_VENV_DIR}"
     if ! "${bootstrap_python}" -m venv "${PR_CI_VENV_DIR}"; then
         echo -e "${RED}Error: failed to create dedicated PR-CI venv at ${PR_CI_VENV_DIR}${NC}"
         return 1
@@ -1915,19 +2005,29 @@ install_dlio_benchmark_for_ci() {
     fi
 
     local python_runner="${PYTHON_EXE:-python3}"
-    local dlio_ref="git+https://github.com/argonne-lcf/dlio_benchmark.git@main"
+    if [ "${RUN_PR_CI_LOCAL}" = "1" ] && [ -x "${PR_CI_VENV_DIR}/bin/python" ]; then
+        python_runner="${PR_CI_VENV_DIR}/bin/python"
+        export PYTHON_EXE="${python_runner}"
+        export VENV_PATH="${PR_CI_VENV_DIR}"
+        if [ -x "${PR_CI_VENV_DIR}/bin/pip" ]; then
+            export PATH="${PR_CI_VENV_DIR}/bin:${PATH}"
+        fi
+    fi
+    local dlio_ref="${SCRIPT_DIR}/dlio_benchmark"
     local mpicc_path=""
     local mpicxx_path=""
 
     if [ "${DRY_RUN}" = "1" ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install ${dlio_ref}${NC}"
+        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install --no-deps ${dlio_ref}${NC}"
+        echo -e "${YELLOW}[DRY-RUN] Would execute: ${python_runner} -m pip install psutil hydra-core omegaconf pandas pyyaml pillow h5py${NC}"
         echo -e "${YELLOW}[DRY-RUN] Would execute: CC=\$(which mpicc) CXX=\$(which mpic++) ${python_runner} -m pip install --no-binary=mpi4py --force-reinstall --no-cache-dir mpi4py${NC}"
         echo -e "${YELLOW}[DRY-RUN] Would verify dlio_benchmark import and report install location${NC}"
         echo -e "${YELLOW}[DRY-RUN] Would verify mpi4py import against MPI runtime${NC}"
         return 0
     fi
 
-    "${python_runner}" -m pip install "${dlio_ref}" || return 1
+    "${python_runner}" -m pip install --no-deps "${dlio_ref}" || return 1
+    "${python_runner}" -m pip install psutil hydra-core omegaconf pandas pyyaml pillow h5py || return 1
 
     if command -v mpicc >/dev/null 2>&1; then
         mpicc_path="$(which mpicc 2>/dev/null || true)"
@@ -2122,6 +2222,23 @@ if [ "$USE_PYTHON" = "auto" ]; then
     fi
 fi
 
+if [ "$USE_PYTHON" = "yes" ] && [ -n "${PYTHON_EXE}" ]; then
+    if [ -x "${PYTHON_EXE}" ]; then
+        :
+    else
+        case "${PYTHON_EXE}" in
+            python|python3|python3.9|python3.10|python3.11)
+                for resolved_python in "$(command -v python3.11 2>/dev/null)" "$(command -v python3.10 2>/dev/null)" "$(command -v python3.9 2>/dev/null)" "$(command -v python3 2>/dev/null)" "$(command -v python 2>/dev/null)"; do
+                    if [ -n "${resolved_python}" ]; then
+                        PYTHON_EXE="${resolved_python}"
+                        break
+                    fi
+                done
+                ;;
+        esac
+    fi
+fi
+
 # Verify we're in a virtual environment if Python is enabled
 if [ "$USE_PYTHON" = "yes" ]; then
     # Check if we're in a virtual environment (venv or conda)
@@ -2309,7 +2426,7 @@ if [ "$CLEAN_INSTALL" = "1" ]; then
                 for location in "${CLEAN_LOCATIONS[@]}"; do
                     if [ -e "$location" ]; then
                         echo "Removing: $location"
-                        rm -rf "$location"
+                        /bin/rm -rf "$location"
                     fi
                 done
                 echo -e "${GREEN}Cleanup complete!${NC}"
@@ -2438,7 +2555,7 @@ if [ "$CLEAN_BUILD" = "1" ] && [ "$SKIP_BUILD_RUN_TESTS" != "1" ] && [ -d "${BUI
     if [ "$DRY_RUN" = "1" ]; then
         echo -e "${YELLOW}[DRY-RUN] Would remove: ${BUILD_DIR}${NC}"
     else
-        rm -rf "${BUILD_DIR}"
+        /bin/rm -rf "${BUILD_DIR}"
     fi
 elif [ "$CLEAN_BUILD" = "1" ] && [ "$SKIP_BUILD_RUN_TESTS" = "1" ]; then
     echo -e "${YELLOW}Ignoring --clean because --skip-build-run-tests needs the existing build tree${NC}"

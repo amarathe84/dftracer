@@ -241,6 +241,46 @@ void test_logger_level() {
   std::cout << "✓ Logger level configuration tests passed" << std::endl;
 }
 
+void test_omnistat_configuration() {
+  std::cout << "Testing Omnistat configuration..." << std::endl;
+
+  const std::string yaml_path = "/tmp/test_omnistat_conf.yaml";
+  std::ofstream yaml_file(yaml_path);
+  yaml_file << "enable: true\n";
+  yaml_file << "features:\n";
+  yaml_file << "  omnistat:\n";
+  yaml_file << "    enable: true\n";
+  yaml_file << "    input: /tmp/omnistat.csv\n";
+  yaml_file << "    format: csv\n";
+  yaml_file << "    timestamp_column: timestamp\n";
+  yaml_file << "    timestamp_format: auto\n";
+  yaml_file << "    counters:\n";
+  yaml_file << "      - rocm_gpu_utilization\n";
+  yaml_file << "      - SQ_WAVES\n";
+  yaml_file << "    include_all_counters: false\n";
+  yaml_file << "    attach_to_trace: true\n";
+  yaml_file << "    export_raw: false\n";
+  yaml_file << "    time_sync:\n";
+  yaml_file << "      mode: absolute\n";
+  yaml_file.close();
+
+  setenv("DFTRACER_CONFIGURATION", yaml_path.c_str(), 1);
+  auto config = std::make_shared<ConfigurationManager>();
+  assert(config->omnistat_enable == true);
+  assert(config->omnistat_input_file == "/tmp/omnistat.csv");
+  assert(config->omnistat_format == "csv");
+  assert(config->omnistat_timestamp_column == "timestamp");
+  assert(config->omnistat_counters.size() == 2);
+  assert(config->omnistat_include_all_counters == false);
+  assert(config->omnistat_attach_to_trace == true);
+  assert(config->omnistat_time_sync_mode == "absolute");
+
+  unsetenv("DFTRACER_CONFIGURATION");
+  std::filesystem::remove(yaml_path);
+
+  std::cout << "✓ Omnistat configuration tests passed" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
   std::cout << "=== Running Configuration Manager Unit Tests ===" << std::endl;
 
@@ -253,6 +293,7 @@ int main(int argc, char* argv[]) {
     test_io_flags();
     test_buffer_size_configuration();
     test_logger_level();
+    test_omnistat_configuration();
 
     std::cout << "\n✓ All Configuration Manager tests passed!" << std::endl;
     return 0;

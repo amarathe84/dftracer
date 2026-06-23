@@ -1,0 +1,4 @@
+timestamp,hostname,gpu_id,rocm_gpu_utilization,rocm_average_socket_power_watts,rocm_memory_usage,GRBM_COUNT,SQ_WAVES
+1710000000.000,node001,0,85.5,420.1,65536,12345,98765
+1710000000.100,node001,0,88.0,430.2,66000,12400,99000
+1710000000.200,node001,1,79.0,390.0,60000,12000,97000

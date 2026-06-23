@@ -2,6 +2,7 @@
 #ifdef DFTRACER_HIP_TRACING_ENABLE
 
 #include <dftracer/core/common/logging.h>
+#include <dftracer/service/telemetry/omnistat_collector.h>
 #include <rocprofiler-sdk/buffer.h>
 #include <rocprofiler-sdk/buffer_tracing.h>
 #include <rocprofiler-sdk/external_correlation.h>
@@ -75,6 +76,23 @@ TimeResolution HIPFunction::transform_timestamp(
   // Convert to absolute timestamp
   // System restart time
   return start_time;
+}
+
+// Helper to push an event into the omnistat collector if available
+static void push_omnistat_event(TimeResolution ts, const std::string& name,
+                                const std::string& category,
+                                const std::string& meta) {
+  auto config =
+      dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
+  if (config && config->omnistat_enable && config->omnistat_attach_to_trace) {
+    static thread_local std::unique_ptr<dftracer::OmnistatTelemetryCollector>
+        omnistat;
+    if (!omnistat) {
+      omnistat = std::make_unique<dftracer::OmnistatTelemetryCollector>();
+      omnistat->initialize();
+    }
+    omnistat->push_hip_event(ts, name, category, meta);
+  }
 }
 void HIPFunction::tool_code_object_callback(
     rocprofiler_callback_tracing_record_t record,
@@ -163,6 +181,14 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
       std::string event_name =
           std::string(client_name_info[record->kind][record->operation]);
 
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "HSA_API",
+          "correlation_id=" +
+              std::to_string(record->correlation_id.external.value) +
+              " tid=" + std::to_string(record->thread_id));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -189,6 +215,15 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
 
       std::string event_name =
           std::string(client_name_info[record->kind][record->operation]);
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "HIP_RUNTIME_API",
+          "correlation_id=" +
+              std::to_string(record->correlation_id.external.value) +
+              " tid=" + std::to_string(record->thread_id));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -220,6 +255,15 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
       }
       // Prepend with string of kernel_id
       event_name = std::to_string(record->dispatch_info.kernel_id) + event_name;
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "HIP_KERNEL_DISPATCH",
+          "correlation_id=" +
+              std::to_string(record->correlation_id.external.value) +
+              " tid=" + std::to_string(record->thread_id));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -249,6 +293,16 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
 
       std::string event_name =
           std::string(client_name_info.at(record->kind, record->operation));
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "HIP_MEMORY_COPY",
+          "src_agent=" + std::to_string(record->src_agent_id.handle) +
+              " dst_agent=" + std::to_string(record->dst_agent_id.handle) +
+              " correlation_id=" +
+              std::to_string(record->correlation_id.external.value));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -271,60 +325,86 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
 
       // Add operation-specific details to metadata
       switch (record->operation) {
-        case ROCPROFILER_PAGE_MIGRATION_PAGE_MIGRATE: {
-          // metadata->insert_or_assign("read_fault",
-          //                            record->page_fault.read_fault);
-          // metadata->insert_or_assign("migrated",
-          // record->page_fault.migrated);
-          metadata->insert_or_assign("node_id", record->page_fault.node_id);
-          metadata->insert_or_assign("address", record->page_fault.address);
+        case ROCPROFILER_PAGE_MIGRATION_PAGE_MIGRATE_START: {
+          auto& pm = record->args.page_migrate_start;
+          metadata->insert_or_assign("start_addr", pm.start_addr);
+          metadata->insert_or_assign("end_addr", pm.end_addr);
+          metadata->insert_or_assign("trigger", static_cast<int>(pm.trigger));
           break;
         }
-        case ROCPROFILER_PAGE_MIGRATION_PAGE_FAULT: {
-          metadata->insert_or_assign("start_addr",
-                                     record->page_migrate.start_addr);
-          metadata->insert_or_assign("end_addr", record->page_migrate.end_addr);
-          metadata->insert_or_assign("from_node",
-                                     record->page_migrate.from_node);
-          metadata->insert_or_assign("to_node", record->page_migrate.to_node);
-          metadata->insert_or_assign("prefetch_node",
-                                     record->page_migrate.prefetch_node);
-          metadata->insert_or_assign("preferred_node",
-                                     record->page_migrate.preferred_node);
-          metadata->insert_or_assign("trigger", record->page_migrate.trigger);
+        case ROCPROFILER_PAGE_MIGRATION_PAGE_MIGRATE_END: {
+          auto& pm = record->args.page_migrate_end;
+          metadata->insert_or_assign("start_addr", pm.start_addr);
+          metadata->insert_or_assign("end_addr", pm.end_addr);
+          metadata->insert_or_assign("trigger", static_cast<int>(pm.trigger));
           break;
         }
-        case ROCPROFILER_PAGE_MIGRATION_QUEUE_SUSPEND: {
-          // metadata->insert_or_assign("rescheduled",
-          //                            record->queue_suspend.rescheduled);
-          metadata->insert_or_assign("node_id", record->queue_suspend.node_id);
-          metadata->insert_or_assign("trigger", record->queue_suspend.trigger);
+        case ROCPROFILER_PAGE_MIGRATION_PAGE_FAULT_START: {
+          auto& pf = record->args.page_fault_start;
+          metadata->insert_or_assign("agent_id",
+                                     static_cast<uint64_t>(pf.agent_id.handle));
+          metadata->insert_or_assign("address", pf.address);
+          metadata->insert_or_assign("read_fault",
+                                     static_cast<int>(pf.read_fault));
+          break;
+        }
+        case ROCPROFILER_PAGE_MIGRATION_PAGE_FAULT_END: {
+          auto& pf = record->args.page_fault_end;
+          metadata->insert_or_assign("agent_id",
+                                     static_cast<uint64_t>(pf.agent_id.handle));
+          metadata->insert_or_assign("address", pf.address);
+          metadata->insert_or_assign("migrated", static_cast<int>(pf.migrated));
+          break;
+        }
+        case ROCPROFILER_PAGE_MIGRATION_QUEUE_EVICTION: {
+          auto& qe = record->args.queue_eviction;
+          metadata->insert_or_assign("agent_id",
+                                     static_cast<uint64_t>(qe.agent_id.handle));
+          metadata->insert_or_assign("trigger", static_cast<int>(qe.trigger));
+          break;
+        }
+        case ROCPROFILER_PAGE_MIGRATION_QUEUE_RESTORE: {
+          auto& qr = record->args.queue_restore;
+          metadata->insert_or_assign("rescheduled",
+                                     static_cast<int>(qr.rescheduled));
+          metadata->insert_or_assign("agent_id",
+                                     static_cast<uint64_t>(qr.agent_id.handle));
           break;
         }
         case ROCPROFILER_PAGE_MIGRATION_UNMAP_FROM_GPU: {
-          metadata->insert_or_assign("node_id", record->unmap_from_gpu.node_id);
-          metadata->insert_or_assign("start_addr",
-                                     record->unmap_from_gpu.start_addr);
-          metadata->insert_or_assign("end_addr",
-                                     record->unmap_from_gpu.end_addr);
-          metadata->insert_or_assign("trigger", record->unmap_from_gpu.trigger);
+          auto& um = record->args.unmap_from_gpu;
+          metadata->insert_or_assign("start_addr", um.start_addr);
+          metadata->insert_or_assign("end_addr", um.end_addr);
+          metadata->insert_or_assign("trigger", static_cast<int>(um.trigger));
+          break;
+        }
+        case ROCPROFILER_PAGE_MIGRATION_DROPPED_EVENT: {
+          auto& de = record->args.dropped_event;
+          metadata->insert_or_assign("dropped_events_count",
+                                     de.dropped_events_count);
           break;
         }
         default:
-          // DFTRACER_LOG_ERROR("unexpected page migration operation: ")
-          continue;  // Skip this record if operation is unknown
+          // Skip this record if operation is unknown
+          continue;
       }
 
       // Note: page migration uses record->pid instead of getpid()
       std::string event_name =
           std::string(client_name_info.at(record->kind, record->operation));
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->timestamp), event_name,
+          "PAGE_MIGRATION",
+          "kind=" + std::to_string(record->kind) +
+              " operation=" + std::to_string(record->operation) +
+              " pid=" + std::to_string(record->pid));
+
       function->logger->enter_event();
-      function->logger->log(
-          event_name.c_str(), kind_name.c_str(),
-          function->transform_timestamp(record->start_timestamp),
-          function->transform_time(record->end_timestamp,
-                                   record->start_timestamp),
-          metadata);
+      function->logger->log(event_name.c_str(), kind_name.c_str(),
+                            function->transform_timestamp(record->timestamp),
+                            static_cast<TimeResolution>(0), metadata);
       function->logger->exit_event();
 
     } else if (header->category == ROCPROFILER_BUFFER_CATEGORY_TRACING &&
@@ -347,6 +427,16 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
       metadata->insert_or_assign("tid", record->thread_id);
       std::string event_name =
           std::string(client_name_info.at(record->kind, record->operation));
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "SCRATCH_MEMORY",
+          "correlation_id=" +
+              std::to_string(record->correlation_id.external.value) +
+              " agent_id=" + std::to_string(record->agent_id.handle) +
+              " queue_id=" + std::to_string(record->queue_id.handle));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -367,6 +457,15 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
 
       std::string event_name =
           std::string(client_name_info.at(record->kind, record->operation));
+
+      // Push to omnistat collector
+      push_omnistat_event(
+          function->transform_timestamp(record->start_timestamp), event_name,
+          "RCCL_API",
+          "correlation_id=" +
+              std::to_string(record->correlation_id.external.value) +
+              " tid=" + std::to_string(record->thread_id));
+
       function->logger->enter_event();
       function->logger->log(
           event_name.c_str(), kind_name.c_str(),
@@ -383,14 +482,12 @@ void HIPFunction::tool_tracing_callback(rocprofiler_context_id_t context,
 
 void HIPFunction::thread_precreate(rocprofiler_runtime_library_t lib,
                                    void* tool_data) {
-  DFTRACER_LOG_DEBUG("internal thread about to be created by rocprofiler",
-                     "lib=" + std::to_string(lib));
+  DFTRACER_LOG_DEBUG("internal thread about to be created by rocprofiler");
 }
 
 void HIPFunction::thread_postcreate(rocprofiler_runtime_library_t lib,
                                     void* tool_data) {
-  DFTRACER_LOG_DEBUG("internal thread was created by rocprofiler",
-                     "lib=" + std::to_string(lib));
+  DFTRACER_LOG_DEBUG("internal thread was created by rocprofiler");
 }
 
 // Tool initialization

@@ -7,6 +7,7 @@
 #include <cpp-logger/logger.h>
 #include <dftracer/core/common/enumeration.h>
 
+#include <string>
 #include <vector>
 namespace dftracer {
 class ConfigurationManager {
@@ -38,6 +39,18 @@ class ConfigurationManager {
   AggregationType aggregation_type;
   std::vector<std::string> aggregation_inclusion_rules;
   std::vector<std::string> aggregation_exclusion_rules;
+
+  bool omnistat_enable;
+  std::string omnistat_input_file;
+  std::string omnistat_format;
+  std::string omnistat_timestamp_column;
+  std::string omnistat_timestamp_format;
+  std::vector<std::string> omnistat_counters;
+  bool omnistat_include_all_counters;
+  bool omnistat_attach_to_trace;
+  bool omnistat_export_raw;
+  std::string omnistat_time_sync_mode;
+
   ConfigurationManager();
   void finalize() {}
 };

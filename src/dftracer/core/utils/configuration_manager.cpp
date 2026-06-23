@@ -40,6 +40,18 @@
 #define DFT_YAML_FEATURES_AGGREGATION_FILE "file"
 #define DFT_YAML_FEATURES_AGGREGATION_INCLUSION_FILTERS "inclusion"
 #define DFT_YAML_FEATURES_AGGREGATION_EXCLUSION_FILTERS "exclusion"
+#define DFT_YAML_FEATURES_OMNISTAT "omnistat"
+#define DFT_YAML_FEATURES_OMNISTAT_ENABLE "enable"
+#define DFT_YAML_FEATURES_OMNISTAT_INPUT "input"
+#define DFT_YAML_FEATURES_OMNISTAT_FORMAT "format"
+#define DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_COLUMN "timestamp_column"
+#define DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_FORMAT "timestamp_format"
+#define DFT_YAML_FEATURES_OMNISTAT_COUNTERS "counters"
+#define DFT_YAML_FEATURES_OMNISTAT_INCLUDE_ALL_COUNTERS "include_all_counters"
+#define DFT_YAML_FEATURES_OMNISTAT_ATTACH_TO_TRACE "attach_to_trace"
+#define DFT_YAML_FEATURES_OMNISTAT_EXPORT_RAW "export_raw"
+#define DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC "time_sync"
+#define DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC_MODE "mode"
 
 // INTERNAL
 #define DFT_YAML_INTERNAL "internal"
@@ -76,7 +88,17 @@ dftracer::ConfigurationManager::ConfigurationManager()
       aggregation_enable(false),
       aggregation_type(AggregationType::AGGREGATION_TYPE_FULL),
       aggregation_inclusion_rules(),
-      aggregation_exclusion_rules() {
+      aggregation_exclusion_rules(),
+      omnistat_enable(false),
+      omnistat_input_file(),
+      omnistat_format("csv"),
+      omnistat_timestamp_column("timestamp"),
+      omnistat_timestamp_format("auto"),
+      omnistat_counters(),
+      omnistat_include_all_counters(false),
+      omnistat_attach_to_trace(true),
+      omnistat_export_raw(false),
+      omnistat_time_sync_mode("absolute") {
   const char* env_conf = getenv(DFTRACER_CONFIGURATION);
   YAML::Node config;
   if (env_conf != nullptr) {
@@ -244,6 +266,61 @@ dftracer::ConfigurationManager::ConfigurationManager()
                          this->aggregation_type);
       DFTRACER_LOG_DEBUG("YAML ConfigurationManager.aggregation_file %s",
                          this->aggregation_file.c_str());
+      if (config[DFT_YAML_FEATURES][DFT_YAML_FEATURES_OMNISTAT]) {
+        auto omnistat = config[DFT_YAML_FEATURES][DFT_YAML_FEATURES_OMNISTAT];
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_ENABLE]) {
+          this->omnistat_enable =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_ENABLE].as<bool>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_INPUT]) {
+          this->omnistat_input_file =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_INPUT].as<std::string>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_FORMAT]) {
+          this->omnistat_format =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_FORMAT].as<std::string>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_COLUMN]) {
+          this->omnistat_timestamp_column =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_COLUMN]
+                  .as<std::string>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_FORMAT]) {
+          this->omnistat_timestamp_format =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_TIMESTAMP_FORMAT]
+                  .as<std::string>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_COUNTERS]) {
+          this->omnistat_counters =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_COUNTERS]
+                  .as<std::vector<std::string>>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_INCLUDE_ALL_COUNTERS]) {
+          this->omnistat_include_all_counters =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_INCLUDE_ALL_COUNTERS]
+                  .as<bool>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_ATTACH_TO_TRACE]) {
+          this->omnistat_attach_to_trace =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_ATTACH_TO_TRACE].as<bool>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_EXPORT_RAW]) {
+          this->omnistat_export_raw =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_EXPORT_RAW].as<bool>();
+        }
+        if (omnistat[DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC] &&
+            omnistat[DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC]
+                    [DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC_MODE]) {
+          this->omnistat_time_sync_mode =
+              omnistat[DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC]
+                      [DFT_YAML_FEATURES_OMNISTAT_TIME_SYNC_MODE]
+                          .as<std::string>();
+        }
+      }
+      DFTRACER_LOG_DEBUG("YAML ConfigurationManager.omnistat_enable %d",
+                         this->omnistat_enable);
+      DFTRACER_LOG_DEBUG("YAML ConfigurationManager.omnistat_input_file %s",
+                         this->omnistat_input_file.c_str());
     }
     if (config[DFT_YAML_INTERNAL]) {
       if (config[DFT_YAML_INTERNAL][DFT_YAML_INTERNAL_SIGNALS]) {

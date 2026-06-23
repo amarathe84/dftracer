@@ -4,11 +4,15 @@ import threading
 from multiprocessing import get_context
 from time import sleep
 
-import h5py
 import numpy as np
 import PIL.Image as im
 from dftracer.python import dftracer, dft_fn
 import resource
+
+try:
+    import h5py
+except Exception:
+    h5py = None
 
 cwd = os.getcwd()
 log_file = os.getenv("LOG_FILE", f"{cwd}/test_py-app.pwf")
@@ -121,6 +125,8 @@ class IOReader(IOHandler):
         if self.format == "npz":
             self.data = np.load(filename)
         if self.format == "hdf5":
+            if h5py is None:
+                raise RuntimeError("h5py is required for hdf5 format tests")
             fd = h5py.File(filename, "r")
             self.data = fd["x"][:]  # type: ignore
             fd.close()
@@ -141,6 +147,8 @@ class IOWriter(IOHandler):
             with open(filename, "wb") as f:
                 np.save(f, data)
         if self.format == "hdf5":
+            if h5py is None:
+                raise RuntimeError("h5py is required for hdf5 format tests")
             fd = h5py.File(filename, "w")
             fd.create_dataset("x", data=data)
             fd.close()

@@ -18,6 +18,8 @@
 
 DFTracer is a tracing tool designed to capture both application-code and I/O-call level events from workflows. It provides a unified tracing interface, optimized trace format, and compression mechanism to enable efficient distributed analysis for large-scale AI-driven workloads.
 
+It also supports post-run Omnistat CSV ingestion for AMD GPU/APU telemetry correlation.
+
 ## Prerequisites
 
 Requirements for DFTracer

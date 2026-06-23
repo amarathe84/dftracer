@@ -476,6 +476,9 @@ else()
                 message(STATUS "[DFTRACER] found rocprofiler-sdk at ${rocprofiler-sdk_INCLUDE_DIR}")
                 set(HIP_TRACING_LIBRARIES rocprofiler-sdk::rocprofiler-sdk)
                 set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${HIP_TRACING_LIBRARIES})
+                # When HIP tracing is enabled, also link the telemetry library so that
+                # omnistat collector symbols are resolved in libdftracer_core.so
+                set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${PROJECT_NAME}_service_telemetry)
         else()
                 message(STATUS "-- [DFTRACER] rocprofiler-sdk is not found.")
         endif()
@@ -617,13 +620,14 @@ else()
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/memory_collector.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/io_collector.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/network_collector.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/omnistat_collector.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/telemetry/telemetry_factory.cpp)
 
         add_library(${PROJECT_NAME}_service_telemetry STATIC ${DFTRACER_SERVICE_TELEMETRY_SRC})
         target_include_directories(${PROJECT_NAME}_service_telemetry
                 PUBLIC
-                ${CMAKE_CURRENT_SOURCE_DIR}/src
-                ${CMAKE_CURRENT_SOURCE_DIR}/include)
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
         target_link_libraries(${PROJECT_NAME}_service_telemetry ${DEPENDENCY_LIB} ${PROJECT_NAME}_core)
 
         set(DFTRACER_SERVICE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/service/service.cpp)
@@ -707,6 +711,13 @@ else()
         )
         install(
                 TARGETS ${PROJECT_NAME}_core_dbg
+                EXPORT ${DFTRACER_EXPORTED_TARGETS}
+                LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+                ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+                RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
+        )
+        install(
+                TARGETS ${PROJECT_NAME}_service_telemetry
                 EXPORT ${DFTRACER_EXPORTED_TARGETS}
                 LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
                 ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}

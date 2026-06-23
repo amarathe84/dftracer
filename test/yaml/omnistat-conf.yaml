@@ -1,0 +1,24 @@
+enable: true
+profiler:
+  init: FUNCTION
+  log_file: trace
+  compression: false
+features:
+  metadata: true
+  omnistat:
+    enable: true
+    input: test/data/omnistat/sample.csv
+    format: csv
+    timestamp_column: timestamp
+    timestamp_format: auto
+    counters:
+      - rocm_gpu_utilization
+      - rocm_average_socket_power_watts
+      - rocm_memory_usage
+      - GRBM_COUNT
+      - SQ_WAVES
+    include_all_counters: false
+    attach_to_trace: true
+    export_raw: false
+    time_sync:
+      mode: absolute
