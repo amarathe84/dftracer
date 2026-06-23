@@ -108,3 +108,7 @@ examples/dfanalyzer/outputs/
 *.pfw*
 .secrets.example
 logs/
+examples/papi_standalone/papi_single_node
+examples/papi_standalone/papi_mpi
+examples/papi_standalone/traces/
+examples/papi_standalone/install/

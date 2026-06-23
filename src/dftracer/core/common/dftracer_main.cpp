@@ -4,6 +4,7 @@
 #include <dftracer/core/common/dftracer_main.h>
 #include <dftracer/core/finstrument/functions.h>
 #include <dftracer/core/function/hip/intercept.h>
+#include <dftracer/core/function/papi/counters.h>
 
 template <>
 std::shared_ptr<dftracer::DFTracerCore>
@@ -86,6 +87,15 @@ bool dftracer::DFTracerCore::log(ConstEventNameType event_name,
   if (this->is_initialized && conf->enable) {
     if (logger != nullptr) {
       logger->log(event_name, category, start_time, duration, metadata);
+#ifdef DFTRACER_PAPI_TRACING_ENABLE
+      if (conf->papi_tracing) {
+        auto papi_instance =
+            dftracer::Singleton<dftracer::PAPICounterFunction>::get_instance();
+        if (papi_instance != nullptr && papi_instance->is_enabled()) {
+          papi_instance->sample();
+        }
+      }
+#endif
       return true;
     } else {
       DFTRACER_LOG_ERROR("DFTracerCore::log logger not initialized");
@@ -109,6 +119,12 @@ bool dftracer::DFTracerCore::finalize() {
   DFTRACER_LOG_DEBUG("DFTracerCore::finalize");
   if (this->is_initialized && conf->enable) {
     DFTRACER_LOG_INFO("Calling finalize on pid %d", this->process_id);
+    auto trie = dftracer::Singleton<Trie>::get_instance();
+    if (trie != nullptr) {
+      DFTRACER_LOG_INFO("Release Prefix Tree");
+      trie->finalize();
+      dftracer::Singleton<Trie>::finalize();
+    }
     if (bind) {
 #ifdef DFTRACER_FTRACING_ENABLE
       auto function_instance = dftracer::Function::get_instance();
@@ -156,12 +172,13 @@ bool dftracer::DFTracerCore::finalize() {
 #endif
       }
     }
-    auto trie = dftracer::Singleton<Trie>::get_instance();
-    if (trie != nullptr) {
-      DFTRACER_LOG_INFO("Release Prefix Tree");
-      trie->finalize();
-      dftracer::Singleton<Trie>::finalize();
+#ifdef DFTRACER_PAPI_TRACING_ENABLE
+    auto papi_instance =
+        dftracer::Singleton<dftracer::PAPICounterFunction>::get_instance();
+    if (papi_instance != nullptr) {
+      papi_instance->finalize();
     }
+#endif
     if (logger != nullptr) {
       logger->finalize();
       dftracer::Singleton<DFTLogger>::finalize();
@@ -383,6 +400,18 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
         DFTRACER_LOG_DEBUG("HIP tracing is not enabled");
 #endif
       }
+#ifdef DFTRACER_PAPI_TRACING_ENABLE
+      if (conf->papi_tracing) {
+        DFTRACER_LOG_DEBUG("PAPI tracing is enabled", "");
+        auto papi_instance =
+            dftracer::Singleton<dftracer::PAPICounterFunction>::get_instance();
+        if (papi_instance != nullptr) {
+          papi_instance->initialize();
+        }
+      } else {
+        DFTRACER_LOG_DEBUG("PAPI tracing is not enabled", "");
+      }
+#endif
     } else {
 #ifdef DFTRACER_FTRACING_ENABLE
       dftracer::Function::get_instance()->finalize();
@@ -392,6 +421,13 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char* _log_file,
           dftracer::Singleton<dftracer::HIPFunction>::get_instance();
       if (hip_instance != nullptr) {
         hip_instance->finalize();
+      }
+#endif
+#ifdef DFTRACER_PAPI_TRACING_ENABLE
+      auto papi_instance =
+          dftracer::Singleton<dftracer::PAPICounterFunction>::get_instance();
+      if (papi_instance != nullptr) {
+        papi_instance->finalize();
       }
 #endif
     }

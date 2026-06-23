@@ -8,6 +8,20 @@
 
 using namespace dftracer;
 
+namespace {
+
+void clear_papi_environment() {
+  unsetenv("DFTRACER_ENABLE");
+  unsetenv("DFTRACER_CONFIGURATION");
+  unsetenv("DFTRACER_TRACE_INTERVAL_MS");
+  unsetenv("DFTRACER_ENABLE_PAPI_TRACING");
+  unsetenv("DFTRACER_PAPI_MULTIPLEX");
+  unsetenv("DFTRACER_PAPI_SAMPLE_INTERVAL_MS");
+  unsetenv("DFTRACER_PAPI_EVENTS");
+}
+
+}  // namespace
+
 void test_default_configuration() {
   std::cout << "Testing default configuration..." << std::endl;
 
@@ -241,6 +255,70 @@ void test_logger_level() {
   std::cout << "✓ Logger level configuration tests passed" << std::endl;
 }
 
+void test_papi_environment_configuration() {
+  std::cout << "Testing PAPI environment configuration..." << std::endl;
+
+  clear_papi_environment();
+  setenv("DFTRACER_ENABLE", "1", 1);
+  setenv("DFTRACER_ENABLE_PAPI_TRACING", "1", 1);
+  setenv("DFTRACER_PAPI_MULTIPLEX", "1", 1);
+  setenv("DFTRACER_TRACE_INTERVAL_MS", "2500", 1);
+  setenv("DFTRACER_PAPI_EVENTS", "PAPI_TOT_CYC,PAPI_TOT_INS", 1);
+
+  auto inherited_interval = std::make_shared<ConfigurationManager>();
+  assert(inherited_interval->papi_tracing == true);
+  assert(inherited_interval->papi_multiplex == true);
+  assert(inherited_interval->papi_sample_interval_ms == 2500);
+  assert(inherited_interval->papi_events.size() == 2);
+  assert(inherited_interval->papi_events[0] == "PAPI_TOT_CYC");
+  assert(inherited_interval->papi_events[1] == "PAPI_TOT_INS");
+
+  setenv("DFTRACER_PAPI_SAMPLE_INTERVAL_MS", "125", 1);
+  auto explicit_interval = std::make_shared<ConfigurationManager>();
+  assert(explicit_interval->papi_sample_interval_ms == 125);
+
+  clear_papi_environment();
+
+  std::cout << "✓ PAPI environment configuration tests passed" << std::endl;
+}
+
+void test_papi_yaml_configuration() {
+  std::cout << "Testing PAPI YAML configuration..." << std::endl;
+
+  clear_papi_environment();
+
+  std::string yaml_path = "/tmp/test_papi_configuration.yaml";
+  std::ofstream yaml_file(yaml_path);
+  yaml_file << "enable: true\n";
+  yaml_file << "features:\n";
+  yaml_file << "  interval: 2000\n";
+  yaml_file << "  papi:\n";
+  yaml_file << "    enable: true\n";
+  yaml_file << "    multiplex: true\n";
+  yaml_file << "    interval: 333\n";
+  yaml_file << "    events:\n";
+  yaml_file << "      - PAPI_TOT_CYC\n";
+  yaml_file << "      - PAPI_L3_TCM\n";
+  yaml_file.close();
+
+  setenv("DFTRACER_CONFIGURATION", yaml_path.c_str(), 1);
+  auto config = std::make_shared<ConfigurationManager>();
+
+  assert(config->enable == true);
+  assert(config->trace_interval_ms == 2000);
+  assert(config->papi_tracing == true);
+  assert(config->papi_multiplex == true);
+  assert(config->papi_sample_interval_ms == 333);
+  assert(config->papi_events.size() == 2);
+  assert(config->papi_events[0] == "PAPI_TOT_CYC");
+  assert(config->papi_events[1] == "PAPI_L3_TCM");
+
+  std::filesystem::remove(yaml_path);
+  clear_papi_environment();
+
+  std::cout << "✓ PAPI YAML configuration tests passed" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
   std::cout << "=== Running Configuration Manager Unit Tests ===" << std::endl;
 
@@ -253,6 +331,8 @@ int main(int argc, char* argv[]) {
     test_io_flags();
     test_buffer_size_configuration();
     test_logger_level();
+    test_papi_environment_configuration();
+    test_papi_yaml_configuration();
 
     std::cout << "\n✓ All Configuration Manager tests passed!" << std::endl;
     return 0;

@@ -138,15 +138,38 @@ Build Variables
    DFTRACER_BUILD_TYPE              STRING  Sets the build type for DFTRACER (default Release). Values are Debug or Release
    DFTRACER_ENABLE_FTRACING         BOOL    Enables function tracing (default OFF).
    DFTRACER_ENABLE_HIP_TRACING      BOOL    Enables AMD GPU tracing (default OFF).
+   DFTRACER_ENABLE_PAPI_TRACING     BOOL    Enables PAPI counter tracing support (default OFF).
    DFTRACER_ENABLE_MPI              BOOL    Enables MPI Rank (default ON).
    DFTRACER_DISABLE_HWLOC           BOOL    Disables HWLOC (default ON).
    DFTRACER_PYTHON_EXE              STRING  Sets path to python executable. Only Cmake.
    DFTRACER_PYTHON_SITE             STRING  Sets path to python site-packages. Only Cmake.
    DFTRACER_BUILD_PYTHON_BINDINGS   STRING  Enable python bindings for DFTracer. Only Cmake.
-   DFTRACER_ENABLE_DYNAMIC_DETECTION BOOL   Enables Dynamic library detection for HWLOC, MPI, and HIP (default OFF).
+   DFTRACER_ENABLE_DYNAMIC_DETECTION BOOL   Enables Dynamic library detection for HWLOC, MPI, HIP, and PAPI (default OFF).
    ================================ ======  ===========================================================================
 
 These build variables can be set with cmake as ``-DDISABLE_HWLOC=OFF`` or as environment variables ``export DFTRACER_DISABLE_HWLOC=OFF``
+
+When DFTracer is built with PAPI support, runtime counter sampling can be enabled with
+``DFTRACER_ENABLE_PAPI_TRACING=1``. The active counters are configured with
+``DFTRACER_PAPI_EVENTS`` as a comma-separated list, ``DFTRACER_PAPI_MULTIPLEX=1``
+enables PAPI multiplexing, and ``DFTRACER_PAPI_SAMPLE_INTERVAL_MS`` overrides the
+sampling interval in milliseconds. When it is unset or set to ``0``, PAPI sampling
+inherits the main ``DFTRACER_TRACE_INTERVAL_MS`` value.
+
+To compile DFTracer with PAPI support, enable ``DFTRACER_ENABLE_PAPI_TRACING`` and make
+sure the PAPI development package is available to CMake. For example:
+
+.. code-block:: Bash
+
+    export DFTRACER_ENABLE_PAPI_TRACING=ON
+    cmake . -B build -DDFTRACER_ENABLE_PAPI_TRACING=ON
+    cmake --build build
+
+At runtime, PAPI tracing can be turned off without rebuilding by setting:
+
+.. code-block:: Bash
+
+    export DFTRACER_ENABLE_PAPI_TRACING=0
 
 Build DFTracer Dependencies
 ********************************
